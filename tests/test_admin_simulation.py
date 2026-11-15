@@ -91,3 +91,33 @@ def test_admin_simulation_endpoints_and_rbac():
     assert stats["counts"]["static_rooms"] == 6
     assert stats["counts"]["mobile_vans"] == 4
     assert len(stats["recent_audit_logs"]) >= 1
+
+
+def test_demand_forecast_honesty_and_labels():
+    """
+    Verify M8-B Demand Forecast endpoint:
+    - Labelled as Rule-based seasonal estimate / Demo forecast
+    - Contains horizon, data_source ('SIMULATED'), and data_status ('FRESH')
+    - Does NOT contain confidence percentages or imply a trained ML model
+    """
+    farmer_login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "farmer.demo@coldbridge.ai", "password": "FarmerDemo123!"},
+        headers=CSRF_HEADER
+    )
+    assert farmer_login.status_code == 200
+    cookies = farmer_login.cookies
+
+    res = client.get("/api/v1/forecast", cookies=cookies)
+    assert res.status_code == 200
+    forecasts = res.json()
+    assert len(forecasts) >= 1
+
+    for f in forecasts:
+        assert f["data_source"] == "SIMULATED"
+        assert f["data_status"] == "FRESH"
+        assert f["forecast_source"] == "SEASONAL_RULE_BASED"
+        assert "horizon_days" in f
+        assert "confidence" not in f
+        assert "probability" not in f
+

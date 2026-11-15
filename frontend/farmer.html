@@ -11,19 +11,27 @@
 <body>
     <header>
         <a href="farmer.html" class="brand">
-            <span>❄️ ColdBridge AI</span>
-            <span class="brand-badge">Farmer Portal</span>
+            <span data-i18n="brand_title">❄️ ColdBridge AI</span>
+            <span class="brand-badge" data-i18n="farmer_portal">Farmer Portal</span>
         </a>
         <nav>
-            <a href="#overview" class="nav-link active" data-tab="tabOverview">Overview</a>
-            <a href="#add" class="nav-link" data-tab="tabAdd">Add Produce</a>
-            <a href="#cooling-map" class="nav-link" data-tab="tabCoolingMap">Cooling Map</a>
-            <a href="#batches" class="nav-link" data-tab="tabBatches">My Batches & SRI</a>
-            <a href="#matching" class="nav-link" data-tab="tabMatching">Cooling Matches</a>
-            <a href="#bookings" class="nav-link" data-tab="tabBookings">My Bookings</a>
+            <a href="#overview" class="nav-link active" data-tab="tabOverview" data-i18n="nav_overview">Overview</a>
+            <a href="#add" class="nav-link" data-tab="tabAdd" data-i18n="nav_add_produce">Add Produce</a>
+            <a href="#cooling-map" class="nav-link" data-tab="tabCoolingMap" data-i18n="nav_cooling_map">Cooling Map</a>
+            <a href="#batches" class="nav-link" data-tab="tabBatches" data-i18n="nav_batches">My Batches & SRI</a>
+            <a href="#matching" class="nav-link" data-tab="tabMatching" data-i18n="nav_matches">Cooling Matches</a>
+            <a href="#bookings" class="nav-link" data-tab="tabBookings" data-i18n="nav_bookings">My Bookings</a>
+            
+            <!-- Language Switcher (M8-B) -->
+            <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
+                <option value="en">🌐 English</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="mr">🚩 मराठी</option>
+            </select>
+
             <div class="user-pill">
                 <span id="userName">Farmer</span>
-                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
             </div>
         </nav>
     </header>
@@ -33,22 +41,22 @@
 
         <!-- TAB 1: OVERVIEW -->
         <div id="tabOverview" class="tab-content active">
-            <h1 class="page-title">Farmer Overview</h1>
-            <p class="page-subtitle">Track your registered harvest batches, spoilage risk assessments, and cold chain options.</p>
+            <h1 class="page-title" data-i18n="overview_title">Farmer Overview</h1>
+            <p class="page-subtitle" data-i18n="overview_subtitle">Track your registered harvest batches, spoilage risk assessments, and cold chain options.</p>
 
             <div class="grid-cards" style="margin-bottom: 1.5rem;">
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">📦 Total Batches</div>
+                    <div class="card-title" data-i18n="stat_batches">📦 Total Batches</div>
                     <div id="statTotalBatches" style="font-size: 2rem; font-weight: 700; color: var(--primary);">0</div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);">Registered in Maharashtra</div>
                 </div>
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">⚖️ Total Produce</div>
+                    <div class="card-title" data-i18n="stat_produce">⚖️ Total Produce</div>
                     <div id="statTotalKg" style="font-size: 2rem; font-weight: 700; color: var(--secondary);">0 kg</div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);">Aggregate harvest quantity</div>
                 </div>
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">🚨 High Risk Batches</div>
+                    <div class="card-title" data-i18n="stat_high_risk">🚨 High Risk Batches</div>
                     <div id="statHighRisk" style="font-size: 2rem; font-weight: 700; color: #dc2626;">0</div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);">SRI score ≥ 65 (Urgent cooling needed)</div>
                 </div>
@@ -56,8 +64,8 @@
 
             <div class="card">
                 <div class="card-title">
-                    <span>Recent Batches & Spoilage Assessments</span>
-                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBatchesOverview">Refresh</button>
+                    <span data-i18n="recent_batches_title">Recent Batches & Spoilage Assessments</span>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBatchesOverview" data-i18n="refresh">Refresh</button>
                 </div>
                 <div id="overviewBatchesList">
                     <div class="state-box">Loading recent batches...</div>
@@ -68,13 +76,13 @@
         <!-- TAB 2: ADD PRODUCE (LM1) -->
         <div id="tabAdd" class="tab-content">
             <div class="card" style="max-width: 760px; margin: 0 auto;">
-                <h1 class="page-title" style="font-size: 1.5rem;">Register New Produce Batch</h1>
-                <p class="page-subtitle">Enter details about your harvest for transparent Spoilage Risk Index (SRI) assessment and cooling matching.</p>
+                <h1 class="page-title" style="font-size: 1.5rem;" data-i18n="register_title">Register New Produce Batch</h1>
+                <p class="page-subtitle" data-i18n="register_subtitle">Enter details about your harvest for transparent Spoilage Risk Index (SRI) assessment and cooling matching.</p>
 
                 <form id="addBatchForm">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="cropCode">Crop Type *</label>
+                            <label for="cropCode" data-i18n="crop_label">Crop Type *</label>
                             <select id="cropCode" required>
                                 <option value="mango">Mango (Alphonso / Kesar) [High Perishability]</option>
                                 <option value="tomato">Tomato [Very High Perishability]</option>
@@ -87,7 +95,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="quantityKg">Quantity (kg) *</label>
+                            <label for="quantityKg" data-i18n="quantity_label">Quantity (kg) *</label>
                             <input type="number" id="quantityKg" min="1" max="50000" step="1" required placeholder="e.g. 500">
                             <span class="form-help">Must be greater than 0 kg</span>
                         </div>
@@ -95,13 +103,13 @@
 
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="harvestAt">Harvest Timestamp *</label>
+                            <label for="harvestAt" data-i18n="harvest_time_label">Harvest Timestamp *</label>
                             <input type="datetime-local" id="harvestAt" required>
                             <span class="form-help">Cannot be in the future</span>
                         </div>
 
                         <div class="form-group">
-                            <label for="ambientTemp">Ambient Temperature at Field (°C) *</label>
+                            <label for="ambientTemp" data-i18n="ambient_temp_label">Ambient Temperature at Field (°C) *</label>
                             <input type="number" id="ambientTemp" min="-10" max="60" step="0.5" required placeholder="e.g. 32.5">
                             <span class="form-help">Ambient field temperature at collection</span>
                         </div>
@@ -297,6 +305,7 @@
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
         import { initMap, createMarker, fitToMarkers, drawRoute, mountLocationPicker, escapeHtml } from './js/maps.js';
+        import { initI18n, setLanguage, getLanguage, applyTranslations } from './js/i18n.js';
 
         let currentUser = null;
         let networkMap = null;
@@ -328,6 +337,16 @@
                     return;
                 }
                 document.getElementById('userName').textContent = `${currentUser.full_name} (${currentUser.role})`;
+                
+                // Initialize Language / i18n (M8-B)
+                initI18n();
+                const langSwitcher = document.getElementById('langSwitcher');
+                if (langSwitcher) {
+                    langSwitcher.value = getLanguage();
+                    langSwitcher.addEventListener('change', (e) => {
+                        setLanguage(e.target.value);
+                    });
+                }
                 
                 // Initialize default date
                 const now = new Date();

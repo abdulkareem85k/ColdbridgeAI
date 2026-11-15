@@ -219,8 +219,8 @@ def get_system_stats(
     active_bookings = db.query(Booking).filter(Booking.status.in_(["RESERVED", "CONFIRMED", "PICKUP_SCHEDULED", "PRODUCE_RECEIVED", "IN_STORAGE"])).count()
     completed_bookings = db.query(Booking).filter_by(status="COMPLETED").count()
 
-    # Recent Audit Logs (last 20)
-    recent_logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(20).all()
+    # Recent Audit Logs (up to 50)
+    recent_logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(50).all()
     logs_data = []
     for l in recent_logs:
         logs_data.append({
