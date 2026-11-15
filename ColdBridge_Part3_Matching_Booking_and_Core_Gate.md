@@ -11,7 +11,7 @@
 - Start every **new** chat or task by pasting **P0** (given below), then the step prompt.
 - Read the agent's plan before approving changes. After each step: run the app, run the tests, check the "Test before moving on" line, then commit to Git.
 - If something breaks, use **U1** (in Part 4) instead of starting over.
-- Never paste real API keys or passwords into a prompt. Keep keys in `backend/.env` and `frontend/js/config.js`.
+- Keep secrets in `backend/.env` and `frontend/js/config.js`.
 
 ## P0 – Master context prompt (paste at the start of every new task)
 
@@ -29,7 +29,7 @@ ColdBridge AI is an AI-driven, pay-per-use cold-chain logistics and aggregation 
 5. Near-expiry surplus recovery through an operator-reviewed buyer marketplace.
 
 DEVELOPMENT PHASES
-- Phase 1 (core MVP, build first): login and roles; farmer batches; static room and van registration; Google Maps location picker and asset map; rule-based SRI; cross-asset matching; reverse auction ranking; solar fallback simulation; three-way comparison; safe booking and capacity reservation.
+- Phase 1 (core MVP, build first): login and roles; farmer batches; static room and van registration; OpenStreetMap + Leaflet.js location picker and asset map; rule-based SRI; cross-asset matching; reverse auction ranking; solar fallback simulation; three-way comparison; safe booking and capacity reservation.
 - Phase 2 (after Phase 1 works): inventory; operator-reviewed surplus listing; buyer marketplace and orders; demand forecast; Hindi/Marathi support; admin audit log screen.
 - Do not start Phase 2 until I confirm the Phase 1 workflow works end to end.
 
@@ -37,19 +37,19 @@ FIXED TECH STACK (do not change without my approval)
 - Frontend: HTML5, CSS3, vanilla JavaScript (ES modules). No React, Vue, Node build tools or CSS frameworks.
 - Backend: Python FastAPI, Pydantic, SQLAlchemy, Alembic.
 - Database: SQLite for early development; must work on PostgreSQL via DATABASE_URL.
-- Maps: GOOGLE MAPS PLATFORM ONLY. Maps JavaScript API, Places API (New), Geocoding API and Routes API. Do NOT use Leaflet, OpenStreetMap, Mapbox or any other map provider.
+- Maps: OPENSTREETMAP + LEAFLET.JS ONLY. Leaflet.js (ES modules / lightweight CDN) with OpenStreetMap standard tiles and Nominatim / OSRM for geocoding and routing fallback. Do NOT use Google Maps Platform, Mapbox or proprietary paid map providers.
 - Charts: Chart.js (only if needed).
 
-GOOGLE MAPS RULES
-- Browser key: stored in frontend/js/config.js, restricted by HTTP referrer, used only for Maps JavaScript API and Places.
-- Server key: stored ONLY in backend .env as GOOGLE_MAPS_SERVER_KEY, used only by backend services for Routes and Geocoding. Never send it to the browser, logs or Git.
-- Cache route results (default 60 minutes). Limit route calls per matching request (default 8). If Google fails, use a straight-line estimate labelled ESTIMATED and keep the app working.
-- Check the current official Google documentation for API usage; if something is deprecated or differs from these instructions, tell me before substituting.
-- Before using any Google API, remind me to verify current official pricing, billing requirements, quotas and free usage. Never assume a fixed free allowance, never quote prices from memory and never say the app is free to operate. Enable only the APIs the app needs. Provide a list-based fallback if Google Maps is unavailable.
+OPENSTREETMAP + LEAFLET.JS RULES
+- Tile Layer: OpenStreetMap standard tiles (https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png) rendered with Leaflet.js; include mandatory OpenStreetMap attribution.
+- Geocoding & Routing: Use OpenStreetMap Nominatim for address search / reverse geocoding with a descriptive User-Agent, and OSRM (Open Source Routing Machine) or straight-line Haversine fallback for road routing.
+- No Proprietary Keys: No Google Maps API keys or billing accounts required. Free, open-source stack.
+- Cache route results (default 60 minutes). Limit route calls per matching request (default 8). If OSRM fails or times out, use a straight-line estimate labelled ESTIMATED and keep the app working.
+- Respect OSM Nominatim Usage Policy (max 1 request/sec, descriptive User-Agent header, cache responses). Provide a list-based fallback if tile rendering or network is unavailable.
 
 HONESTY RULES
 - First release is a software-only prototype with deterministic demo data (Maharashtra, India: Nashik, Pune, Ratnagiri, Mumbai; currency INR).
-- Use three INDEPENDENT label groups. DATA SOURCE: LIVE (from a real connected source) or SIMULATED (generated for demo/testing). DATA STATUS: FRESH (within its freshness period), STALE (older than the permitted period) or UNAVAILABLE (could not be obtained). ROUTE SOURCE: GOOGLE_ROUTES (returned by Google Routes) or ESTIMATED (approximate fallback). Show them separately, e.g. SIMULATED + FRESH, LIVE + STALE, GOOGLE_ROUTES, ESTIMATED. Never label simulated data as live. Never show an ESTIMATED route as a confirmed Google road route.
+- Use three INDEPENDENT label groups. DATA SOURCE: LIVE (from a real connected source) or SIMULATED (generated for demo/testing). DATA STATUS: FRESH (within its freshness period), STALE (older than the permitted period) or UNAVAILABLE (could not be obtained). ROUTE SOURCE: OSRM_ROUTES (returned by OpenStreetMap/OSRM) or ESTIMATED (approximate fallback). Show them separately, e.g. SIMULATED + FRESH, LIVE + STALE, OSRM_ROUTES, ESTIMATED. Never label simulated data as live. Never show an ESTIMATED route as a confirmed road route.
 - The SRI is a transparent rule-based prototype, not a scientifically validated spoilage prediction. Never claim it predicts exact spoilage time and never invent validated thresholds; crop thresholds need validation by agricultural or cold-chain experts.
 - The solar fallback (effective capacity = available capacity x solar reliability) is a simplified simulation. Never present it as a real battery, power, Peltier cooling load, temperature stability or operating-time calculation. Hardware (ESP32, sensors, battery monitoring, Peltier) is a later phase and is NOT part of this software MVP.
 - Never claim real GPS, real sensors, validated spoilage prediction, or measured spoilage reduction.
@@ -58,7 +58,7 @@ HONESTY RULES
 ENGINEERING RULES
 - Inspect the repository before changing anything. Preserve working code. Do not delete or rewrite files without asking.
 - Thin routers; business logic in services; Pydantic schemas for all requests/responses.
-- The backend is the source of truth for SRI, matching, booking and capacity. Frontend only displays and does basic validation.
+- The backend is the source of truth for SRI, matching, booking and capacity. Frontend only displays and basic validation.
 - Role-based access control and ownership checks (batches, assets, bookings, orders) on every private endpoint, enforced on the backend. Frontend role checks are never the only protection.
 - Authentication: securely hashed passwords (bcrypt/argon2), JWT secret only in backend .env, short token expiry, ONE session method: the JWT lives only in an HttpOnly cookie (Secure in production, suitable SameSite) set by the backend. JavaScript must never read, store (localStorage, sessionStorage, variables) or manually attach the JWT. Every frontend request uses credentials: 'include'. Backend dependencies verify the cookie. Logout clears it. CSRF protection for cookie-based requests.
 - Use database transactions to prevent capacity overbooking.
@@ -79,7 +79,7 @@ Reply "Context understood" and wait for my next prompt.
 **Run:** paste the prompt below as a **new Antigravity task**, after pasting P0.
 
 ```text
-Implement only M5: the core matching engine. Use the real road distance and travel time from GM3 (maps_service).
+Implement only M5: the core matching engine. Use the real road distance and travel time from LM3 (maps_service).
 
 Services: eligibility.py, matching_engine.py, auction_scoring.py, solar_adjustment.py.
 
@@ -97,10 +97,10 @@ Services: eligibility.py, matching_engine.py, auction_scoring.py, solar_adjustme
    - capacity_penalty = requested_kg / effective_available_kg, where effective_available_kg = available_capacity_kg for a static room and available_capacity_kg * solar_reliability for a van. For an eligible offer it is between 0 and 1 (1.0 = would use all remaining space). It is NOT min-max normalised.
    - urgency_bonus = urgency_bonus_max * band_factor(SRI band) for a mobile van; 0 for a static room; 0 if the SRI cannot be assessed.
    - Scores can be below 0 because of the bonus; only the order matters. Rank by the UNROUNDED score ascending, display 3 decimals, and break exact ties by lower price_total, then lower eta_minutes, then asset_id. The same inputs and the same config must always give the same ranking.
-   - Distance and time come from GM3 (GOOGLE_ROUTES, or ESTIMATED when Google is unavailable). Never mix the SRI score with monetary price; the SRI band only controls the urgency bonus. Do not make any real-world performance claims.
+   - Distance and time come from LM3 (OSRM_ROUTES, or ESTIMATED when routing is unavailable). Never mix the SRI score with monetary price; the SRI band only controls the urgency bonus. Do not make any real-world performance claims.
 5. Explanation: for every offer return the score breakdown by component and 2-4 plain-English reasons.
 6. Baselines on the same data: "nearest eligible" and "lowest price eligible". Return all three picks and why they differ.
-7. UI: results page with ranked offers, a "Why this match?" panel (component breakdown bars plus reasons), a three-way comparison table (Nearest vs Cheapest vs ColdBridge), the route of the selected offer drawn on the Google Map, a route source label (GOOGLE_ROUTES or ESTIMATED) on every distance/time, a visible note "Solar fallback is a simplified simulation", and an admin toggle to change a van's solar reliability and re-run ranking.
+7. UI: results page with ranked offers, a "Why this match?" panel (component breakdown bars plus reasons), a three-way comparison table (Nearest vs Cheapest vs ColdBridge), the route of the selected offer drawn on the Leaflet Map, a route source label (OSRM_ROUTES or ESTIMATED) on every distance/time, a visible note "Solar fallback is a simplified simulation", and an admin toggle to change a van's solar reliability and re-run ranking.
 
 Tests: each filter; normalisation edge cases (single offer, equal values); capacity_penalty and reliability_penalty definitions; urgency bonus only for vans and only when justified; tie-breaking; and the worked example below, which must be reproduced (tolerance 0.0005):
    Requested 500 kg, SRI HIGH. A static room: Rs 1000, 5 km, 65 min, 1000 kg available. B van: Rs 1200, 8 km, 35 min, 800 kg available, solar 0.9 (effective 720 kg). C static room: Rs 800, 25 km, 90 min, 800 kg available.
@@ -157,7 +157,7 @@ Implement only M8 Part A: dashboards and simulation controls (Phase 1). Do not b
 
 - Role dashboards (farmer, operator, admin) using real API data: counts, active bookings, a priority list taken from the SRI priority queue (there is no alerts table in Phase 1), utilisation, recent activity (from audit_logs). Add Chart.js charts only where useful.
 - Admin simulation controls: reset demo data, toggle a van's solar reliability (simulation input), advance a simulated clock, simulate a temperature update. Every simulated record carries data_source = "SIMULATED".
-- Labels on every metric, map and value, shown as INDEPENDENT groups: data source (LIVE or SIMULATED) and data status (FRESH, STALE or UNAVAILABLE, calculated from timestamps and freshness limits). Route values also show GOOGLE_ROUTES or ESTIMATED. Never label simulated data as LIVE.
+- Labels on every metric, map and value, shown as INDEPENDENT groups: data source (LIVE or SIMULATED) and data status (FRESH, STALE or UNAVAILABLE, calculated from timestamps and freshness limits). Route values also show OSRM_ROUTES or ESTIMATED. Never label simulated data as LIVE.
 - Loading, empty and error states for every dashboard.
 
 Stop after M8 Part A.
@@ -173,14 +173,14 @@ Stop after M8 Part A.
 
 Do the full **core demo** by hand. If anything fails, fix it with U1 (Part 4) before starting Phase 2.
 
-- [ ] Log in as a farmer and add a 500 kg mango batch using the Google Maps picker
+- [ ] Log in as a farmer and add a 500 kg mango batch using the Leaflet location picker
 - [ ] SRI badge shows with reasons and the prototype label
 - [ ] Map shows rooms and vans; matching shows bids with route source labels
 - [ ] Three-way comparison shows nearest, cheapest and ColdBridge picks
 - [ ] "Why this match?" panel shows the score breakdown
 - [ ] Lowering solar reliability changes the result
 - [ ] Accepting an offer creates a booking and reserves capacity
-- [ ] Everything still works with the Google Maps list fallback
+- [ ] Everything still works with the map list fallback
 - [ ] No API key or secret is in Git
 
 **Next:** open `ColdBridge_Part4_Phase2_Final_and_Utility.md`.

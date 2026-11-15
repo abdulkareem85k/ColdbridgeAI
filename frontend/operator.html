@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ColdBridge AI – Operator Portal</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" data-leaflet-css="true" />
 </head>
 <body>
     <header>
@@ -14,6 +16,7 @@
         </a>
         <nav>
             <a href="#assets" class="nav-link active" data-tab="tabAssets">My Assets</a>
+            <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue">SRI Priority Queue</a>
             <a href="#add-static" class="nav-link" data-tab="tabAddStatic">Add Cold Room</a>
             <a href="#add-van" class="nav-link" data-tab="tabAddVan">Add Solar Van</a>
             <div class="user-pill">
@@ -49,11 +52,32 @@
             </div>
         </div>
 
-        <!-- TAB 2: ADD STATIC ROOM -->
+        <!-- TAB 2: SRI PRIORITY QUEUE (M4) -->
+        <div id="tabSriQueue" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">🌾 Spoilage Risk Index (SRI) Priority Queue</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Unallocated farmgate batches prioritized by urgency and heat stress decay rate.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshQueue">Refresh Queue</button>
+            </div>
+
+            <div class="alert alert-info" style="margin-bottom: 1rem;">
+                ℹ️ <strong>Rule Engine Prototype:</strong> Batches with score ≥ 65 are categorized as <strong>HIGH RISK</strong> and warrant immediate mobile solar cooling van dispatch.
+            </div>
+
+            <div class="card">
+                <div id="sriQueueTableContainer">
+                    <div class="state-box">Loading priority queue...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: ADD STATIC ROOM (LM1) -->
         <div id="tabAddStatic" class="tab-content">
-            <div class="card" style="max-width: 720px; margin: 0 auto;">
+            <div class="card" style="max-width: 760px; margin: 0 auto;">
                 <h1 class="page-title" style="font-size: 1.5rem;">Register Static Cold Room</h1>
-                <p class="page-subtitle">Add a permanent warehouse or cold storage facility.</p>
+                <p class="page-subtitle">Add a permanent warehouse or cold storage facility with OpenStreetMap pin selection.</p>
 
                 <form id="addStaticForm">
                     <div class="form-grid">
@@ -95,14 +119,21 @@
                         <input type="text" id="staticCrops" required placeholder="mango, tomato, grapes, pomegranate">
                     </div>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="staticLat">Latitude *</label>
-                            <input type="number" id="staticLat" step="0.0001" min="-90" max="90" required placeholder="20.0050">
-                        </div>
-                        <div class="form-group">
-                            <label for="staticLng">Longitude *</label>
-                            <input type="number" id="staticLng" step="0.0001" min="-180" max="180" required placeholder="73.7950">
+                    <!-- OpenStreetMap Location Picker (LM1) -->
+                    <div style="margin-top: 0.5rem; margin-bottom: 1rem;">
+                        <label style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; display: block;">
+                            Facility Location (OpenStreetMap Picker)
+                        </label>
+                        <div id="staticLocationPickerContainer"></div>
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; margin-top: 0.5rem;">
+                            <div class="form-group">
+                                <label for="staticLat">Latitude</label>
+                                <input type="number" id="staticLat" step="0.0001" min="-90" max="90" required placeholder="20.0050">
+                            </div>
+                            <div class="form-group">
+                                <label for="staticLng">Longitude</label>
+                                <input type="number" id="staticLng" step="0.0001" min="-180" max="180" required placeholder="73.7950">
+                            </div>
                         </div>
                     </div>
 
@@ -118,9 +149,9 @@
             </div>
         </div>
 
-        <!-- TAB 3: ADD MOBILE SOLAR VAN -->
+        <!-- TAB 4: ADD MOBILE SOLAR VAN (LM1) -->
         <div id="tabAddVan" class="tab-content">
-            <div class="card" style="max-width: 720px; margin: 0 auto;">
+            <div class="card" style="max-width: 760px; margin: 0 auto;">
                 <h1 class="page-title" style="font-size: 1.5rem;">Register Mobile Solar Cooling Van</h1>
                 <p class="page-subtitle">Add a dispatchable solar-assisted cooling vehicle for farmgate pickup.</p>
 
@@ -163,14 +194,21 @@
                         </div>
                     </div>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="vanLat">Current Base Latitude *</label>
-                            <input type="number" id="vanLat" step="0.0001" min="-90" max="90" required placeholder="20.0100">
-                        </div>
-                        <div class="form-group">
-                            <label for="vanLng">Current Base Longitude *</label>
-                            <input type="number" id="vanLng" step="0.0001" min="-180" max="180" required placeholder="73.7800">
+                    <!-- OpenStreetMap Location Picker (LM1) -->
+                    <div style="margin-top: 0.5rem; margin-bottom: 1rem;">
+                        <label style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; display: block;">
+                            Van Base Location (OpenStreetMap Picker)
+                        </label>
+                        <div id="vanLocationPickerContainer"></div>
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; margin-top: 0.5rem;">
+                            <div class="form-group">
+                                <label for="vanLat">Current Base Latitude</label>
+                                <input type="number" id="vanLat" step="0.0001" min="-90" max="90" required placeholder="20.0100">
+                            </div>
+                            <div class="form-group">
+                                <label for="vanLng">Current Base Longitude</label>
+                                <input type="number" id="vanLng" step="0.0001" min="-180" max="180" required placeholder="73.7800">
+                            </div>
                         </div>
                     </div>
 
@@ -182,7 +220,7 @@
         </div>
     </div>
 
-    <!-- Quick Capacity Update Modal -->
+    <!-- Capacity Update Modal -->
     <div id="capacityModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
         <div class="card" style="max-width: 420px; width: 90%; margin: auto;">
             <div class="card-title">Update Available Capacity</div>
@@ -211,6 +249,7 @@
     <script type="module">
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
+        import { mountLocationPicker, escapeHtml } from './js/maps.js';
 
         let currentUser = null;
 
@@ -235,6 +274,30 @@
                 }
                 document.getElementById('operatorName').textContent = `${currentUser.full_name} (${currentUser.role})`;
                 await loadAssets();
+
+                // Mount OpenStreetMap Location Pickers (LM1)
+                await mountLocationPicker('staticLocationPickerContainer', {
+                    initialLat: 20.0050,
+                    initialLng: 73.7950,
+                    onChange: ({ lat, lng }) => {
+                        document.getElementById('staticLat').value = lat.toFixed(4);
+                        document.getElementById('staticLng').value = lng.toFixed(4);
+                    }
+                });
+                document.getElementById('staticLat').value = '20.0050';
+                document.getElementById('staticLng').value = '73.7950';
+
+                await mountLocationPicker('vanLocationPickerContainer', {
+                    initialLat: 20.0100,
+                    initialLng: 73.7800,
+                    onChange: ({ lat, lng }) => {
+                        document.getElementById('vanLat').value = lat.toFixed(4);
+                        document.getElementById('vanLng').value = lng.toFixed(4);
+                    }
+                });
+                document.getElementById('vanLat').value = '20.0100';
+                document.getElementById('vanLng').value = '73.7800';
+
             } catch (err) {
                 showAlert('Authentication error: ' + err.message);
             }
@@ -252,6 +315,10 @@
                 const targetTabId = link.getAttribute('data-tab');
                 document.getElementById(targetTabId).classList.add('active');
                 hideAlert();
+
+                if (targetTabId === 'tabSriQueue') {
+                    loadSriPriorityQueue();
+                }
             });
         });
 
@@ -289,13 +356,12 @@
                         <div class="asset-card">
                             <div class="asset-card-header">
                                 <div>
-                                    <h3 style="font-size: 1.1rem; margin-bottom: 0.2rem;">${a.name}</h3>
+                                    <h3 style="font-size: 1.1rem; margin-bottom: 0.2rem;">${escapeHtml(a.name)}</h3>
                                     <span class="badge ${isVan ? 'badge-type-van' : 'badge-type-room'}">
                                         ${isVan ? '🚐 Mobile Van' : '🏭 Static Room'}
                                     </span>
                                 </div>
                                 <div class="badge-group">
-                                    <!-- INDEPENDENT DATA LABELS -->
                                     <span class="badge ${a.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">
                                         ${a.data_source}
                                     </span>
@@ -329,8 +395,8 @@
                                         <span class="val">${a.static_detail ? `${a.static_detail.min_temperature_c}° to ${a.static_detail.max_temperature_c}°C` : '—'}</span>
                                     </div>
                                     <div>
-                                        <span class="label">Supported Crops</span>
-                                        <span class="val" style="font-size: 0.75rem;">${a.static_detail ? a.static_detail.supported_crops : '—'}</span>
+                                        <span class="label">Location</span>
+                                        <span class="val" style="font-size: 0.75rem;">${a.latitude.toFixed(4)}, ${a.longitude.toFixed(4)}</span>
                                     </div>
                                 `}
                             </div>
@@ -341,7 +407,7 @@
                                 </span>
                                 <button type="button" class="btn btn-secondary btn-sm btn-update-cap" 
                                     data-id="${a.id}" 
-                                    data-name="${a.name}"
+                                    data-name="${escapeHtml(a.name)}"
                                     data-avail="${a.available_capacity_kg}"
                                     data-total="${a.total_capacity_kg}"
                                     data-active="${a.is_active}">
@@ -379,6 +445,78 @@
 
         document.getElementById('btnRefreshAssets').addEventListener('click', loadAssets);
         document.getElementById('filterAssetType').addEventListener('change', loadAssets);
+
+        // Load SRI Priority Queue (M4)
+        async function loadSriPriorityQueue() {
+            const container = document.getElementById('sriQueueTableContainer');
+            container.innerHTML = '<div class="state-box">Loading prioritized batches...</div>';
+
+            try {
+                const queue = await apiRequest('/sri/priority-queue');
+                if (queue.length === 0) {
+                    container.innerHTML = `
+                        <div class="state-box">
+                            <div class="state-icon">🌾</div>
+                            <h3>Priority queue is empty</h3>
+                            <p>No active farmer batches currently awaiting cooling.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Rank / Risk</th>
+                                    <th>Crop</th>
+                                    <th>Quantity</th>
+                                    <th>Field Temp</th>
+                                    <th>SRI Score</th>
+                                    <th>Recommended Allocation</th>
+                                    <th>Farm Coordinates</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${queue.map((item, idx) => {
+                                    let badgeColor = '#15803d';
+                                    let badgeBg = '#dcfce7';
+                                    if (item.risk_category === 'HIGH') {
+                                        badgeColor = '#b91c1c';
+                                        badgeBg = '#fee2e2';
+                                    } else if (item.risk_category === 'MEDIUM') {
+                                        badgeColor = '#854d0e';
+                                        badgeBg = '#fef9c3';
+                                    }
+
+                                    return `
+                                        <tr>
+                                            <td>
+                                                <strong style="margin-right: 6px;">#${idx + 1}</strong>
+                                                <span class="badge" style="background: ${badgeBg}; color: ${badgeColor}; font-weight: 700;">
+                                                    ${item.risk_category}
+                                                </span>
+                                            </td>
+                                            <td><strong>${escapeHtml(item.crop_code.toUpperCase())}</strong></td>
+                                            <td>${item.quantity_kg.toLocaleString()} kg</td>
+                                            <td>${item.ambient_temp_c}°C</td>
+                                            <td><strong style="color: ${badgeColor};">${item.score.toFixed(1)} / 100</strong></td>
+                                            <td style="font-size: 0.85rem;">${escapeHtml(item.recommended_action)}</td>
+                                            <td style="font-size: 0.8rem; color: var(--text-muted);">${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `<div class="alert alert-error">Error loading priority queue: ${err.message}</div>`;
+            }
+        }
+
+        document.getElementById('btnRefreshQueue').addEventListener('click', loadSriPriorityQueue);
 
         // Modal Controls
         document.getElementById('btnCancelModal').addEventListener('click', () => {

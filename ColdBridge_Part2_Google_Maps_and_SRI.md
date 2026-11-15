@@ -1,8 +1,8 @@
-# ColdBridge AI – Part 2 of 4: Google Maps and Spoilage Risk Index
+# ColdBridge AI – Part 2 of 4: OpenStreetMap, Leaflet.js and Spoilage Risk Index
 
-**Steps in this file:** P0, GM1, GM2, GM3, M4
-**Before you start:** Part 1 is finished and committed. **Finish the Google Cloud setup yourself first** (Document 1, Part E): check current pricing and billing on Google's official pages, enable only the needed APIs (Maps JavaScript, Places API (New), Geocoding, Routes), create a restricted browser key and server key, set quotas and budget alerts. Put keys in `.env` and `config.js` yourself.
-**When this part is done:** the Google map, address picker, road routes and SRI all work. Then open Part 3.
+**Steps in this file:** P0, LM1, LM2, LM3, M4
+**Before you start:** Part 1 is finished and committed. OpenStreetMap + Leaflet.js requires no paid Google Cloud setup or API keys. Free, open-source tile layer and OSRM / Nominatim services.
+**When this part is done:** the Leaflet map, address picker, road routes and SRI all work. Then open Part 3.
 
 ---
 
@@ -11,7 +11,7 @@
 - Start every **new** chat or task by pasting **P0** (given below), then the step prompt.
 - Read the agent's plan before approving changes. After each step: run the app, run the tests, check the "Test before moving on" line, then commit to Git.
 - If something breaks, use **U1** (in Part 4) instead of starting over.
-- Never paste real API keys or passwords into a prompt. Keep keys in `backend/.env` and `frontend/js/config.js`.
+- Keep secrets in `backend/.env` and `frontend/js/config.js`.
 
 ## P0 – Master context prompt (paste at the start of every new task)
 
@@ -29,7 +29,7 @@ ColdBridge AI is an AI-driven, pay-per-use cold-chain logistics and aggregation 
 5. Near-expiry surplus recovery through an operator-reviewed buyer marketplace.
 
 DEVELOPMENT PHASES
-- Phase 1 (core MVP, build first): login and roles; farmer batches; static room and van registration; Google Maps location picker and asset map; rule-based SRI; cross-asset matching; reverse auction ranking; solar fallback simulation; three-way comparison; safe booking and capacity reservation.
+- Phase 1 (core MVP, build first): login and roles; farmer batches; static room and van registration; OpenStreetMap + Leaflet.js location picker and asset map; rule-based SRI; cross-asset matching; reverse auction ranking; solar fallback simulation; three-way comparison; safe booking and capacity reservation.
 - Phase 2 (after Phase 1 works): inventory; operator-reviewed surplus listing; buyer marketplace and orders; demand forecast; Hindi/Marathi support; admin audit log screen.
 - Do not start Phase 2 until I confirm the Phase 1 workflow works end to end.
 
@@ -37,19 +37,19 @@ FIXED TECH STACK (do not change without my approval)
 - Frontend: HTML5, CSS3, vanilla JavaScript (ES modules). No React, Vue, Node build tools or CSS frameworks.
 - Backend: Python FastAPI, Pydantic, SQLAlchemy, Alembic.
 - Database: SQLite for early development; must work on PostgreSQL via DATABASE_URL.
-- Maps: GOOGLE MAPS PLATFORM ONLY. Maps JavaScript API, Places API (New), Geocoding API and Routes API. Do NOT use Leaflet, OpenStreetMap, Mapbox or any other map provider.
+- Maps: OPENSTREETMAP + LEAFLET.JS ONLY. Leaflet.js (ES modules / lightweight CDN) with OpenStreetMap standard tiles and Nominatim / OSRM for geocoding and routing fallback. Do NOT use Google Maps Platform, Mapbox or proprietary paid map providers.
 - Charts: Chart.js (only if needed).
 
-GOOGLE MAPS RULES
-- Browser key: stored in frontend/js/config.js, restricted by HTTP referrer, used only for Maps JavaScript API and Places.
-- Server key: stored ONLY in backend .env as GOOGLE_MAPS_SERVER_KEY, used only by backend services for Routes and Geocoding. Never send it to the browser, logs or Git.
-- Cache route results (default 60 minutes). Limit route calls per matching request (default 8). If Google fails, use a straight-line estimate labelled ESTIMATED and keep the app working.
-- Check the current official Google documentation for API usage; if something is deprecated or differs from these instructions, tell me before substituting.
-- Before using any Google API, remind me to verify current official pricing, billing requirements, quotas and free usage. Never assume a fixed free allowance, never quote prices from memory and never say the app is free to operate. Enable only the APIs the app needs. Provide a list-based fallback if Google Maps is unavailable.
+OPENSTREETMAP + LEAFLET.JS RULES
+- Tile Layer: OpenStreetMap standard tiles (https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png) rendered with Leaflet.js; include mandatory OpenStreetMap attribution.
+- Geocoding & Routing: Use OpenStreetMap Nominatim for address search / reverse geocoding with a descriptive User-Agent, and OSRM (Open Source Routing Machine) or straight-line Haversine fallback for road routing.
+- No Proprietary Keys: No Google Maps API keys or billing accounts required. Free, open-source stack.
+- Cache route results (default 60 minutes). Limit route calls per matching request (default 8). If OSRM fails or times out, use a straight-line estimate labelled ESTIMATED and keep the app working.
+- Respect OSM Nominatim Usage Policy (max 1 request/sec, descriptive User-Agent header, cache responses). Provide a list-based fallback if tile rendering or network is unavailable.
 
 HONESTY RULES
 - First release is a software-only prototype with deterministic demo data (Maharashtra, India: Nashik, Pune, Ratnagiri, Mumbai; currency INR).
-- Use three INDEPENDENT label groups. DATA SOURCE: LIVE (from a real connected source) or SIMULATED (generated for demo/testing). DATA STATUS: FRESH (within its freshness period), STALE (older than the permitted period) or UNAVAILABLE (could not be obtained). ROUTE SOURCE: GOOGLE_ROUTES (returned by Google Routes) or ESTIMATED (approximate fallback). Show them separately, e.g. SIMULATED + FRESH, LIVE + STALE, GOOGLE_ROUTES, ESTIMATED. Never label simulated data as live. Never show an ESTIMATED route as a confirmed Google road route.
+- Use three INDEPENDENT label groups. DATA SOURCE: LIVE (from a real connected source) or SIMULATED (generated for demo/testing). DATA STATUS: FRESH (within its freshness period), STALE (older than the permitted period) or UNAVAILABLE (could not be obtained). ROUTE SOURCE: OSRM_ROUTES (returned by OpenStreetMap/OSRM) or ESTIMATED (approximate fallback). Show them separately, e.g. SIMULATED + FRESH, LIVE + STALE, OSRM_ROUTES, ESTIMATED. Never label simulated data as live. Never show an ESTIMATED route as a confirmed road route.
 - The SRI is a transparent rule-based prototype, not a scientifically validated spoilage prediction. Never claim it predicts exact spoilage time and never invent validated thresholds; crop thresholds need validation by agricultural or cold-chain experts.
 - The solar fallback (effective capacity = available capacity x solar reliability) is a simplified simulation. Never present it as a real battery, power, Peltier cooling load, temperature stability or operating-time calculation. Hardware (ESP32, sensors, battery monitoring, Peltier) is a later phase and is NOT part of this software MVP.
 - Never claim real GPS, real sensors, validated spoilage prediction, or measured spoilage reduction.
@@ -74,91 +74,89 @@ Reply "Context understood" and wait for my next prompt.
 
 ---
 
-## Step 4: GM1 – Google Maps module and location picker
+## Step 4: LM1 – Leaflet.js module and location picker
 
 **Run:** paste the prompt below as a **new Antigravity task**, after pasting P0.
 
 ```text
-Implement only GM1: the reusable Google Maps module and the location picker. Use Google Maps Platform only.
+Implement only LM1: the reusable Leaflet.js + OpenStreetMap module and the location picker. Use OpenStreetMap + Leaflet.js only.
 
-COST PRECAUTION (do this first): tell me which Google APIs this milestone needs (Maps JavaScript API and Places API (New) for the browser key) and remind me to verify current pricing, billing requirements, quotas and free usage on the official Google Maps Platform pages. Do not assume a fixed free allowance or quote prices. Enable only the required APIs. Avoid unnecessary requests: load the script once, debounce address search, and never re-search on every map movement.
+No proprietary API keys or Google Cloud billing required.
 
-Create frontend/js/maps.js (ES module) and frontend/js/config.js (GOOGLE_MAPS_BROWSER_KEY, GOOGLE_MAP_ID, DEFAULT_CENTER = Nashik, Maharashtra, DEFAULT_ZOOM). config.js must contain placeholders and a comment that the key is restricted by HTTP referrer.
+Create frontend/js/maps.js (ES module) and frontend/js/config.js (OSM_TILE_URL, OSM_ATTRIBUTION, NOMINATIM_REVERSE_URL, DEFAULT_CENTER = Nashik, Maharashtra, DEFAULT_ZOOM).
 
 maps.js must:
-- Load the Maps JavaScript API once using Google's official dynamic library loader (importLibrary for "maps", "marker", "places", "geometry"), using the Map ID so Advanced Markers work.
-- Export initMap(elementId, options), createMarker({lat, lng, type, title, sourceLabel}), openInfoWindow(marker, html), clearMarkers(), fitToMarkers(), and drawRoute(encodedPolyline).
-- Export mountLocationPicker(containerId, onChange): a Places autocomplete search box (Places API New), a draggable marker, click-on-map to set the location, and a "Use my location" button. onChange receives {lat, lng, address}. Show the readable address when available (reverse geocode through the backend GET /api/v1/maps/reverse-geocode if you create it; otherwise skip the address).
-- Handle failure: if the script fails to load, billing is missing or the key is rejected, show a clear message and a fallback manual latitude/longitude form. Never leave a blank grey box.
-- Escape all user-supplied text placed in info windows (prevent XSS).
+- Load Leaflet.js and CSS cleanly via CDN/ESM with standard OpenStreetMap tile layer (https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png) and standard OSM attribution.
+- Export initMap(elementId, options), createMarker({lat, lng, type, title, sourceLabel}), openInfoWindow(marker, html) / bindPopup, clearMarkers(), fitToMarkers(), and drawRoute(coordinates).
+- Export mountLocationPicker(containerId, onChange): an address search box querying OpenStreetMap Nominatim with debounced input, a draggable Leaflet marker, click-on-map to set the location, and a "Use my location" button. onChange receives {lat, lng, address}. Show the readable address when available (reverse geocode through Nominatim or backend GET /api/v1/maps/reverse-geocode).
+- Handle failure: if tile loading fails or offline, show a clear message and keep the fallback manual latitude/longitude form visible. Never leave a broken container.
+- Escape all user-supplied text placed in info windows / popups (prevent XSS).
 
-Integrate the picker into the Farmer "Add Produce" form (replace manual lat/lng inputs but keep them as a visible fallback) and into the operator "Add asset" forms.
+Integrate the picker into the Farmer "Add Produce" form (replace manual lat/lng inputs with the picker, keeping manual inputs as a visible fallback) and into the operator "Add asset" forms.
 
-Tests/checks: describe a manual test for each failure case and verify no API key appears anywhere except config.js (browser key only). Do not build the network map or routing yet. Stop after GM1 and tell me exactly which Google Cloud settings I must have in place: required APIs, browser-key referrer and API restrictions, quotas, budget alerts and usage monitoring.
+Tests/checks: describe a test for failure cases and verify no Google API key or paid service is used. Stop after LM1.
 ```
 
-**Test before moving on:** the map loads with your browser key; you can search an address and drag the pin; with a wrong key a clear message and a manual latitude/longitude form appear (no blank grey box).
+**Test before moving on:** the map loads with OpenStreetMap tiles; you can search an address and drag the pin; manual latitude/longitude inputs remain functional as a reliable fallback.
 
-**Then:** commit to Git (`git add . && git commit -m "GM1 done"`).
+**Then:** commit to Git (`git add . && git commit -m "LM1 done"`).
 
 ---
 
-## Step 5: GM2 – Asset network map
+## Step 5: LM2 – Asset network map
 
 **Run:** paste the prompt below as a **new Antigravity task**, after pasting P0.
 
 ```text
-Implement only GM2: the asset network map using the maps.js module from GM1.
+Implement only LM2: the asset network map using the maps.js module from LM1.
 
 Build:
-- Farmer "Find Cooling" page and Admin map: one Google Map showing all active assets from GET /api/v1/assets.
-- Distinct markers: static cold rooms (green, label "Room") and mobile vans (blue, label "Van"). Never rely on colour alone; include text in the marker title and info window.
-- Clicking a marker opens an info window: name, type, available capacity (kg), price per kg/day, solar reliability for vans, data source (SIMULATED or LIVE) and data status (FRESH, STALE or UNAVAILABLE) as separate labels.
+- Farmer "Find Cooling" page and Admin map: one Leaflet Map showing all active assets from GET /api/v1/assets.
+- Distinct markers: static cold rooms (green, label "Room") and mobile vans (blue, label "Van"). Never rely on colour alone; include text in the marker title and popup.
+- Clicking a marker opens a popup: name, type, available capacity (kg), price per kg/day, solar reliability for vans, data source (SIMULATED or LIVE) and data status (FRESH, STALE or UNAVAILABLE) as separate labels.
 - Filters: asset type, minimum available capacity, maximum price, status. Filters update markers without reloading the page.
 - Show the farmer's batch location as a distinct marker.
 - Calculate each van's data status from last_location_at: FRESH within LOCATION_FRESHNESS_MINUTES, STALE if older, UNAVAILABLE if missing. Never merge this with the data source label.
-- Fallback: if the map cannot load (script error, billing, quota or key problem, or no internet), show the same assets as a sortable table.
-- Cost: load assets once per filter change, make no Google calls inside marker loops, and make no Routes API calls in this milestone.
+- Fallback: if the map cannot load or is offline, show the same assets as a sortable table.
 - Responsive layout: map above list on mobile, side by side on desktop.
 
-Do not call the Routes API yet. Run through a manual test and report. Stop after GM2.
+Do not call the routing API yet. Run through a test and report. Stop after LM2.
 ```
 
-**Test before moving on:** rooms (green) and vans (blue) appear with info windows; filters work; each asset shows data source and data status separately; the table fallback works.
+**Test before moving on:** rooms (green) and vans (blue) appear with popups; filters work; each asset shows data source and data status separately; the table fallback works.
 
-**Then:** commit to Git (`git add . && git commit -m "GM2 done"`).
+**Then:** commit to Git (`git add . && git commit -m "LM2 done"`).
 
 ---
 
-## Step 6: GM3 – Google Routes: distance, time and route lines
+## Step 6: LM3 – OSRM & OpenStreetMap Routes: distance, time and route lines
 
 **Run:** paste the prompt below as a **new Antigravity task**, after pasting P0.
 
 ```text
-Implement only GM3: backend Google Routes integration.
+Implement only LM3: backend OSRM and OpenStreetMap routing integration.
 
 Create backend/app/services/maps_service.py:
-- compute_route_matrix(origin, destinations): calls the Google Routes API computeRouteMatrix (travel mode DRIVE) using httpx and the server key from settings, with a field mask that returns only originIndex, destinationIndex, duration, distanceMeters, status and condition. Returns distance_km and duration_minutes per destination.
-- compute_route(origin, destination): calls computeRoutes and returns distance_km, duration_minutes and routes.polyline.encodedPolyline.
-- reverse_geocode(lat, lng): calls the Geocoding API and returns a readable address.
+- compute_route_matrix(origin, destinations): calls OSRM table/matrix API (travel mode driving) using httpx and settings.OSRM_ROUTING_URL, or computes haversine fallback. Returns distance_km and duration_minutes per destination.
+- compute_route(origin, destination): calls OSRM route service and returns distance_km, duration_minutes, and route coordinates / encoded polyline.
+- reverse_geocode(lat, lng): calls Nominatim API with User-Agent header and returns readable address.
 - haversine_km(a, b): straight-line fallback.
 
 Rules:
-- Before coding, remind me to verify current Routes API pricing, billing requirements, quotas and free usage on the official Google pages (no assumed free allowance, no prices from memory). Request only the fields in the field mask.
-- Add a daily safety limit MAX_ROUTE_CALLS_PER_DAY; when it is reached, stop calling Google and return ESTIMATED results. Log call counts (never keys) so usage can be monitored.
+- 100% Free, open-source stack. Respect OpenStreetMap Nominatim Usage Policy (max 1 request/second, descriptive User-Agent header, cache responses).
+- Add a daily safety limit MAX_ROUTE_CALLS_PER_DAY; when it is reached, stop external network calls and return ESTIMATED results. Log call counts so usage can be monitored.
 - Cache results in the route_cache table. Round coordinates to 4 decimals for the cache key. TTL = ROUTE_CACHE_MINUTES.
-- Never call Google for more than MAX_ROUTE_CALLS_PER_REQUEST destinations; pick the nearest by straight line first.
-- Timeouts and retries (max 2). On any Google error, return the haversine estimate with source = "ESTIMATED" and an explanatory note; otherwise source = "GOOGLE_ROUTES". Route source is separate from data source and data status. The UI must never present an ESTIMATED route as a confirmed Google road route.
-- Never log the API key or full request headers.
-- Endpoints (authenticated): GET /api/v1/maps/route?batch_id=&asset_id= and GET /api/v1/maps/reverse-geocode.
-- Frontend: in the map module call the route endpoint for a selected offer and draw it with drawRoute(), showing distance, minutes and the source label.
+- Never call routing for more than MAX_ROUTE_CALLS_PER_REQUEST destinations; pick the nearest by straight line first.
+- Timeouts and retries (max 2). On any network/service error, return the haversine estimate with source = "ESTIMATED" and an explanatory note; otherwise source = "OSRM_ROUTES". Route source is separate from data source and data status. The UI must never present an ESTIMATED route as a confirmed road route.
+- Endpoints (authenticated): GET /api/v1/maps/route?batch_id=&asset_id= and GET /api/v1/maps/reverse-geocode?lat=&lng=.
+- Frontend: in the map module call the route endpoint for a selected offer and draw it with drawRoute(), showing distance, minutes and the source label (OSRM_ROUTES or ESTIMATED).
 
-Tests: use a mocked Google response; test cache hit, cache expiry, error fallback and the call cap. Do not change the matching score yet (M5 will use these values). Stop after GM3 and report the number of Google calls made in your manual test.
+Tests: use mocked routing responses; test cache hit, cache expiry, error fallback and the call cap. Stop after LM3.
 ```
 
-**Test before moving on:** each candidate shows road km and minutes with a route source label (GOOGLE_ROUTES or ESTIMATED); a repeated request uses the cache; the call cap works; tests pass with a mocked Google response.
+**Test before moving on:** each candidate shows road km and minutes with a route source label (OSRM_ROUTES or ESTIMATED); a repeated request uses the cache; the call cap works; tests pass with a mocked routing response.
 
-**Then:** commit to Git (`git add . && git commit -m "GM3 done"`).
+**Then:** commit to Git (`git add . && git commit -m "LM3 done"`).
 
 ---
 

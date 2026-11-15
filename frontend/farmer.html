@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ColdBridge AI – Farmer Portal</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" data-leaflet-css="true" />
 </head>
 <body>
     <header>
@@ -15,7 +17,8 @@
         <nav>
             <a href="#overview" class="nav-link active" data-tab="tabOverview">Overview</a>
             <a href="#add" class="nav-link" data-tab="tabAdd">Add Produce</a>
-            <a href="#batches" class="nav-link" data-tab="tabBatches">My Batches</a>
+            <a href="#cooling-map" class="nav-link" data-tab="tabCoolingMap">Cooling Map</a>
+            <a href="#batches" class="nav-link" data-tab="tabBatches">My Batches & SRI</a>
             <div class="user-pill">
                 <span id="userName">Farmer</span>
                 <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
@@ -29,7 +32,7 @@
         <!-- TAB 1: OVERVIEW -->
         <div id="tabOverview" class="tab-content active">
             <h1 class="page-title">Farmer Overview</h1>
-            <p class="page-subtitle">Track your registered harvest batches and cold chain bookings.</p>
+            <p class="page-subtitle">Track your registered harvest batches, spoilage risk assessments, and cold chain options.</p>
 
             <div class="grid-cards" style="margin-bottom: 1.5rem;">
                 <div class="card" style="margin: 0;">
@@ -42,11 +45,16 @@
                     <div id="statTotalKg" style="font-size: 2rem; font-weight: 700; color: var(--secondary);">0 kg</div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);">Aggregate harvest quantity</div>
                 </div>
+                <div class="card" style="margin: 0;">
+                    <div class="card-title">🚨 High Risk Batches</div>
+                    <div id="statHighRisk" style="font-size: 2rem; font-weight: 700; color: #dc2626;">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">SRI score ≥ 65 (Urgent cooling needed)</div>
+                </div>
             </div>
 
             <div class="card">
                 <div class="card-title">
-                    <span>Recent Batches</span>
+                    <span>Recent Batches & Spoilage Assessments</span>
                     <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBatchesOverview">Refresh</button>
                 </div>
                 <div id="overviewBatchesList">
@@ -55,24 +63,24 @@
             </div>
         </div>
 
-        <!-- TAB 2: ADD PRODUCE -->
+        <!-- TAB 2: ADD PRODUCE (LM1) -->
         <div id="tabAdd" class="tab-content">
-            <div class="card" style="max-width: 720px; margin: 0 auto;">
+            <div class="card" style="max-width: 760px; margin: 0 auto;">
                 <h1 class="page-title" style="font-size: 1.5rem;">Register New Produce Batch</h1>
-                <p class="page-subtitle">Enter details about your harvest for spoilage assessment and cooling matching.</p>
+                <p class="page-subtitle">Enter details about your harvest for transparent Spoilage Risk Index (SRI) assessment and cooling matching.</p>
 
                 <form id="addBatchForm">
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="cropCode">Crop Type *</label>
                             <select id="cropCode" required>
-                                <option value="mango">Mango (Alphonso / Kesar)</option>
-                                <option value="tomato">Tomato</option>
-                                <option value="grapes">Grapes (Table / Wine)</option>
-                                <option value="pomegranate">Pomegranate (Bhagwa)</option>
-                                <option value="onion">Onion (Storage / Red)</option>
-                                <option value="strawberry">Strawberry</option>
-                                <option value="cashew_apple">Cashew Apple</option>
+                                <option value="mango">Mango (Alphonso / Kesar) [High Perishability]</option>
+                                <option value="tomato">Tomato [Very High Perishability]</option>
+                                <option value="grapes">Grapes (Table / Wine) [High Perishability]</option>
+                                <option value="pomegranate">Pomegranate (Bhagwa) [Medium Perishability]</option>
+                                <option value="onion">Onion (Rabi / Red) [Low Perishability]</option>
+                                <option value="strawberry">Strawberry [Very High Perishability]</option>
+                                <option value="cashew_apple">Cashew Apple [Extreme Perishability]</option>
                             </select>
                         </div>
 
@@ -93,46 +101,80 @@
                         <div class="form-group">
                             <label for="ambientTemp">Ambient Temperature at Field (°C) *</label>
                             <input type="number" id="ambientTemp" min="-10" max="60" step="0.5" required placeholder="e.g. 32.5">
-                            <span class="form-help">Recorded collection temperature</span>
+                            <span class="form-help">Ambient field temperature at collection</span>
                         </div>
                     </div>
 
-                    <!-- Location Section: In M3 latitude/longitude inputs; GM1 will attach Places autocomplete and map picker -->
-                    <div id="locationPickerContainer" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-                        <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem;">Farm / Collection Location</div>
-                        <div class="form-grid">
+                    <!-- OpenStreetMap + Leaflet Location Picker (LM1) -->
+                    <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                        <label style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; display: block;">
+                            Farm / Collection Location (OpenStreetMap + Leaflet Picker)
+                        </label>
+                        <div id="batchLocationPickerContainer" style="margin-bottom: 0.75rem;"></div>
+
+                        <!-- Manual Lat/Lng Fallback -->
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
                             <div class="form-group">
-                                <label for="latInput">Latitude *</label>
+                                <label for="latInput">Latitude</label>
                                 <input type="number" id="latInput" step="0.0001" min="-90" max="90" required placeholder="19.9975">
                             </div>
                             <div class="form-group">
-                                <label for="lngInput">Longitude *</label>
+                                <label for="lngInput">Longitude</label>
                                 <input type="number" id="lngInput" step="0.0001" min="-180" max="180" required placeholder="73.7898">
                             </div>
-                        </div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
-                            Preset: Nashik (19.9975, 73.7898) | Pune (18.5204, 73.8567) | Ratnagiri (16.9902, 73.3120)
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="batchNotes">Notes (Optional)</label>
-                        <textarea id="batchNotes" rows="2" placeholder="e.g. Tree-ripened, packed in crates"></textarea>
+                        <textarea id="batchNotes" rows="2" placeholder="e.g. Tree-ripened, sorted into wooden crates"></textarea>
                     </div>
 
                     <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
                         <button type="button" class="btn btn-secondary" id="btnResetBatchForm">Reset</button>
-                        <button type="submit" class="btn btn-primary" id="btnSubmitBatch">Save Batch</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitBatch">Save Batch & Assess Spoilage</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- TAB 3: MY BATCHES -->
+        <!-- TAB 3: COOLING MAP (LM2) -->
+        <div id="tabCoolingMap" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.2rem;">Cooling Network Map</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Interactive map of available static rooms and mobile solar vans across Maharashtra.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <select id="mapFilterType" style="padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                        <option value="">All Asset Types</option>
+                        <option value="STATIC">Static Rooms (Green)</option>
+                        <option value="MOBILE">Mobile Vans (Blue)</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshMapAssets">Refresh Map</button>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <div id="coolingNetworkMap" style="height: 480px; width: 100%;"></div>
+                <div style="padding: 0.75rem 1rem; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <span style="display: inline-block; width: 10px; height: 10px; background: #15803d; border-radius: 50%; margin-right: 4px;"></span> <strong>Static Rooms</strong>
+                        <span style="display: inline-block; width: 10px; height: 10px; background: #0284c7; border-radius: 50%; margin-left: 12px; margin-right: 4px;"></span> <strong>Mobile Vans</strong>
+                        <span style="display: inline-block; width: 10px; height: 10px; background: #b45309; border-radius: 50%; margin-left: 12px; margin-right: 4px;"></span> <strong>My Batches</strong>
+                    </div>
+                    <div>
+                        Powered by <strong>OpenStreetMap + Leaflet.js</strong> (Free, Zero Google API Billing)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: MY BATCHES & SRI ASSESSMENTS (M3 + M4) -->
         <div id="tabBatches" class="tab-content">
             <div class="card">
                 <div class="card-title">
-                    <span>My Registered Batches</span>
+                    <span>My Registered Batches & Spoilage Assessments</span>
                     <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBatches">Refresh</button>
                 </div>
                 <div id="batchesTableContainer">
@@ -142,11 +184,28 @@
         </div>
     </div>
 
+    <!-- SRI Detail Modal -->
+    <div id="sriModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 580px; width: 90%; margin: auto; max-height: 90vh; overflow-y: auto;">
+            <div class="card-title" style="border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                <span>Explainable Spoilage Risk Index (SRI)</span>
+                <button type="button" id="btnCloseSriModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div id="sriModalContent" style="padding-top: 1rem;">
+                <div class="state-box">Calculating assessment...</div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
+        import { initMap, createMarker, fitToMarkers, mountLocationPicker, escapeHtml } from './js/maps.js';
 
         let currentUser = null;
+        let networkMap = null;
+        let networkMarkers = [];
+        let cachedBatches = [];
 
         const globalAlert = document.getElementById('globalAlert');
         function showAlert(msg, type = 'error') {
@@ -169,14 +228,23 @@
                 }
                 document.getElementById('userName').textContent = `${currentUser.full_name} (${currentUser.role})`;
                 
-                // Set default harvest time to now
+                // Initialize default date
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
                 document.getElementById('harvestAt').value = now.toISOString().slice(0, 16);
-                
-                // Default coordinates (Nashik)
-                document.getElementById('latInput').value = 19.9975;
-                document.getElementById('lngInput').value = 73.7898;
+
+                // Mount OpenStreetMap Location Picker (LM1)
+                await mountLocationPicker('batchLocationPickerContainer', {
+                    initialLat: 19.9975,
+                    initialLng: 73.7898,
+                    onChange: ({ lat, lng }) => {
+                        document.getElementById('latInput').value = lat.toFixed(4);
+                        document.getElementById('lngInput').value = lng.toFixed(4);
+                    }
+                });
+
+                document.getElementById('latInput').value = '19.9975';
+                document.getElementById('lngInput').value = '73.7898';
 
                 await loadBatches();
             } catch (err) {
@@ -186,7 +254,7 @@
 
         document.getElementById('btnLogout').addEventListener('click', logout);
 
-        // Navigation tab switching
+        // Tab Navigation
         document.querySelectorAll('nav a.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -196,10 +264,106 @@
                 const targetTabId = link.getAttribute('data-tab');
                 document.getElementById(targetTabId).classList.add('active');
                 hideAlert();
+
+                if (targetTabId === 'tabCoolingMap') {
+                    initNetworkMap();
+                }
             });
         });
 
-        // Load Batches
+        // Initialize Cooling Network Map (LM2)
+        async function initNetworkMap() {
+            if (!networkMap) {
+                try {
+                    networkMap = await initMap('coolingNetworkMap', {
+                        center: [19.9975, 73.7898],
+                        zoom: 9
+                    });
+                } catch (e) {
+                    console.error('Map init error:', e);
+                    return;
+                }
+            }
+            setTimeout(() => {
+                networkMap.invalidateSize();
+                loadNetworkAssets();
+            }, 200);
+        }
+
+        async function loadNetworkAssets() {
+            if (!networkMap) return;
+
+            // Clear old markers
+            networkMarkers.forEach(m => networkMap.removeLayer(m));
+            networkMarkers = [];
+
+            const filterType = document.getElementById('mapFilterType').value;
+            let query = '/assets?limit=50';
+            if (filterType) query += `&asset_type=${filterType}`;
+
+            try {
+                const res = await apiRequest(query);
+                const assets = res.items || [];
+
+                for (const a of assets) {
+                    const isVan = a.asset_type === 'MOBILE';
+                    const popupHtml = `
+                        <div style="font-size: 0.85rem; line-height: 1.4;">
+                            <strong style="font-size: 0.95rem;">${escapeHtml(a.name)}</strong><br>
+                            <span>${isVan ? '🚐 Mobile Solar Cooling Van' : '🏭 Static Cold Storage Room'}</span><br>
+                            <div style="margin: 0.4rem 0;">
+                                <strong>Capacity:</strong> ${a.available_capacity_kg.toLocaleString()} / ${a.total_capacity_kg.toLocaleString()} kg<br>
+                                <strong>Rate:</strong> ₹${a.price_per_kg_per_day.toFixed(2)} / kg / day<br>
+                                ${isVan && a.mobile_detail ? `<strong>Solar Reliability:</strong> ${(a.mobile_detail.solar_reliability * 100).toFixed(0)}% (Simulated)<br>` : ''}
+                            </div>
+                            <div class="badge-group" style="margin-top: 0.2rem;">
+                                <span class="badge ${a.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">${a.data_source}</span>
+                                <span class="badge ${a.data_status === 'FRESH' ? 'badge-status-fresh' : (a.data_status === 'STALE' ? 'badge-status-stale' : 'badge-status-unavailable')}">${a.data_status}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    const marker = await createMarker(networkMap, {
+                        lat: a.latitude,
+                        lng: a.longitude,
+                        type: a.asset_type,
+                        title: a.name,
+                        popupHtml
+                    });
+                    networkMarkers.push(marker);
+                }
+
+                // Add farmer's batch locations as distinct markers
+                for (const b of cachedBatches) {
+                    const bMarker = await createMarker(networkMap, {
+                        lat: b.latitude,
+                        lng: b.longitude,
+                        type: 'FARM',
+                        title: `Batch: ${b.crop_code.toUpperCase()}`,
+                        popupHtml: `
+                            <div style="font-size: 0.85rem;">
+                                <strong>🌾 My Produce Batch</strong><br>
+                                Crop: <strong>${escapeHtml(b.crop_code.toUpperCase())}</strong><br>
+                                Quantity: ${b.quantity_kg.toLocaleString()} kg<br>
+                                Temp: ${b.ambient_temp_c}°C
+                            </div>
+                        `
+                    });
+                    networkMarkers.push(bMarker);
+                }
+
+                if (networkMarkers.length > 0) {
+                    await fitToMarkers(networkMap, networkMarkers);
+                }
+            } catch (err) {
+                console.error('Failed to load network assets:', err);
+            }
+        }
+
+        document.getElementById('mapFilterType').addEventListener('change', loadNetworkAssets);
+        document.getElementById('btnRefreshMapAssets').addEventListener('click', loadNetworkAssets);
+
+        // Load Batches & Spoilage Status
         async function loadBatches() {
             const tableContainer = document.getElementById('batchesTableContainer');
             const overviewContainer = document.getElementById('overviewBatchesList');
@@ -207,19 +371,18 @@
 
             try {
                 const res = await apiRequest('/produce/batches?limit=50');
-                const batches = res.items || [];
+                cachedBatches = res.items || [];
 
-                // Update Stats
-                document.getElementById('statTotalBatches').textContent = batches.length;
-                const totalKg = batches.reduce((sum, b) => sum + b.quantity_kg, 0);
+                document.getElementById('statTotalBatches').textContent = cachedBatches.length;
+                const totalKg = cachedBatches.reduce((sum, b) => sum + b.quantity_kg, 0);
                 document.getElementById('statTotalKg').textContent = `${totalKg.toLocaleString()} kg`;
 
-                if (batches.length === 0) {
+                if (cachedBatches.length === 0) {
                     const emptyHtml = `
                         <div class="state-box">
                             <div class="state-icon">🌾</div>
                             <h3>No produce batches registered yet</h3>
-                            <p>Register your first crop harvest to start matching with cooling providers.</p>
+                            <p>Register your first crop harvest to compute SRI and match with cold chain providers.</p>
                         </div>
                     `;
                     tableContainer.innerHTML = emptyHtml;
@@ -227,7 +390,64 @@
                     return;
                 }
 
-                // Render Table
+                // Fetch SRI assessment for each batch (M4)
+                const batchesWithSri = await Promise.all(cachedBatches.map(async (b) => {
+                    try {
+                        const sri = await apiRequest(`/sri/${b.id}`);
+                        return { ...b, sri };
+                    } catch (e) {
+                        return { ...b, sri: null };
+                    }
+                }));
+
+                const highRiskCount = batchesWithSri.filter(b => b.sri && b.sri.risk_category === 'HIGH').length;
+                document.getElementById('statHighRisk').textContent = highRiskCount;
+
+                const renderRows = (items) => items.map(b => {
+                    const sri = b.sri;
+                    let badgeClass = 'badge-status-fresh';
+                    let categoryText = 'NOT ASSESSED';
+                    let scoreText = '—';
+
+                    if (sri) {
+                        scoreText = `${sri.score.toFixed(1)} / 100`;
+                        if (sri.risk_category === 'HIGH') {
+                            badgeClass = 'badge-danger';
+                            categoryText = 'HIGH RISK';
+                        } else if (sri.risk_category === 'MEDIUM') {
+                            badgeClass = 'badge-warning';
+                            categoryText = 'MEDIUM RISK';
+                        } else {
+                            badgeClass = 'badge-status-fresh';
+                            categoryText = 'LOW RISK';
+                        }
+                    }
+
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(b.crop_code.toUpperCase())}</strong></td>
+                            <td>${b.quantity_kg.toLocaleString()} kg</td>
+                            <td>${new Date(b.harvest_at).toLocaleString()}</td>
+                            <td>${b.ambient_temp_c}°C</td>
+                            <td>
+                                <span class="badge ${badgeClass}" style="${sri && sri.risk_category === 'HIGH' ? 'background: #fee2e2; color: #b91c1c;' : (sri && sri.risk_category === 'MEDIUM' ? 'background: #fef9c3; color: #854d0e;' : 'background: #dcfce7; color: #15803d;')}">
+                                    ${categoryText} (${scoreText})
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge ${b.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">
+                                    ${b.data_source}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-secondary btn-sm btn-view-sri" data-id="${b.id}" data-crop="${escapeHtml(b.crop_code)}">
+                                    Why this SRI?
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
                 const tableHtml = `
                     <div class="table-container">
                         <table>
@@ -235,35 +455,31 @@
                                 <tr>
                                     <th>Crop</th>
                                     <th>Quantity</th>
-                                    <th>Harvest Date & Time</th>
-                                    <th>Temp (°C)</th>
-                                    <th>Location (Lat, Lng)</th>
-                                    <th>Source Label</th>
-                                    <th>Notes</th>
+                                    <th>Harvest Time</th>
+                                    <th>Field Temp</th>
+                                    <th>Spoilage Risk Index (SRI)</th>
+                                    <th>Data Source</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${batches.map(b => `
-                                    <tr>
-                                        <td><strong>${b.crop_code.toUpperCase()}</strong></td>
-                                        <td>${b.quantity_kg.toLocaleString()} kg</td>
-                                        <td>${new Date(b.harvest_at).toLocaleString()}</td>
-                                        <td>${b.ambient_temp_c}°C</td>
-                                        <td>${b.latitude.toFixed(4)}, ${b.longitude.toFixed(4)}</td>
-                                        <td>
-                                            <span class="badge ${b.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">
-                                                ${b.data_source}
-                                            </span>
-                                        </td>
-                                        <td style="color: var(--text-muted); font-size: 0.85rem;">${b.notes || '—'}</td>
-                                    </tr>
-                                `).join('')}
+                                ${renderRows(batchesWithSri)}
                             </tbody>
                         </table>
                     </div>
                 `;
+
                 tableContainer.innerHTML = tableHtml;
                 overviewContainer.innerHTML = tableHtml;
+
+                // Attach modal handlers
+                document.querySelectorAll('.btn-view-sri').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const batchId = btn.getAttribute('data-id');
+                        const crop = btn.getAttribute('data-crop');
+                        openSriModal(batchId, crop);
+                    });
+                });
             } catch (err) {
                 const errHtml = `<div class="alert alert-error">Error loading batches: ${err.message}</div>`;
                 tableContainer.innerHTML = errHtml;
@@ -271,10 +487,62 @@
             }
         }
 
+        async function openSriModal(batchId, crop) {
+            const modal = document.getElementById('sriModal');
+            const content = document.getElementById('sriModalContent');
+            content.innerHTML = '<div class="state-box">Loading assessment...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                const res = await apiRequest(`/sri/${batchId}`);
+                let color = '#15803d';
+                if (res.risk_category === 'HIGH') color = '#dc2626';
+                else if (res.risk_category === 'MEDIUM') color = '#d97706';
+
+                content.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div>
+                            <h2 style="font-size: 1.25rem; text-transform: uppercase;">${escapeHtml(crop)} Batch</h2>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Assessed at: ${new Date(res.created_at).toLocaleString()}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.8rem; font-weight: 800; color: ${color};">${res.score.toFixed(1)} / 100</div>
+                            <span class="badge" style="background: ${color}20; color: ${color}; font-size: 0.85rem; font-weight: 700;">
+                                ${res.risk_category} RISK
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; padding: 0.75rem 1rem; border-radius: var(--radius-md); border-left: 4px solid ${color}; margin-bottom: 1rem;">
+                        <strong>Recommended Action:</strong>
+                        <p style="margin-top: 0.25rem; font-size: 0.9rem;">${escapeHtml(res.recommended_action)}</p>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem;">Why this Spoilage Risk score?</h4>
+                        <ul style="padding-left: 1.2rem; font-size: 0.85rem; color: var(--text-main); line-height: 1.6;">
+                            ${res.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span>Rule Engine: <strong>${escapeHtml(res.rule_version)}</strong></span>
+                        <span>⚠️ ${escapeHtml(res.disclaimer)}</span>
+                    </div>
+                `;
+            } catch (err) {
+                content.innerHTML = `<div class="alert alert-error">Error: ${err.message}</div>`;
+            }
+        }
+
+        document.getElementById('btnCloseSriModal').addEventListener('click', () => {
+            document.getElementById('sriModal').style.display = 'none';
+        });
+
         document.getElementById('btnRefreshBatches').addEventListener('click', loadBatches);
         document.getElementById('btnRefreshBatchesOverview').addEventListener('click', loadBatches);
 
-        // Submit Batch Form
+        // Add Batch Form Handler
         const addBatchForm = document.getElementById('addBatchForm');
         addBatchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -282,7 +550,7 @@
 
             const submitBtn = document.getElementById('btnSubmitBatch');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
+            submitBtn.textContent = 'Saving & Assessing...';
 
             try {
                 const crop_code = document.getElementById('cropCode').value;
@@ -304,24 +572,25 @@
                     notes
                 };
 
-                await apiRequest('/produce/batches', {
+                const batch = await apiRequest('/produce/batches', {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
 
-                showAlert(`Successfully registered ${quantity_kg} kg of ${crop_code.toUpperCase()}!`, 'success');
+                // Auto-trigger SRI Calculation (M4)
+                await apiRequest(`/sri/${batch.id}/calculate`, { method: 'POST' });
+
+                showAlert(`Successfully registered ${quantity_kg} kg of ${crop_code.toUpperCase()}! SRI assessed.`, 'success');
                 addBatchForm.reset();
                 
-                // Reset date to current
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
                 document.getElementById('harvestAt').value = now.toISOString().slice(0, 16);
-                document.getElementById('latInput').value = 19.9975;
-                document.getElementById('lngInput').value = 73.7898;
+                document.getElementById('latInput').value = '19.9975';
+                document.getElementById('lngInput').value = '73.7898';
 
                 await loadBatches();
 
-                // Switch to batches tab
                 setTimeout(() => {
                     document.querySelector('a[data-tab="tabBatches"]').click();
                 }, 800);
@@ -329,7 +598,7 @@
                 showAlert(err.message || 'Failed to save batch', 'error');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Batch';
+                submitBtn.textContent = 'Save Batch & Assess Spoilage';
             }
         });
 
@@ -338,8 +607,8 @@
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('harvestAt').value = now.toISOString().slice(0, 16);
-            document.getElementById('latInput').value = 19.9975;
-            document.getElementById('lngInput').value = 73.7898;
+            document.getElementById('latInput').value = '19.9975';
+            document.getElementById('lngInput').value = '73.7898';
         });
     </script>
 </body>

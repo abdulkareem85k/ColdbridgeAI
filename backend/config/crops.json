@@ -1,0 +1,76 @@
+{
+  "_comment": "ColdBridge AI Crop Perishability and Spoilage Risk Index (SRI) Rule Thresholds. NOTE: These are transparent rule-based prototype values and require expert validation from agricultural/post-harvest specialists.",
+  "rule_version": "prototype-1",
+  "disclaimer": "Prototype estimate - not a validated spoilage prediction",
+  "perishability_classes": {
+    "EXTREME": {
+      "base_decay_rate": 2.5,
+      "temp_sensitivity_factor": 1.8,
+      "max_safe_hours_at_25c": 12
+    },
+    "VERY_HIGH": {
+      "base_decay_rate": 2.0,
+      "temp_sensitivity_factor": 1.5,
+      "max_safe_hours_at_25c": 24
+    },
+    "HIGH": {
+      "base_decay_rate": 1.5,
+      "temp_sensitivity_factor": 1.3,
+      "max_safe_hours_at_25c": 48
+    },
+    "MEDIUM": {
+      "base_decay_rate": 1.0,
+      "temp_sensitivity_factor": 1.1,
+      "max_safe_hours_at_25c": 72
+    },
+    "LOW": {
+      "base_decay_rate": 0.5,
+      "temp_sensitivity_factor": 0.8,
+      "max_safe_hours_at_25c": 168
+    }
+  },
+  "crops": {
+    "mango": {
+      "name": "Mango (Alphonso / Kesar)",
+      "class": "HIGH",
+      "optimal_temp_c": 12.0,
+      "threshold_ambient_temp_c": 25.0
+    },
+    "tomato": {
+      "name": "Tomato",
+      "class": "VERY_HIGH",
+      "optimal_temp_c": 10.0,
+      "threshold_ambient_temp_c": 24.0
+    },
+    "grapes": {
+      "name": "Grapes (Table / Wine)",
+      "class": "HIGH",
+      "optimal_temp_c": 2.0,
+      "threshold_ambient_temp_c": 22.0
+    },
+    "pomegranate": {
+      "name": "Pomegranate (Bhagwa)",
+      "class": "MEDIUM",
+      "optimal_temp_c": 6.0,
+      "threshold_ambient_temp_c": 28.0
+    },
+    "onion": {
+      "name": "Onion (Rabi / Red)",
+      "class": "LOW",
+      "optimal_temp_c": 15.0,
+      "threshold_ambient_temp_c": 32.0
+    },
+    "strawberry": {
+      "name": "Strawberry",
+      "class": "VERY_HIGH",
+      "optimal_temp_c": 2.0,
+      "threshold_ambient_temp_c": 20.0
+    },
+    "cashew_apple": {
+      "name": "Cashew Apple",
+      "class": "EXTREME",
+      "optimal_temp_c": 4.0,
+      "threshold_ambient_temp_c": 25.0
+    }
+  }
+}

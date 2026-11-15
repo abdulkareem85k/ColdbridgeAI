@@ -1,0 +1,323 @@
+import { CONFIG } from './config.js';
+
+let leafletLoadedPromise = null;
+
+/**
+ * Dynamically load Leaflet library and stylesheet if not already loaded.
+ */
+export function ensureLeafletLoaded() {
+    if (window.L) {
+        return Promise.resolve(window.L);
+    }
+    if (leafletLoadedPromise) {
+        return leafletLoadedPromise;
+    }
+
+    leafletLoadedPromise = new Promise((resolve, reject) => {
+        // Load CSS
+        if (!document.querySelector('link[data-leaflet-css]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            link.setAttribute('data-leaflet-css', 'true');
+            document.head.appendChild(link);
+        }
+
+        // Load JS
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.crossOrigin = '';
+        script.onload = () => resolve(window.L);
+        script.onerror = (err) => reject(new Error('Failed to load Leaflet.js library'));
+        document.head.appendChild(script);
+    });
+
+    return leafletLoadedPromise;
+}
+
+/**
+ * Escape HTML to prevent XSS vulnerabilities in map popups.
+ */
+export function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+/**
+ * Initialize a Leaflet map attached to elementId.
+ */
+export async function initMap(elementId, options = {}) {
+    const L = await ensureLeafletLoaded();
+    const container = document.getElementById(elementId);
+    if (!container) {
+        throw new Error(`Map container #${elementId} not found`);
+    }
+
+    // Reset container if previously initialized
+    if (container._leaflet_id) {
+        container._leaflet_id = null;
+        container.innerHTML = '';
+    }
+
+    const center = options.center || [CONFIG.DEFAULT_CENTER.lat, CONFIG.DEFAULT_CENTER.lng];
+    const zoom = options.zoom || CONFIG.DEFAULT_ZOOM;
+
+    const map = L.map(elementId, {
+        zoomControl: true,
+        scrollWheelZoom: true
+    }).setView(center, zoom);
+
+    // Add OpenStreetMap raster tile layer with attribution
+    L.tileLayer(CONFIG.OSM_TILE_URL, {
+        maxZoom: 19,
+        attribution: CONFIG.OSM_ATTRIBUTION
+    }).addTo(map);
+
+    return map;
+}
+
+/**
+ * Create custom SVG-styled Leaflet Marker for Static Rooms, Mobile Vans, and Farms.
+ */
+export async function createMarker(map, { lat, lng, type = 'STATIC', title = '', popupHtml = '', isDraggable = false, onDragEnd = null }) {
+    const L = await ensureLeafletLoaded();
+
+    let color = '#15803d'; // Green for Static Room
+    let symbol = '🏭';
+    let typeLabel = 'Room';
+
+    if (type === 'MOBILE') {
+        color = '#0284c7'; // Blue for Mobile Van
+        symbol = '🚐';
+        typeLabel = 'Van';
+    } else if (type === 'FARM') {
+        color = '#b45309'; // Amber for Farm / Harvest batch
+        symbol = '🌾';
+        typeLabel = 'Farm';
+    }
+
+    const iconHtml = `
+        <div style="
+            background-color: ${color};
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: 2px solid #ffffff;
+            cursor: pointer;
+        ">
+            <span style="transform: rotate(45deg); font-size: 14px;">${symbol}</span>
+        </div>
+    `;
+
+    const customIcon = L.divIcon({
+        className: 'custom-map-pin',
+        html: iconHtml,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+    });
+
+    const marker = L.marker([lat, lng], {
+        icon: customIcon,
+        title: `${typeLabel}: ${title}`,
+        draggable: isDraggable
+    }).addTo(map);
+
+    if (popupHtml) {
+        marker.bindPopup(popupHtml);
+    }
+
+    if (isDraggable && onDragEnd) {
+        marker.on('dragend', (e) => {
+            const pos = e.target.getLatLng();
+            onDragEnd(pos.lat, pos.lng);
+        });
+    }
+
+    return marker;
+}
+
+/**
+ * Fit map viewport to encompass all markers.
+ */
+export async function fitToMarkers(map, markers = []) {
+    const L = await ensureLeafletLoaded();
+    if (!markers || markers.length === 0) return;
+
+    const group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.15));
+}
+
+/**
+ * Draw road route line on Leaflet map.
+ */
+export async function drawRoute(map, coordinates = [], options = {}) {
+    const L = await ensureLeafletLoaded();
+    if (!coordinates || coordinates.length === 0) return null;
+
+    // Convert GeoJSON [lon, lat] pairs to Leaflet [lat, lon] pairs if needed
+    const latLngs = coordinates.map(c => {
+        if (Array.isArray(c)) {
+            return c[0] > 60 ? [c[1], c[0]] : [c[0], c[1]];
+        }
+        return [c.lat, c.lng];
+    });
+
+    const polyline = L.polyline(latLngs, {
+        color: options.color || '#2563eb',
+        weight: 5,
+        opacity: 0.8,
+        dashArray: options.isEstimated ? '6, 8' : null
+    }).addTo(map);
+
+    map.fitBounds(polyline.getBounds().pad(0.15));
+    return polyline;
+}
+
+/**
+ * Mount an interactive OpenStreetMap + Leaflet location picker.
+ * Includes address search, map click, draggable marker, and GPS locate button.
+ */
+export async function mountLocationPicker(containerId, { initialLat = 19.9975, initialLng = 73.7898, onChange }) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="location-picker-widget" style="border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: #fff;">
+            <div style="padding: 0.75rem; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="pickerSearchInput" placeholder="🔍 Search address in Maharashtra (e.g. Nashik APMC, Pune)..." 
+                       style="flex: 1; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                <button type="button" id="pickerBtnLocate" class="btn btn-secondary btn-sm" title="Use My Current GPS Location">
+                    📍 My Location
+                </button>
+            </div>
+            <div id="pickerMapElement" style="height: 250px; width: 100%;"></div>
+            <div style="padding: 0.5rem 0.75rem; background: #f8fafc; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+                <span id="pickerAddressText">Selected: 19.9975, 73.7898 (Click map or drag pin)</span>
+                <span class="badge badge-source-live">OpenStreetMap</span>
+            </div>
+        </div>
+    `;
+
+    const L = await ensureLeafletLoaded();
+    const map = await initMap('pickerMapElement', {
+        center: [initialLat, initialLng],
+        zoom: 12
+    });
+
+    let currentLat = initialLat;
+    let currentLng = initialLng;
+
+    // Draggable Pin
+    let marker = await createMarker(map, {
+        lat: currentLat,
+        lng: currentLng,
+        type: 'FARM',
+        title: 'Selected Location',
+        isDraggable: true,
+        onDragEnd: async (lat, lng) => {
+            currentLat = lat;
+            currentLng = lng;
+            await updateLocation(lat, lng);
+        }
+    });
+
+    // Map Click Handler
+    map.on('click', async (e) => {
+        currentLat = e.latlng.lat;
+        currentLng = e.latlng.lng;
+        marker.setLatLng(e.latlng);
+        await updateLocation(currentLat, currentLng);
+    });
+
+    async function updateLocation(lat, lng, knownAddress = null) {
+        let address = knownAddress;
+        document.getElementById('pickerAddressText').textContent = `Resolving address for ${lat.toFixed(4)}, ${lng.toFixed(4)}...`;
+
+        if (!address) {
+            try {
+                // Call reverse-geocoding
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+                    headers: { 'User-Agent': 'ColdBridgeAI-Avishkar/1.0' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    address = data.display_name;
+                }
+            } catch (e) {
+                // Ignore network errors on reverse geocode
+            }
+        }
+
+        const displayText = address || `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        document.getElementById('pickerAddressText').textContent = `Selected: ${displayText}`;
+        
+        if (onChange) {
+            onChange({ lat, lng, address: displayText });
+        }
+    }
+
+    // Geolocation "Use My Location"
+    document.getElementById('pickerBtnLocate').addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                map.setView([lat, lng], 13);
+                marker.setLatLng([lat, lng]);
+                await updateLocation(lat, lng);
+            },
+            (err) => {
+                alert('Could not obtain current location: ' + err.message);
+            }
+        );
+    });
+
+    // Debounced Address Search using OpenStreetMap Nominatim
+    let searchTimeout = null;
+    const searchInput = document.getElementById('pickerSearchInput');
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+        if (query.length < 3) return;
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Maharashtra, India')}&limit=1`;
+                const res = await fetch(url, { headers: { 'User-Agent': 'ColdBridgeAI-Avishkar/1.0' } });
+                if (res.ok) {
+                    const results = await res.json();
+                    if (results && results.length > 0) {
+                        const first = results[0];
+                        const lat = parseFloat(first.lat);
+                        const lng = parseFloat(first.lon);
+                        map.setView([lat, lng], 13);
+                        marker.setLatLng([lat, lng]);
+                        await updateLocation(lat, lng, first.display_name);
+                    }
+                }
+            } catch (err) {
+                console.warn('Address search error:', err);
+            }
+        }, 500);
+    });
+
+    // Trigger initial resolution
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 200);
+
+    return { map, marker };
+}
