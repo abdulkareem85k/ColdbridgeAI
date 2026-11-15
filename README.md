@@ -17,7 +17,7 @@ ColdBridge AI is an AI-driven, pay-per-use cold-chain logistics and aggregation 
 - **Backend:** Python 3.13, FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic
 - **Database:** SQLite (default local development) / PostgreSQL-ready via `DATABASE_URL`
 - **Frontend:** Vanilla HTML5, CSS3, ES modules JavaScript (No React, Vue, or build bundlers)
-- **Maps:** Google Maps Platform (Maps JavaScript API, Places API (New), Geocoding API, Routes API)
+- **Maps:** OpenStreetMap + Leaflet.js (standard OSM raster tiles, Nominatim for reverse geocoding, OSRM for road distance/routes, with straight-line Haversine fallback)
 
 ---
 
@@ -27,7 +27,7 @@ ColdBridge AI is an AI-driven, pay-per-use cold-chain logistics and aggregation 
 2. **Independent Status Labels:**
    - **DATA SOURCE:** `LIVE` (user-created) or `SIMULATED` (demo generated).
    - **DATA STATUS:** `FRESH` (within freshness threshold), `STALE` (exceeds threshold), or `UNAVAILABLE`.
-   - **ROUTE SOURCE:** `GOOGLE_ROUTES` (official Google Routes) or `ESTIMATED` (straight-line haversine fallback).
+   - **ROUTE SOURCE:** `OSRM_ROUTES` (OpenStreetMap/OSRM road route) or `ESTIMATED` (straight-line haversine fallback).
 3. **Spoilage Risk Index (SRI):** Transparent rule-based prototype model; **not** a scientifically validated prediction.
 4. **Solar Fallback Simulation:** Calculated as `effective_capacity = available_capacity * solar_reliability`. Real battery, power, and Peltier cooling load telemetry belong to a subsequent hardware phase.
 5. **No Payment Processing:** No payment step or gateway exists in this prototype. Rates and costs are estimates in INR.

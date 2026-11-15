@@ -14,10 +14,15 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
     FRONTEND_ORIGIN: str = "http://127.0.0.1:5500"
-    GOOGLE_MAPS_SERVER_KEY: str = "dummy_server_key"
+    
+    # OpenStreetMap + Leaflet / OSRM Configuration (Open Source, No Google Billing)
+    OSRM_ROUTING_URL: str = "https://router.project-osrm.org"
+    OSM_USER_AGENT: str = "ColdBridgeAI-Avishkar/1.0"
+    
+    # Routing and Freshness parameters
     ROUTE_CACHE_MINUTES: int = 60
     MAX_ROUTE_CALLS_PER_REQUEST: int = 8
-    MAX_ROUTE_CALLS_PER_DAY: int = 100
+    MAX_ROUTE_CALLS_PER_DAY: int = 200
     LOCATION_FRESHNESS_MINUTES: int = 60
 
     model_config = SettingsConfigDict(

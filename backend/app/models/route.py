@@ -6,7 +6,7 @@ class RouteCache(Base, TimestampMixin):
     Route calculation cache.
     Coordinates rounded to 4 decimals for query lookup.
     TTL governed by ROUTE_CACHE_MINUTES.
-    Route source: GOOGLE_ROUTES or ESTIMATED.
+    Route source: OSRM_ROUTES or ESTIMATED.
     """
     __tablename__ = "route_cache"
 
@@ -17,4 +17,4 @@ class RouteCache(Base, TimestampMixin):
     distance_km = Column(Float, nullable=False)
     duration_minutes = Column(Float, nullable=False)
     encoded_polyline = Column(Text, nullable=True)
-    route_source = Column(String(50), default="ESTIMATED", nullable=False)  # GOOGLE_ROUTES or ESTIMATED
+    route_source = Column(String(50), default="ESTIMATED", nullable=False)  # OSRM_ROUTES or ESTIMATED

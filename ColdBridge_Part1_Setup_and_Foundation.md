@@ -29,7 +29,7 @@ ColdBridge AI is an AI-driven, pay-per-use cold-chain logistics and aggregation 
 5. Near-expiry surplus recovery through an operator-reviewed buyer marketplace.
 
 DEVELOPMENT PHASES
-- Phase 1 (core MVP, build first): login and roles; farmer batches; static room and van registration; Google Maps location picker and asset map; rule-based SRI; cross-asset matching; reverse auction ranking; solar fallback simulation; three-way comparison; safe booking and capacity reservation.
+- Phase 1 (core MVP, build first): login and roles; farmer batches; static room and van registration; OpenStreetMap + Leaflet.js location picker and asset map; rule-based SRI; cross-asset matching; reverse auction ranking; solar fallback simulation; three-way comparison; safe booking and capacity reservation.
 - Phase 2 (after Phase 1 works): inventory; operator-reviewed surplus listing; buyer marketplace and orders; demand forecast; Hindi/Marathi support; admin audit log screen.
 - Do not start Phase 2 until I confirm the Phase 1 workflow works end to end.
 
@@ -37,19 +37,19 @@ FIXED TECH STACK (do not change without my approval)
 - Frontend: HTML5, CSS3, vanilla JavaScript (ES modules). No React, Vue, Node build tools or CSS frameworks.
 - Backend: Python FastAPI, Pydantic, SQLAlchemy, Alembic.
 - Database: SQLite for early development; must work on PostgreSQL via DATABASE_URL.
-- Maps: GOOGLE MAPS PLATFORM ONLY. Maps JavaScript API, Places API (New), Geocoding API and Routes API. Do NOT use Leaflet, OpenStreetMap, Mapbox or any other map provider.
+- Maps: OPENSTREETMAP + LEAFLET.JS ONLY. Leaflet.js (ES modules / lightweight CDN) with OpenStreetMap standard tiles and Nominatim / OSRM for geocoding and routing fallback. Do NOT use Google Maps Platform, Mapbox or proprietary paid map providers.
 - Charts: Chart.js (only if needed).
 
-GOOGLE MAPS RULES
-- Browser key: stored in frontend/js/config.js, restricted by HTTP referrer, used only for Maps JavaScript API and Places.
-- Server key: stored ONLY in backend .env as GOOGLE_MAPS_SERVER_KEY, used only by backend services for Routes and Geocoding. Never send it to the browser, logs or Git.
-- Cache route results (default 60 minutes). Limit route calls per matching request (default 8). If Google fails, use a straight-line estimate labelled ESTIMATED and keep the app working.
-- Check the current official Google documentation for API usage; if something is deprecated or differs from these instructions, tell me before substituting.
-- Before using any Google API, remind me to verify current official pricing, billing requirements, quotas and free usage. Never assume a fixed free allowance, never quote prices from memory and never say the app is free to operate. Enable only the APIs the app needs. Provide a list-based fallback if Google Maps is unavailable.
+OPENSTREETMAP + LEAFLET.JS RULES
+- Tile Layer: OpenStreetMap standard tiles (https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png) rendered with Leaflet.js; include mandatory OpenStreetMap attribution.
+- Geocoding & Routing: Use OpenStreetMap Nominatim for address search / reverse geocoding with a descriptive User-Agent, and OSRM (Open Source Routing Machine) or straight-line Haversine fallback for road routing.
+- No Proprietary Keys: No Google Maps API keys or billing accounts required. Free, open-source stack.
+- Cache route results (default 60 minutes). Limit route calls per matching request (default 8). If OSRM fails or times out, use a straight-line estimate labelled ESTIMATED and keep the app working.
+- Respect OSM Nominatim Usage Policy (max 1 request/sec, descriptive User-Agent header, cache responses). Provide a list-based fallback if tile rendering or network is unavailable.
 
 HONESTY RULES
 - First release is a software-only prototype with deterministic demo data (Maharashtra, India: Nashik, Pune, Ratnagiri, Mumbai; currency INR).
-- Use three INDEPENDENT label groups. DATA SOURCE: LIVE (from a real connected source) or SIMULATED (generated for demo/testing). DATA STATUS: FRESH (within its freshness period), STALE (older than the permitted period) or UNAVAILABLE (could not be obtained). ROUTE SOURCE: GOOGLE_ROUTES (returned by Google Routes) or ESTIMATED (approximate fallback). Show them separately, e.g. SIMULATED + FRESH, LIVE + STALE, GOOGLE_ROUTES, ESTIMATED. Never label simulated data as live. Never show an ESTIMATED route as a confirmed Google road route.
+- Use three INDEPENDENT label groups. DATA SOURCE: LIVE (from a real connected source) or SIMULATED (generated for demo/testing). DATA STATUS: FRESH (within its freshness period), STALE (older than the permitted period) or UNAVAILABLE (could not be obtained). ROUTE SOURCE: OSRM_ROUTES (returned by OpenStreetMap/OSRM) or ESTIMATED (approximate fallback). Show them separately, e.g. SIMULATED + FRESH, LIVE + STALE, OSRM_ROUTES, ESTIMATED. Never label simulated data as live. Never show an ESTIMATED route as a confirmed road route.
 - The SRI is a transparent rule-based prototype, not a scientifically validated spoilage prediction. Never claim it predicts exact spoilage time and never invent validated thresholds; crop thresholds need validation by agricultural or cold-chain experts.
 - The solar fallback (effective capacity = available capacity x solar reliability) is a simplified simulation. Never present it as a real battery, power, Peltier cooling load, temperature stability or operating-time calculation. Hardware (ESP32, sensors, battery monitoring, Peltier) is a later phase and is NOT part of this software MVP.
 - Never claim real GPS, real sensors, validated spoilage prediction, or measured spoilage reduction.
@@ -85,8 +85,8 @@ Milestone M0 only. Do NOT write or change application code yet.
 2. Compare it with the specification and list the gaps.
 3. Propose the target architecture and folder layout (frontend/, backend/app/{core,db,models,schemas,routers,services,seed}, tests/, README.md).
 4. Produce a sitemap and role-based navigation for Farmer, Static Operator, Van Operator, Buyer and Admin.
-5. Give a milestone plan M1-M9 plus GM1-GM3 (Google Maps) with the files each will create, and list which database tables belong to Phase 1 and which to Phase 2 (Phase 2 tables are added later by new migrations).
-6. Mark Phase 1 (core MVP: login and roles, batches, room/van registration, Google Maps picker and asset map, rule-based SRI, matching, reverse auction ranking, solar fallback simulation, three-way comparison, safe booking) versus Phase 2 (inventory, surplus listing review, buyer marketplace and orders, demand forecast, Hindi/Marathi, admin audit log screen). The prototype has no payment gateway or payment step. State that Phase 2 starts only after the Phase 1 workflow works.
+5. Give a milestone plan M1-M9 plus LM1-LM3 (Leaflet & OpenStreetMap) with the files each will create, and list which database tables belong to Phase 1 and which to Phase 2 (Phase 2 tables are added later by new migrations).
+6. Mark Phase 1 (core MVP: login and roles, batches, room/van registration, Leaflet/OpenStreetMap picker and asset map, rule-based SRI, matching, reverse auction ranking, solar fallback simulation, three-way comparison, safe booking) versus Phase 2 (inventory, surplus listing review, buyer marketplace and orders, demand forecast, Hindi/Marathi, admin audit log screen). The prototype has no payment gateway or payment step. State that Phase 2 starts only after the Phase 1 workflow works.
 7. List risks, assumptions and decisions you need from me (for example SQLite vs PostgreSQL, language support).
 
 Return sections A-G and wait for approval.
@@ -105,17 +105,17 @@ Implement only Milestone M1: foundation.
 
 Build:
 - backend/app/main.py with FastAPI, CORS limited to FRONTEND_ORIGIN, and GET /api/v1/health.
-- core/config.py using pydantic-settings reading .env. Variables: APP_ENV, DATABASE_URL, JWT_SECRET, ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_SECURE, COOKIE_SAMESITE, FRONTEND_ORIGIN, GOOGLE_MAPS_SERVER_KEY, ROUTE_CACHE_MINUTES, MAX_ROUTE_CALLS_PER_REQUEST, MAX_ROUTE_CALLS_PER_DAY, LOCATION_FRESHNESS_MINUTES.
+- core/config.py using pydantic-settings reading .env. Variables: APP_ENV, DATABASE_URL, JWT_SECRET, ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_SECURE, COOKIE_SAMESITE, FRONTEND_ORIGIN, OSRM_ROUTING_URL, OSM_USER_AGENT, ROUTE_CACHE_MINUTES, MAX_ROUTE_CALLS_PER_REQUEST, MAX_ROUTE_CALLS_PER_DAY, LOCATION_FRESHNESS_MINUTES.
 - db/session.py and db/base.py with SQLAlchemy (SQLite default, PostgreSQL-ready).
 - SQLAlchemy models with UUID primary keys, created_at/updated_at (UTC) for the PHASE 1 TABLES ONLY: users, farmer_profiles, operator_profiles, produce_batches, cold_assets, static_asset_details, mobile_asset_details (vehicle_ref, service_radius_km, solar_reliability as a simulation input, last_location_at; NO battery_state), asset_availability, spoilage_assessments, matching_requests, bids, bookings, route_cache, audit_logs. Do NOT create Phase 2 tables (buyer_profiles, inventory, buyer_listings, purchase_orders, alerts, any forecast table) or hardware tables (asset_telemetry). They are added later with NEW Alembic migrations (M7, M8 Part B, hardware phase). Do not build Phase 2 features, endpoints or screens in this milestone.
 - Store locations as latitude and longitude columns (no PostGIS needed).
-- Add a data_source field (LIVE or SIMULATED) to seeded business records. Data status (FRESH, STALE, UNAVAILABLE) is calculated from timestamps and the freshness limits in config; do not store it by hand. Route source (GOOGLE_ROUTES or ESTIMATED) is a separate field on route results.
+- Add a data_source field (LIVE or SIMULATED) to seeded business records. Data status (FRESH, STALE, UNAVAILABLE) is calculated from timestamps and the freshness limits in config; do not store it by hand. Route source (OSRM_ROUTES or ESTIMATED) is a separate field on route results.
 - Alembic configured with the first migration covering the Phase 1 tables only.
 - seed/demo_data.py: a repeatable script (running it twice gives the same data) that inserts demo data in Maharashtra labelled SIMULATED: 5 farmers, 6 static cold rooms, 4 mobile vans (different solar_reliability values), 12 produce batches across crops, and 2-4 bids per request, designed so that nearest, cheapest and ColdBridge picks differ.
 - requirements.txt, .env.example, .gitignore (must ignore .env and *.db), and a README with setup commands for Windows CMD, PowerShell and Mac/Linux.
 - Basic pytest test for /health.
 
-Do not build auth, screens, matching or Google features yet. Run the server and tests and report results. Stop after M1.
+Do not build auth, screens, matching or map features yet. Run the server and tests and report results. Stop after M1.
 ```
 
 **Test before moving on:** server starts, `http://127.0.0.1:8000/docs` opens, `/api/v1/health` returns OK, tests pass, running the seed script twice gives the same data.
@@ -160,7 +160,7 @@ Do not build batches, assets or maps yet. Stop after M2 and report.
 **Run:** paste the prompt below as a **new Antigravity task**, after pasting P0.
 
 ```text
-Implement only Milestone M3: farmer produce batches and operator assets (no map features yet; use simple latitude/longitude number inputs for now, the Google Maps pickers come in GM1/GM2).
+Implement only Milestone M3: farmer produce batches and operator assets (no map features yet; use simple latitude/longitude number inputs for now, the Leaflet + OpenStreetMap pickers come in LM1/LM2).
 
 Backend:
 - POST/GET /api/v1/produce/batches and GET /produce/batches/{id}. Fields: crop_code, quantity_kg, harvest_at (UTC), ambient_temp_c, latitude, longitude, notes. Validate: quantity > 0 and within a limit, valid coordinates, harvest_at not in the future.
