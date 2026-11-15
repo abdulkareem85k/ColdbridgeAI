@@ -207,36 +207,64 @@ export async function mountLocationPicker(containerId, { initialLat = 19.9975, i
         </div>
     `;
 
-    const L = await ensureLeafletLoaded();
-    const map = await initMap('pickerMapElement', {
-        center: [initialLat, initialLng],
-        zoom: 12
-    });
-
+    let map = null;
+    let marker = null;
     let currentLat = initialLat;
     let currentLng = initialLng;
 
-    // Draggable Pin
-    let marker = await createMarker(map, {
-        lat: currentLat,
-        lng: currentLng,
-        type: 'FARM',
-        title: 'Selected Location',
-        isDraggable: true,
-        onDragEnd: async (lat, lng) => {
-            currentLat = lat;
-            currentLng = lng;
-            await updateLocation(lat, lng);
-        }
-    });
+    try {
+        const L = await ensureLeafletLoaded();
+        map = await initMap('pickerMapElement', {
+            center: [initialLat, initialLng],
+            zoom: 12
+        });
 
-    // Map Click Handler
-    map.on('click', async (e) => {
-        currentLat = e.latlng.lat;
-        currentLng = e.latlng.lng;
-        marker.setLatLng(e.latlng);
-        await updateLocation(currentLat, currentLng);
-    });
+        // Draggable Pin
+        marker = await createMarker(map, {
+            lat: currentLat,
+            lng: currentLng,
+            type: 'FARM',
+            title: 'Selected Location',
+            isDraggable: true,
+            onDragEnd: async (lat, lng) => {
+                currentLat = lat;
+                currentLng = lng;
+                await updateLocation(lat, lng);
+            }
+        });
+
+        // Map Click Handler
+        map.on('click', async (e) => {
+            currentLat = e.latlng.lat;
+            currentLng = e.latlng.lng;
+            marker.setLatLng(e.latlng);
+            await updateLocation(currentLat, currentLng);
+        });
+    } catch (err) {
+        console.warn('Map initialization failed (offline mode):', err);
+        const mapEl = document.getElementById('pickerMapElement');
+        if (mapEl) {
+            mapEl.innerHTML = `
+                <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f8fafc; padding: 1rem; text-align: center;">
+                    <div style="font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">📡 Offline / Fallback Location Mode</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Interactive map tiles offline. Select default Maharashtra location:</div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+                        <button type="button" class="btn btn-secondary btn-sm preset-btn" data-lat="19.9975" data-lng="73.7898">Nashik (19.99, 73.78)</button>
+                        <button type="button" class="btn btn-secondary btn-sm preset-btn" data-lat="18.5204" data-lng="73.8567">Pune (18.52, 73.85)</button>
+                        <button type="button" class="btn btn-secondary btn-sm preset-btn" data-lat="16.9902" data-lng="73.3120">Ratnagiri (16.99, 73.31)</button>
+                    </div>
+                </div>
+            `;
+            mapEl.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const lat = parseFloat(btn.dataset.lat);
+                    const lng = parseFloat(btn.dataset.lng);
+                    document.getElementById('pickerAddressText').textContent = `Selected: ${lat}, ${lng} (${btn.textContent.split(' ')[0]})`;
+                    if (onChange) onChange({ lat, lng, address: btn.textContent });
+                });
+            });
+        }
+    }
 
     async function updateLocation(lat, lng, knownAddress = null) {
         let address = knownAddress;
@@ -259,7 +287,7 @@ export async function mountLocationPicker(containerId, { initialLat = 19.9975, i
 
         const displayText = address || `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         document.getElementById('pickerAddressText').textContent = `Selected: ${displayText}`;
-        
+
         if (onChange) {
             onChange({ lat, lng, address: displayText });
         }
