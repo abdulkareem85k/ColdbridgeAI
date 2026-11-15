@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColdBridge AI – Farmer Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <a href="farmer.html" class="brand">
+            <span>❄️ ColdBridge AI</span>
+            <span class="brand-badge">Farmer Portal</span>
+        </a>
+        <nav>
+            <a href="#overview" class="nav-link active" data-tab="tabOverview">Overview</a>
+            <a href="#add" class="nav-link" data-tab="tabAdd">Add Produce</a>
+            <a href="#batches" class="nav-link" data-tab="tabBatches">My Batches</a>
+            <div class="user-pill">
+                <span id="userName">Farmer</span>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div id="globalAlert" class="alert" style="display: none;"></div>
+
+        <!-- TAB 1: OVERVIEW -->
+        <div id="tabOverview" class="tab-content active">
+            <h1 class="page-title">Farmer Overview</h1>
+            <p class="page-subtitle">Track your registered harvest batches and cold chain bookings.</p>
+
+            <div class="grid-cards" style="margin-bottom: 1.5rem;">
+                <div class="card" style="margin: 0;">
+                    <div class="card-title">📦 Total Batches</div>
+                    <div id="statTotalBatches" style="font-size: 2rem; font-weight: 700; color: var(--primary);">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Registered in Maharashtra</div>
+                </div>
+                <div class="card" style="margin: 0;">
+                    <div class="card-title">⚖️ Total Produce</div>
+                    <div id="statTotalKg" style="font-size: 2rem; font-weight: 700; color: var(--secondary);">0 kg</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Aggregate harvest quantity</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span>Recent Batches</span>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBatchesOverview">Refresh</button>
+                </div>
+                <div id="overviewBatchesList">
+                    <div class="state-box">Loading recent batches...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ADD PRODUCE -->
+        <div id="tabAdd" class="tab-content">
+            <div class="card" style="max-width: 720px; margin: 0 auto;">
+                <h1 class="page-title" style="font-size: 1.5rem;">Register New Produce Batch</h1>
+                <p class="page-subtitle">Enter details about your harvest for spoilage assessment and cooling matching.</p>
+
+                <form id="addBatchForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="cropCode">Crop Type *</label>
+                            <select id="cropCode" required>
+                                <option value="mango">Mango (Alphonso / Kesar)</option>
+                                <option value="tomato">Tomato</option>
+                                <option value="grapes">Grapes (Table / Wine)</option>
+                                <option value="pomegranate">Pomegranate (Bhagwa)</option>
+                                <option value="onion">Onion (Storage / Red)</option>
+                                <option value="strawberry">Strawberry</option>
+                                <option value="cashew_apple">Cashew Apple</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantityKg">Quantity (kg) *</label>
+                            <input type="number" id="quantityKg" min="1" max="50000" step="1" required placeholder="e.g. 500">
+                            <span class="form-help">Must be greater than 0 kg</span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="harvestAt">Harvest Timestamp *</label>
+                            <input type="datetime-local" id="harvestAt" required>
+                            <span class="form-help">Cannot be in the future</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ambientTemp">Ambient Temperature at Field (°C) *</label>
+                            <input type="number" id="ambientTemp" min="-10" max="60" step="0.5" required placeholder="e.g. 32.5">
+                            <span class="form-help">Recorded collection temperature</span>
+                        </div>
+                    </div>
+
+                    <!-- Location Section: In M3 latitude/longitude inputs; GM1 will attach Places autocomplete and map picker -->
+                    <div id="locationPickerContainer" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                        <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem;">Farm / Collection Location</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="latInput">Latitude *</label>
+                                <input type="number" id="latInput" step="0.0001" min="-90" max="90" required placeholder="19.9975">
+                            </div>
+                            <div class="form-group">
+                                <label for="lngInput">Longitude *</label>
+                                <input type="number" id="lngInput" step="0.0001" min="-180" max="180" required placeholder="73.7898">
+                            </div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                            Preset: Nashik (19.9975, 73.7898) | Pune (18.5204, 73.8567) | Ratnagiri (16.9902, 73.3120)
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="batchNotes">Notes (Optional)</label>
+                        <textarea id="batchNotes" rows="2" placeholder="e.g. Tree-ripened, packed in crates"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary" id="btnResetBatchForm">Reset</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitBatch">Save Batch</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3: MY BATCHES -->
+        <div id="tabBatches" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>My Registered Batches</span>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBatches">Refresh</button>
+                </div>
+                <div id="batchesTableContainer">
+                    <div class="state-box">Loading batches...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getMe, logout } from './js/auth.js';
+        import { apiRequest } from './js/api.js';
+
+        let currentUser = null;
+
+        const globalAlert = document.getElementById('globalAlert');
+        function showAlert(msg, type = 'error') {
+            globalAlert.className = `alert alert-${type}`;
+            globalAlert.textContent = msg;
+            globalAlert.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function hideAlert() {
+            globalAlert.style.display = 'none';
+        }
+
+        // Initialize Authentication
+        (async () => {
+            try {
+                currentUser = await getMe();
+                if (!currentUser) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                document.getElementById('userName').textContent = `${currentUser.full_name} (${currentUser.role})`;
+                
+                // Set default harvest time to now
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('harvestAt').value = now.toISOString().slice(0, 16);
+                
+                // Default coordinates (Nashik)
+                document.getElementById('latInput').value = 19.9975;
+                document.getElementById('lngInput').value = 73.7898;
+
+                await loadBatches();
+            } catch (err) {
+                showAlert('Failed to authenticate session: ' + err.message);
+            }
+        })();
+
+        document.getElementById('btnLogout').addEventListener('click', logout);
+
+        // Navigation tab switching
+        document.querySelectorAll('nav a.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('nav a.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                link.classList.add('active');
+                const targetTabId = link.getAttribute('data-tab');
+                document.getElementById(targetTabId).classList.add('active');
+                hideAlert();
+            });
+        });
+
+        // Load Batches
+        async function loadBatches() {
+            const tableContainer = document.getElementById('batchesTableContainer');
+            const overviewContainer = document.getElementById('overviewBatchesList');
+            tableContainer.innerHTML = '<div class="state-box">Loading batches...</div>';
+
+            try {
+                const res = await apiRequest('/produce/batches?limit=50');
+                const batches = res.items || [];
+
+                // Update Stats
+                document.getElementById('statTotalBatches').textContent = batches.length;
+                const totalKg = batches.reduce((sum, b) => sum + b.quantity_kg, 0);
+                document.getElementById('statTotalKg').textContent = `${totalKg.toLocaleString()} kg`;
+
+                if (batches.length === 0) {
+                    const emptyHtml = `
+                        <div class="state-box">
+                            <div class="state-icon">🌾</div>
+                            <h3>No produce batches registered yet</h3>
+                            <p>Register your first crop harvest to start matching with cooling providers.</p>
+                        </div>
+                    `;
+                    tableContainer.innerHTML = emptyHtml;
+                    overviewContainer.innerHTML = emptyHtml;
+                    return;
+                }
+
+                // Render Table
+                const tableHtml = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Crop</th>
+                                    <th>Quantity</th>
+                                    <th>Harvest Date & Time</th>
+                                    <th>Temp (°C)</th>
+                                    <th>Location (Lat, Lng)</th>
+                                    <th>Source Label</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${batches.map(b => `
+                                    <tr>
+                                        <td><strong>${b.crop_code.toUpperCase()}</strong></td>
+                                        <td>${b.quantity_kg.toLocaleString()} kg</td>
+                                        <td>${new Date(b.harvest_at).toLocaleString()}</td>
+                                        <td>${b.ambient_temp_c}°C</td>
+                                        <td>${b.latitude.toFixed(4)}, ${b.longitude.toFixed(4)}</td>
+                                        <td>
+                                            <span class="badge ${b.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">
+                                                ${b.data_source}
+                                            </span>
+                                        </td>
+                                        <td style="color: var(--text-muted); font-size: 0.85rem;">${b.notes || '—'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                tableContainer.innerHTML = tableHtml;
+                overviewContainer.innerHTML = tableHtml;
+            } catch (err) {
+                const errHtml = `<div class="alert alert-error">Error loading batches: ${err.message}</div>`;
+                tableContainer.innerHTML = errHtml;
+                overviewContainer.innerHTML = errHtml;
+            }
+        }
+
+        document.getElementById('btnRefreshBatches').addEventListener('click', loadBatches);
+        document.getElementById('btnRefreshBatchesOverview').addEventListener('click', loadBatches);
+
+        // Submit Batch Form
+        const addBatchForm = document.getElementById('addBatchForm');
+        addBatchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const submitBtn = document.getElementById('btnSubmitBatch');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                const crop_code = document.getElementById('cropCode').value;
+                const quantity_kg = parseFloat(document.getElementById('quantityKg').value);
+                const harvest_local = document.getElementById('harvestAt').value;
+                const harvest_at = new Date(harvest_local).toISOString();
+                const ambient_temp_c = parseFloat(document.getElementById('ambientTemp').value);
+                const latitude = parseFloat(document.getElementById('latInput').value);
+                const longitude = parseFloat(document.getElementById('lngInput').value);
+                const notes = document.getElementById('batchNotes').value.trim() || null;
+
+                const payload = {
+                    crop_code,
+                    quantity_kg,
+                    harvest_at,
+                    ambient_temp_c,
+                    latitude,
+                    longitude,
+                    notes
+                };
+
+                await apiRequest('/produce/batches', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                showAlert(`Successfully registered ${quantity_kg} kg of ${crop_code.toUpperCase()}!`, 'success');
+                addBatchForm.reset();
+                
+                // Reset date to current
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('harvestAt').value = now.toISOString().slice(0, 16);
+                document.getElementById('latInput').value = 19.9975;
+                document.getElementById('lngInput').value = 73.7898;
+
+                await loadBatches();
+
+                // Switch to batches tab
+                setTimeout(() => {
+                    document.querySelector('a[data-tab="tabBatches"]').click();
+                }, 800);
+            } catch (err) {
+                showAlert(err.message || 'Failed to save batch', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Batch';
+            }
+        });
+
+        document.getElementById('btnResetBatchForm').addEventListener('click', () => {
+            addBatchForm.reset();
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('harvestAt').value = now.toISOString().slice(0, 16);
+            document.getElementById('latInput').value = 19.9975;
+            document.getElementById('lngInput').value = 73.7898;
+        });
+    </script>
+</body>
+</html>

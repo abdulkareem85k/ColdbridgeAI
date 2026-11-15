@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColdBridge AI – Operator Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <a href="operator.html" class="brand">
+            <span>❄️ ColdBridge AI</span>
+            <span class="brand-badge">Operator Portal</span>
+        </a>
+        <nav>
+            <a href="#assets" class="nav-link active" data-tab="tabAssets">My Assets</a>
+            <a href="#add-static" class="nav-link" data-tab="tabAddStatic">Add Cold Room</a>
+            <a href="#add-van" class="nav-link" data-tab="tabAddVan">Add Solar Van</a>
+            <div class="user-pill">
+                <span id="operatorName">Operator</span>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div id="globalAlert" class="alert" style="display: none;"></div>
+
+        <!-- TAB 1: ASSETS LIST & AVAILABILITY -->
+        <div id="tabAssets" class="tab-content active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Cooling Infrastructure Fleet</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Manage your registered static cold rooms and mobile solar cooling vans.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select id="filterAssetType" class="form-group" style="margin: 0; padding: 0.4rem 0.8rem;">
+                        <option value="">All Asset Types</option>
+                        <option value="STATIC">Static Rooms Only</option>
+                        <option value="MOBILE">Mobile Vans Only</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAssets">Refresh</button>
+                </div>
+            </div>
+
+            <!-- Assets Grid -->
+            <div id="assetsGrid" class="grid-cards">
+                <div class="state-box">Loading fleet assets...</div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ADD STATIC ROOM -->
+        <div id="tabAddStatic" class="tab-content">
+            <div class="card" style="max-width: 720px; margin: 0 auto;">
+                <h1 class="page-title" style="font-size: 1.5rem;">Register Static Cold Room</h1>
+                <p class="page-subtitle">Add a permanent warehouse or cold storage facility.</p>
+
+                <form id="addStaticForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="staticName">Facility Name *</label>
+                            <input type="text" id="staticName" required placeholder="e.g. Nashik Agro Vault A">
+                        </div>
+                        <div class="form-group">
+                            <label for="staticPrice">Rate (₹ per kg / day) *</label>
+                            <input type="number" id="staticPrice" step="0.1" min="0.1" max="100" required placeholder="1.5">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="staticTotalCap">Total Capacity (kg) *</label>
+                            <input type="number" id="staticTotalCap" step="10" min="50" max="500000" required placeholder="5000">
+                        </div>
+                        <div class="form-group">
+                            <label for="staticAvailCap">Initially Available Capacity (kg)</label>
+                            <input type="number" id="staticAvailCap" step="10" min="0" placeholder="Defaults to total">
+                            <span class="form-help">Cannot exceed total capacity</span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="staticMinTemp">Min Operating Temp (°C) *</label>
+                            <input type="number" id="staticMinTemp" step="0.5" min="-30" max="25" required placeholder="2.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="staticMaxTemp">Max Operating Temp (°C) *</label>
+                            <input type="number" id="staticMaxTemp" step="0.5" min="-30" max="30" required placeholder="12.0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="staticCrops">Supported Crops (comma-separated) *</label>
+                        <input type="text" id="staticCrops" required placeholder="mango, tomato, grapes, pomegranate">
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="staticLat">Latitude *</label>
+                            <input type="number" id="staticLat" step="0.0001" min="-90" max="90" required placeholder="20.0050">
+                        </div>
+                        <div class="form-group">
+                            <label for="staticLng">Longitude *</label>
+                            <input type="number" id="staticLng" step="0.0001" min="-180" max="180" required placeholder="73.7950">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="staticAddress">Facility Physical Address</label>
+                        <input type="text" id="staticAddress" placeholder="e.g. Pune-Nashik National Highway, Nashik">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitStatic">Save Cold Room</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3: ADD MOBILE SOLAR VAN -->
+        <div id="tabAddVan" class="tab-content">
+            <div class="card" style="max-width: 720px; margin: 0 auto;">
+                <h1 class="page-title" style="font-size: 1.5rem;">Register Mobile Solar Cooling Van</h1>
+                <p class="page-subtitle">Add a dispatchable solar-assisted cooling vehicle for farmgate pickup.</p>
+
+                <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+                    💡 <strong>Simulation Note:</strong> Solar reliability is a configurable simulation input (0.0 to 1.0). Hardware telemetry (ESP32, Peltier cooling load, battery state) is scheduled for a later hardware phase and is not part of this software prototype.
+                </div>
+
+                <form id="addVanForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="vanName">Van Fleet Name *</label>
+                            <input type="text" id="vanName" required placeholder="e.g. SolarVan Alpha">
+                        </div>
+                        <div class="form-group">
+                            <label for="vanRegNum">Vehicle Registration Ref *</label>
+                            <input type="text" id="vanRegNum" required placeholder="e.g. MH-15-AB-1001">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="vanTotalCap">Total Van Capacity (kg) *</label>
+                            <input type="number" id="vanTotalCap" step="10" min="50" max="10000" required placeholder="1200">
+                        </div>
+                        <div class="form-group">
+                            <label for="vanPrice">Rate (₹ per kg / day) *</label>
+                            <input type="number" id="vanPrice" step="0.1" min="0.1" max="100" required placeholder="2.4">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="vanRadius">Service Radius (km) *</label>
+                            <input type="number" id="vanRadius" min="5" max="300" step="1" required placeholder="60">
+                        </div>
+                        <div class="form-group">
+                            <label for="vanSolar">Solar Reliability Simulation Input (0.0 - 1.0) *</label>
+                            <input type="number" id="vanSolar" min="0" max="1" step="0.05" required value="0.90">
+                            <span class="form-help">Effective capacity = Available capacity × Solar reliability</span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="vanLat">Current Base Latitude *</label>
+                            <input type="number" id="vanLat" step="0.0001" min="-90" max="90" required placeholder="20.0100">
+                        </div>
+                        <div class="form-group">
+                            <label for="vanLng">Current Base Longitude *</label>
+                            <input type="number" id="vanLng" step="0.0001" min="-180" max="180" required placeholder="73.7800">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitVan">Save Mobile Van</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Capacity Update Modal -->
+    <div id="capacityModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 420px; width: 90%; margin: auto;">
+            <div class="card-title">Update Available Capacity</div>
+            <p id="modalAssetName" style="font-weight: 600; margin-bottom: 1rem; color: var(--primary);"></p>
+            <form id="capacityUpdateForm">
+                <input type="hidden" id="modalAssetId">
+                <input type="hidden" id="modalAssetTotal">
+                <div class="form-group">
+                    <label for="modalNewAvailCap">Available Capacity (kg) *</label>
+                    <input type="number" id="modalNewAvailCap" required min="0" step="1">
+                    <span id="modalCapHelp" class="form-help"></span>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="modalIsActive"> Asset is Active & Bookable
+                    </label>
+                </div>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" id="btnCancelModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveCapModal">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { getMe, logout } from './js/auth.js';
+        import { apiRequest } from './js/api.js';
+
+        let currentUser = null;
+
+        const globalAlert = document.getElementById('globalAlert');
+        function showAlert(msg, type = 'error') {
+            globalAlert.className = `alert alert-${type}`;
+            globalAlert.textContent = msg;
+            globalAlert.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function hideAlert() {
+            globalAlert.style.display = 'none';
+        }
+
+        // Initialize Authentication
+        (async () => {
+            try {
+                currentUser = await getMe();
+                if (!currentUser) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                document.getElementById('operatorName').textContent = `${currentUser.full_name} (${currentUser.role})`;
+                await loadAssets();
+            } catch (err) {
+                showAlert('Authentication error: ' + err.message);
+            }
+        })();
+
+        document.getElementById('btnLogout').addEventListener('click', logout);
+
+        // Tab Switching
+        document.querySelectorAll('nav a.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('nav a.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                link.classList.add('active');
+                const targetTabId = link.getAttribute('data-tab');
+                document.getElementById(targetTabId).classList.add('active');
+                hideAlert();
+            });
+        });
+
+        // Load Assets
+        async function loadAssets() {
+            const grid = document.getElementById('assetsGrid');
+            grid.innerHTML = '<div class="state-box">Loading fleet assets...</div>';
+
+            const filterType = document.getElementById('filterAssetType').value;
+            let query = '/assets?limit=50';
+            if (filterType) query += `&asset_type=${filterType}`;
+
+            try {
+                const res = await apiRequest(query);
+                const assets = res.items || [];
+
+                if (assets.length === 0) {
+                    grid.innerHTML = `
+                        <div class="state-box" style="grid-column: 1 / -1;">
+                            <div class="state-icon">❄️</div>
+                            <h3>No cooling assets found</h3>
+                            <p>Register static cold rooms or mobile vans to make them discoverable to farmers.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = assets.map(a => {
+                    const isVan = a.asset_type === 'MOBILE';
+                    const effectiveCap = isVan && a.mobile_detail 
+                        ? (a.available_capacity_kg * a.mobile_detail.solar_reliability).toFixed(0)
+                        : a.available_capacity_kg;
+
+                    return `
+                        <div class="asset-card">
+                            <div class="asset-card-header">
+                                <div>
+                                    <h3 style="font-size: 1.1rem; margin-bottom: 0.2rem;">${a.name}</h3>
+                                    <span class="badge ${isVan ? 'badge-type-van' : 'badge-type-room'}">
+                                        ${isVan ? '🚐 Mobile Van' : '🏭 Static Room'}
+                                    </span>
+                                </div>
+                                <div class="badge-group">
+                                    <!-- INDEPENDENT DATA LABELS -->
+                                    <span class="badge ${a.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">
+                                        ${a.data_source}
+                                    </span>
+                                    <span class="badge ${a.data_status === 'FRESH' ? 'badge-status-fresh' : (a.data_status === 'STALE' ? 'badge-status-stale' : 'badge-status-unavailable')}">
+                                        ${a.data_status}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="asset-meta">
+                                <div>
+                                    <span class="label">Available / Total</span>
+                                    <span class="val">${a.available_capacity_kg.toLocaleString()} / ${a.total_capacity_kg.toLocaleString()} kg</span>
+                                </div>
+                                <div>
+                                    <span class="label">Price per Day</span>
+                                    <span class="val">₹${a.price_per_kg_per_day.toFixed(2)} / kg</span>
+                                </div>
+                                ${isVan && a.mobile_detail ? `
+                                    <div>
+                                        <span class="label">Solar Reliability</span>
+                                        <span class="val">${(a.mobile_detail.solar_reliability * 100).toFixed(0)}% (Simulated)</span>
+                                    </div>
+                                    <div>
+                                        <span class="label">Effective Capacity</span>
+                                        <span class="val">${effectiveCap} kg</span>
+                                    </div>
+                                ` : `
+                                    <div>
+                                        <span class="label">Temperature Range</span>
+                                        <span class="val">${a.static_detail ? `${a.static_detail.min_temperature_c}° to ${a.static_detail.max_temperature_c}°C` : '—'}</span>
+                                    </div>
+                                    <div>
+                                        <span class="label">Supported Crops</span>
+                                        <span class="val" style="font-size: 0.75rem;">${a.static_detail ? a.static_detail.supported_crops : '—'}</span>
+                                    </div>
+                                `}
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.5rem; border-top: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                    Status: <strong style="color: ${a.is_active ? 'var(--primary)' : 'var(--error-text)'};">${a.is_active ? 'Active' : 'Inactive'}</strong>
+                                </span>
+                                <button type="button" class="btn btn-secondary btn-sm btn-update-cap" 
+                                    data-id="${a.id}" 
+                                    data-name="${a.name}"
+                                    data-avail="${a.available_capacity_kg}"
+                                    data-total="${a.total_capacity_kg}"
+                                    data-active="${a.is_active}">
+                                    Update Capacity
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Attach update modal handlers
+                document.querySelectorAll('.btn-update-cap').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        const name = btn.getAttribute('data-name');
+                        const avail = btn.getAttribute('data-avail');
+                        const total = btn.getAttribute('data-total');
+                        const active = btn.getAttribute('data-active') === 'true';
+
+                        document.getElementById('modalAssetId').value = id;
+                        document.getElementById('modalAssetTotal').value = total;
+                        document.getElementById('modalAssetName').textContent = `${name} (Max: ${total} kg)`;
+                        document.getElementById('modalNewAvailCap').value = avail;
+                        document.getElementById('modalNewAvailCap').max = total;
+                        document.getElementById('modalCapHelp').textContent = `Max allowed: ${total} kg`;
+                        document.getElementById('modalIsActive').checked = active;
+
+                        document.getElementById('capacityModal').style.display = 'flex';
+                    });
+                });
+            } catch (err) {
+                grid.innerHTML = `<div class="alert alert-error">Error loading assets: ${err.message}</div>`;
+            }
+        }
+
+        document.getElementById('btnRefreshAssets').addEventListener('click', loadAssets);
+        document.getElementById('filterAssetType').addEventListener('change', loadAssets);
+
+        // Modal Controls
+        document.getElementById('btnCancelModal').addEventListener('click', () => {
+            document.getElementById('capacityModal').style.display = 'none';
+        });
+
+        document.getElementById('capacityUpdateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const assetId = document.getElementById('modalAssetId').value;
+            const newAvail = parseFloat(document.getElementById('modalNewAvailCap').value);
+            const total = parseFloat(document.getElementById('modalAssetTotal').value);
+            const isActive = document.getElementById('modalIsActive').checked;
+
+            if (newAvail > total) {
+                alert(`Available capacity cannot exceed total capacity (${total} kg)`);
+                return;
+            }
+
+            try {
+                await apiRequest(`/assets/${assetId}/availability`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        available_capacity_kg: newAvail,
+                        is_active: isActive
+                    })
+                });
+                document.getElementById('capacityModal').style.display = 'none';
+                showAlert('Asset capacity updated successfully!', 'success');
+                await loadAssets();
+            } catch (err) {
+                alert('Error updating capacity: ' + err.message);
+            }
+        });
+
+        // Add Static Room Handler
+        document.getElementById('addStaticForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const submitBtn = document.getElementById('btnSubmitStatic');
+            submitBtn.disabled = true;
+
+            try {
+                const totalCap = parseFloat(document.getElementById('staticTotalCap').value);
+                const availCapVal = document.getElementById('staticAvailCap').value;
+                const availCap = availCapVal ? parseFloat(availCapVal) : totalCap;
+
+                const payload = {
+                    name: document.getElementById('staticName').value.trim(),
+                    asset_type: 'STATIC',
+                    total_capacity_kg: totalCap,
+                    available_capacity_kg: availCap,
+                    price_per_kg_per_day: parseFloat(document.getElementById('staticPrice').value),
+                    latitude: parseFloat(document.getElementById('staticLat').value),
+                    longitude: parseFloat(document.getElementById('staticLng').value),
+                    static_detail: {
+                        supported_crops: document.getElementById('staticCrops').value.trim(),
+                        min_temperature_c: parseFloat(document.getElementById('staticMinTemp').value),
+                        max_temperature_c: parseFloat(document.getElementById('staticMaxTemp').value),
+                        address: document.getElementById('staticAddress').value.trim() || null
+                    }
+                };
+
+                await apiRequest('/assets', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                showAlert(`Static room "${payload.name}" registered successfully!`, 'success');
+                document.getElementById('addStaticForm').reset();
+                await loadAssets();
+                setTimeout(() => document.querySelector('a[data-tab="tabAssets"]').click(), 600);
+            } catch (err) {
+                showAlert(err.message || 'Failed to save static cold room', 'error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Add Van Handler
+        document.getElementById('addVanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const submitBtn = document.getElementById('btnSubmitVan');
+            submitBtn.disabled = true;
+
+            try {
+                const totalCap = parseFloat(document.getElementById('vanTotalCap').value);
+                const payload = {
+                    name: document.getElementById('vanName').value.trim(),
+                    asset_type: 'MOBILE',
+                    total_capacity_kg: totalCap,
+                    available_capacity_kg: totalCap,
+                    price_per_kg_per_day: parseFloat(document.getElementById('vanPrice').value),
+                    latitude: parseFloat(document.getElementById('vanLat').value),
+                    longitude: parseFloat(document.getElementById('vanLng').value),
+                    mobile_detail: {
+                        vehicle_ref: document.getElementById('vanRegNum').value.trim(),
+                        service_radius_km: parseFloat(document.getElementById('vanRadius').value),
+                        solar_reliability: parseFloat(document.getElementById('vanSolar').value)
+                    }
+                };
+
+                await apiRequest('/assets', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                showAlert(`Solar van "${payload.name}" registered successfully!`, 'success');
+                document.getElementById('addVanForm').reset();
+                await loadAssets();
+                setTimeout(() => document.querySelector('a[data-tab="tabAssets"]').click(), 600);
+            } catch (err) {
+                showAlert(err.message || 'Failed to save mobile van', 'error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
