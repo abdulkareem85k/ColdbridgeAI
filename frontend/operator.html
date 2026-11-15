@@ -17,6 +17,7 @@
         <nav>
             <a href="#assets" class="nav-link active" data-tab="tabAssets">My Assets</a>
             <a href="#bookings" class="nav-link" data-tab="tabBookings">Active Bookings</a>
+            <a href="#surplus" class="nav-link" data-tab="tabSurplus">Surplus & Inventory</a>
             <a href="#utilization" class="nav-link" data-tab="tabUtilization">Capacity Utilization</a>
             <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue">SRI Priority Queue</a>
             <a href="#add-static" class="nav-link" data-tab="tabAddStatic">Add Cold Room</a>
@@ -273,6 +274,131 @@
                 </form>
             </div>
         </div>
+
+        <!-- TAB 7: SURPLUS & INVENTORY (M7 Phase 2) -->
+        <div id="tabSurplus" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Inventory & Near-Expiry Surplus Recovery</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Trace produce batches in cold bays, monitor shelf-life thresholds, and inspect produce before marketplace release.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSurplus">Refresh Data</button>
+            </div>
+
+            <!-- Operator Alerts -->
+            <div id="surplusAlertsContainer" style="margin-bottom: 1.5rem;"></div>
+
+            <!-- Stored Inventory Section -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="card-title" style="margin-bottom: 1rem;">
+                    <span>Active Facility Inventory (Stored Batches)</span>
+                    <span class="badge badge-simulated">DATA SOURCE: SIMULATED</span>
+                </div>
+                <div id="inventoryContainer">
+                    <div class="state-box">Loading facility inventory...</div>
+                </div>
+            </div>
+
+            <!-- Surplus Listings Section -->
+            <div class="card">
+                <div class="card-title" style="margin-bottom: 1rem;">
+                    <span>Surplus Produce Listings & Quality Sign-Off</span>
+                    <span class="badge" style="background:#dbeafe; color:#1e40af; font-weight:700;">PHASE 2 MARKETPLACE</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    ⚠️ <strong>Quality Gate Invariant:</strong> Unapproved listings can NEVER be seen or purchased by buyers. The operator must physically verify produce condition and sign off on quality before publishing.
+                </div>
+                <div id="operatorListingsContainer">
+                    <div class="state-box">Loading surplus listings...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Surplus Listing Modal -->
+    <div id="createSurplusModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 500px; width: 90%; margin: auto;">
+            <div class="card-title">
+                <span>Create Surplus Produce Listing</span>
+            </div>
+            <form id="createSurplusForm" style="margin-top: 1rem;">
+                <input type="hidden" id="surplusInventoryId">
+                <div class="form-group">
+                    <label>Produce Crop & Facility</label>
+                    <input type="text" id="surplusProduceDesc" disabled style="background: #f1f5f9;">
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="surplusQuantity">Quantity to List (kg) *</label>
+                        <input type="number" id="surplusQuantity" step="10" min="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="surplusBasePrice">Base Price (₹/kg) *</label>
+                        <input type="number" id="surplusBasePrice" step="0.5" min="1" required placeholder="40">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="surplusExpiryHours">Listing Window (Hours) *</label>
+                        <input type="number" id="surplusExpiryHours" step="6" min="12" max="168" value="48" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="surplusQualityGrade">Inspected Quality Grade</label>
+                        <select id="surplusQualityGrade">
+                            <option value="GRADE_A">Grade A (Firm, Unblemished)</option>
+                            <option value="GRADE_B">Grade B (Ripe, Intact)</option>
+                            <option value="GRADE_C">Grade C (Processing Grade)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="surplusNotes">Inspection / Condition Notes</label>
+                    <textarea id="surplusNotes" rows="2" placeholder="e.g. Hydro-cooled tomatoes, 80% color, no fungal lesions"></textarea>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; background: #f8fafc; padding: 0.5rem; border-radius: var(--radius); border: 1px solid var(--border);">
+                    <input type="checkbox" id="surplusApproveImmediately" checked>
+                    <label for="surplusApproveImmediately" style="margin: 0; font-size: 0.85rem; cursor: pointer;">
+                        <strong>Operator Sign-Off:</strong> I have physically inspected this produce and certify its quality for immediate marketplace release.
+                    </label>
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" id="btnCancelSurplusModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitSurplus">Publish Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quality Approval Modal -->
+    <div id="qualityApprovalModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 480px; width: 90%; margin: auto;">
+            <div class="card-title">
+                <span>Produce Quality Inspection Sign-Off</span>
+            </div>
+            <form id="qualityApprovalForm" style="margin-top: 1rem;">
+                <input type="hidden" id="approvalListingId">
+                <p id="approvalListingSummary" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"></p>
+                <div class="form-group">
+                    <label for="approvalGrade">Certified Quality Grade *</label>
+                    <select id="approvalGrade" required>
+                        <option value="GRADE_A">Grade A (Premium Fresh, Firm, Zero Mould)</option>
+                        <option value="GRADE_B">Grade B (Fully Ripe, Suitable for Immediate Consumption)</option>
+                        <option value="GRADE_C">Grade C (Processing / Pulping Grade)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="approvalNotes">Visual & Physical Inspection Notes *</label>
+                    <textarea id="approvalNotes" rows="3" required placeholder="e.g. Firmness tested with penetrometer; skin intact; cold storage at 4C maintained."></textarea>
+                </div>
+                <div class="notice-banner" style="margin-bottom: 1rem; font-size: 0.8rem; background: #fffbeb; border-color: #fde68a; color: #92400e;">
+                    ℹ️ Time alone does NOT prove food safety. By signing off, you confirm that physical inspection was performed and produce is fit for human consumption.
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" id="btnCancelApprovalModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnConfirmApproval">Approve & Release to Buyers</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Capacity Adjustment Modal -->
@@ -362,6 +488,7 @@
                 await loadBookings();
                 await loadUtilization();
                 await loadSriPriorityQueue();
+                await loadInventoryAndSurplus();
             } catch (err) {
                 showAlert('Session error: ' + err.message);
             }
@@ -381,6 +508,7 @@
                 hideAlert();
 
                 if (targetTabId === 'tabBookings') loadBookings();
+                if (targetTabId === 'tabSurplus') loadInventoryAndSurplus();
                 if (targetTabId === 'tabUtilization') loadUtilization();
                 if (targetTabId === 'tabSriQueue') loadSriPriorityQueue();
             });
@@ -824,6 +952,242 @@
                 submitBtn.disabled = false;
             }
         });
+
+        // ==================== SURPLUS & INVENTORY (M7) ====================
+        let cachedInventory = [];
+        let cachedOperatorListings = [];
+
+        async function loadInventoryAndSurplus() {
+            await Promise.all([loadAlerts(), loadInventory(), loadOperatorListings()]);
+        }
+
+        async function loadAlerts() {
+            const container = document.getElementById('surplusAlertsContainer');
+            try {
+                const alerts = await apiRequest('/inventory/alerts');
+                if (!alerts || alerts.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+                container.innerHTML = alerts.slice(0, 3).map(a => `
+                    <div class="alert alert-warning" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+                        <div>
+                            <strong>⚠️ ${escapeHtml(a.alert_type)}:</strong> ${escapeHtml(a.message)}
+                        </div>
+                        <span style="font-size:0.75rem; color:#854d0e;">${new Date(a.created_at).toLocaleDateString()}</span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.warn('Alerts load error:', e);
+            }
+        }
+
+        async function loadInventory() {
+            const container = document.getElementById('inventoryContainer');
+            container.innerHTML = '<div class="state-box">Loading stored inventory...</div>';
+            try {
+                const items = await apiRequest('/inventory');
+                cachedInventory = items || [];
+                if (cachedInventory.length === 0) {
+                    container.innerHTML = '<div class="state-box">No stored inventory currently in facility. Produce is auto-recorded upon arrival (PRODUCE_RECEIVED).</div>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                            <thead>
+                                <tr style="background:#f8fafc; border-bottom:1px solid var(--border); text-align:left;">
+                                    <th style="padding:0.6rem 0.75rem;">Crop & Batch</th>
+                                    <th style="padding:0.6rem 0.75rem;">Facility Location</th>
+                                    <th style="padding:0.6rem 0.75rem;">Current Stock</th>
+                                    <th style="padding:0.6rem 0.75rem;">Received Date</th>
+                                    <th style="padding:0.6rem 0.75rem;">Expiry Risk</th>
+                                    <th style="padding:0.6rem 0.75rem;">Status</th>
+                                    <th style="padding:0.6rem 0.75rem; text-align:right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${cachedInventory.map(item => `
+                                    <tr style="border-bottom:1px solid var(--border);">
+                                        <td style="padding:0.6rem 0.75rem; font-weight:600;">${(item.crop_code || 'PRODUCE').toUpperCase()}</td>
+                                        <td style="padding:0.6rem 0.75rem;">${escapeHtml(item.asset_name || 'Warehouse')} (${escapeHtml(item.storage_location)})</td>
+                                        <td style="padding:0.6rem 0.75rem; font-weight:700; color:var(--primary);">${item.current_quantity_kg.toFixed(1)} kg</td>
+                                        <td style="padding:0.6rem 0.75rem;">${new Date(item.received_at).toLocaleDateString()}</td>
+                                        <td style="padding:0.6rem 0.75rem; color:${item.status === 'NEAR_EXPIRY' ? 'var(--danger)' : 'inherit'};">
+                                            ${item.expiry_risk_date ? new Date(item.expiry_risk_date).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                        <td style="padding:0.6rem 0.75rem;">
+                                            <span class="badge" style="background:${item.status === 'NEAR_EXPIRY' ? '#fee2e2; color:#991b1b;' : '#f1f5f9; color:#475569;'}">${item.status}</span>
+                                        </td>
+                                        <td style="padding:0.6rem 0.75rem; text-align:right;">
+                                            <button type="button" class="btn btn-primary btn-sm btn-list-surplus" data-id="${item.id}" ${item.current_quantity_kg <= 0 ? 'disabled' : ''}>
+                                                List Surplus
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                container.querySelectorAll('.btn-list-surplus').forEach(b => {
+                    b.addEventListener('click', () => {
+                        const inv = cachedInventory.find(x => x.id === b.getAttribute('data-id'));
+                        if (inv) openCreateSurplusModal(inv);
+                    });
+                });
+            } catch (err) {
+                container.innerHTML = `<div class="state-box" style="color:var(--danger);">Error loading inventory: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        async function loadOperatorListings() {
+            const container = document.getElementById('operatorListingsContainer');
+            container.innerHTML = '<div class="state-box">Loading surplus listings...</div>';
+            try {
+                const listings = await apiRequest('/marketplace/operator-listings');
+                cachedOperatorListings = listings || [];
+                if (cachedOperatorListings.length === 0) {
+                    container.innerHTML = '<div class="state-box">No surplus listings created yet. Select an inventory item above to list surplus.</div>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                            <thead>
+                                <tr style="background:#f8fafc; border-bottom:1px solid var(--border); text-align:left;">
+                                    <th style="padding:0.6rem 0.75rem;">Crop</th>
+                                    <th style="padding:0.6rem 0.75rem;">Available / Initial</th>
+                                    <th style="padding:0.6rem 0.75rem;">Base Rate</th>
+                                    <th style="padding:0.6rem 0.75rem;">Sliding Discount</th>
+                                    <th style="padding:0.6rem 0.75rem;">Current Buyer Price</th>
+                                    <th style="padding:0.6rem 0.75rem;">Quality Sign-Off</th>
+                                    <th style="padding:0.6rem 0.75rem;">Status</th>
+                                    <th style="padding:0.6rem 0.75rem; text-align:right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${cachedOperatorListings.map(l => {
+                                    const isPending = l.status === 'PENDING_APPROVAL';
+                                    return `
+                                        <tr style="border-bottom:1px solid var(--border);">
+                                            <td style="padding:0.6rem 0.75rem; font-weight:600;">${l.crop_code.toUpperCase()}</td>
+                                            <td style="padding:0.6rem 0.75rem;">${l.available_quantity_kg.toFixed(1)} / ${l.initial_quantity_kg.toFixed(1)} kg</td>
+                                            <td style="padding:0.6rem 0.75rem;">₹${l.base_price_per_kg.toFixed(2)}/kg</td>
+                                            <td style="padding:0.6rem 0.75rem; color:#15803d; font-weight:700;">${l.current_discount_pct}% OFF</td>
+                                            <td style="padding:0.6rem 0.75rem; font-weight:700; color:var(--primary);">₹${l.discounted_price_per_kg.toFixed(2)}/kg</td>
+                                            <td style="padding:0.6rem 0.75rem;">
+                                                ${l.quality_approved_by ? `<span style="color:#15803d;">✅ ${escapeHtml(l.quality_grade || 'Approved')}</span>` : `<span style="color:#b45309; font-weight:600;">⏳ Pending Review</span>`}
+                                            </td>
+                                            <td style="padding:0.6rem 0.75rem;">
+                                                <span class="badge" style="background:${isPending ? '#fef3c7; color:#92400e;' : (l.status === 'APPROVED' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#475569;')}">
+                                                    ${l.status}
+                                                </span>
+                                            </td>
+                                            <td style="padding:0.6rem 0.75rem; text-align:right;">
+                                                ${isPending ? `
+                                                    <button type="button" class="btn btn-primary btn-sm btn-approve-quality" data-id="${l.id}">
+                                                        Inspect & Sign Off
+                                                    </button>
+                                                ` : `<span style="font-size:0.75rem; color:var(--text-muted);">Published</span>`}
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                container.querySelectorAll('.btn-approve-quality').forEach(b => {
+                    b.addEventListener('click', () => {
+                        const l = cachedOperatorListings.find(x => x.id === b.getAttribute('data-id'));
+                        if (l) openQualityApprovalModal(l);
+                    });
+                });
+            } catch (err) {
+                container.innerHTML = `<div class="state-box" style="color:var(--danger);">Error loading listings: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        function openCreateSurplusModal(inv) {
+            document.getElementById('surplusInventoryId').value = inv.id;
+            document.getElementById('surplusProduceDesc').value = `${(inv.crop_code || 'Produce').toUpperCase()} (${inv.current_quantity_kg} kg available at ${inv.asset_name || 'Facility'})`;
+            document.getElementById('surplusQuantity').max = inv.current_quantity_kg;
+            document.getElementById('surplusQuantity').value = inv.current_quantity_kg;
+            document.getElementById('surplusBasePrice').value = '40';
+            document.getElementById('createSurplusModal').style.display = 'flex';
+        }
+
+        document.getElementById('btnCancelSurplusModal').addEventListener('click', () => {
+            document.getElementById('createSurplusModal').style.display = 'none';
+        });
+
+        document.getElementById('createSurplusForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+            const btn = document.getElementById('btnSubmitSurplus');
+            btn.disabled = true;
+            try {
+                const payload = {
+                    inventory_id: document.getElementById('surplusInventoryId').value,
+                    initial_quantity_kg: parseFloat(document.getElementById('surplusQuantity').value),
+                    base_price_per_kg: parseFloat(document.getElementById('surplusBasePrice').value),
+                    expiry_hours: parseInt(document.getElementById('surplusExpiryHours').value, 10),
+                    quality_grade: document.getElementById('surplusQualityGrade').value,
+                    notes: document.getElementById('surplusNotes').value.trim() || null,
+                    approve_immediately: document.getElementById('surplusApproveImmediately').checked
+                };
+                await apiRequest('/marketplace/listings', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                document.getElementById('createSurplusModal').style.display = 'none';
+                showAlert('Surplus listing created successfully!', 'success');
+                await loadInventoryAndSurplus();
+            } catch (err) {
+                showAlert('Failed to create surplus listing: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        function openQualityApprovalModal(listing) {
+            document.getElementById('approvalListingId').value = listing.id;
+            document.getElementById('approvalListingSummary').textContent = `${listing.crop_code.toUpperCase()} – ${listing.available_quantity_kg} kg at ₹${listing.base_price_per_kg}/kg`;
+            document.getElementById('approvalNotes').value = '';
+            document.getElementById('qualityApprovalModal').style.display = 'flex';
+        }
+
+        document.getElementById('btnCancelApprovalModal').addEventListener('click', () => {
+            document.getElementById('qualityApprovalModal').style.display = 'none';
+        });
+
+        document.getElementById('qualityApprovalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+            const btn = document.getElementById('btnConfirmApproval');
+            btn.disabled = true;
+            try {
+                const id = document.getElementById('approvalListingId').value;
+                const payload = {
+                    quality_grade: document.getElementById('approvalGrade').value,
+                    notes: document.getElementById('approvalNotes').value.trim()
+                };
+                await apiRequest(`/marketplace/listings/${id}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                document.getElementById('qualityApprovalModal').style.display = 'none';
+                showAlert('Quality inspection signed off! Produce listing is now published to buyers.', 'success');
+                await loadInventoryAndSurplus();
+            } catch (err) {
+                showAlert('Failed to sign off on quality: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btnRefreshSurplus').addEventListener('click', loadInventoryAndSurplus);
     </script>
 </body>
 </html>

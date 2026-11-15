@@ -50,6 +50,9 @@ export function redirectByRole(user) {
         case 'VAN_OPERATOR':
             window.location.href = 'operator.html';
             break;
+        case 'BUYER':
+            window.location.href = 'buyer.html';
+            break;
         case 'ADMIN':
             window.location.href = 'admin.html';
             break;

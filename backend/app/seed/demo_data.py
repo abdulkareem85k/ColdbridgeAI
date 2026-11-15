@@ -10,12 +10,17 @@ if str(backend_dir) not in sys.path:
 
 from app.db.session import SessionLocal, engine
 from app.db.base import Base
-from app.models.user import User, FarmerProfile, OperatorProfile
+from app.models.user import User, FarmerProfile, OperatorProfile, BuyerProfile
 from app.models.asset import ColdAsset, StaticAssetDetail, MobileAssetDetail, AssetAvailability
 from app.models.produce import ProduceBatch, SpoilageAssessment
 from app.models.matching import MatchingRequest, Bid
 from app.models.booking import Booking
+from app.models.inventory import Inventory, Alert
+from app.models.marketplace import BuyerListing, PurchaseOrder
+from app.models.forecast import DemandForecast
 from app.core.security import hash_password
+from app.services.marketplace_service import calculate_sliding_discount
+from app.services.forecast_service import DEFAULT_SEASONAL_ESTIMATES
 
 def seed_demo_data(db=None):
     """
@@ -33,6 +38,11 @@ def seed_demo_data(db=None):
         Base.metadata.create_all(bind=engine)
 
         # Clear existing demo data cleanly in dependency order
+        db.query(PurchaseOrder).delete()
+        db.query(BuyerListing).delete()
+        db.query(Alert).delete()
+        db.query(Inventory).delete()
+        db.query(DemandForecast).delete()
         db.query(Booking).delete()
         db.query(Bid).delete()
         db.query(MatchingRequest).delete()
@@ -42,6 +52,7 @@ def seed_demo_data(db=None):
         db.query(StaticAssetDetail).delete()
         db.query(MobileAssetDetail).delete()
         db.query(ColdAsset).delete()
+        db.query(BuyerProfile).delete()
         db.query(FarmerProfile).delete()
         db.query(OperatorProfile).delete()
         db.query(User).delete()
@@ -103,22 +114,52 @@ def seed_demo_data(db=None):
         )
         farmer5 = User(
             id="f1000000-0000-0000-0000-000000000005",
-            email="mahesh.farmer@coldbridge.ai",
+            email="santosh.farmer@coldbridge.ai",
             hashed_password=hash_password(demo_pw),
             role="FARMER",
-            full_name="Mahesh Kadam",
+            full_name="Santosh Gaikwad",
             phone="+91-9822011005",
             is_active=True
         )
         db.add_all([farmer2, farmer3, farmer4, farmer5])
         db.flush()
 
-        db.add_all([
-            FarmerProfile(id="fp000000-0000-0000-0000-000000000002", user_id=farmer2.id, farm_name="Shinde Tomato Farms", district="Pune", state="Maharashtra", default_latitude=18.5204, default_longitude=73.8567),
-            FarmerProfile(id="fp000000-0000-0000-0000-000000000003", user_id=farmer3.id, farm_name="Ratnagiri Alphonso Estate", district="Ratnagiri", state="Maharashtra", default_latitude=16.9902, default_longitude=73.3120),
-            FarmerProfile(id="fp000000-0000-0000-0000-000000000004", user_id=farmer4.id, farm_name="Pawar Vineyard", district="Nashik", state="Maharashtra", default_latitude=20.0110, default_longitude=73.8120),
-            FarmerProfile(id="fp000000-0000-0000-0000-000000000005", user_id=farmer5.id, farm_name="Kadam Berry Grove", district="Mumbai", state="Maharashtra", default_latitude=19.0760, default_longitude=72.8777),
-        ])
+        db.add(FarmerProfile(
+            id="fp000000-0000-0000-0000-000000000002",
+            user_id=farmer2.id,
+            farm_name="Shinde Agro Estates",
+            district="Pune",
+            state="Maharashtra",
+            default_latitude=18.5204,
+            default_longitude=73.8567
+        ))
+        db.add(FarmerProfile(
+            id="fp000000-0000-0000-0000-000000000003",
+            user_id=farmer3.id,
+            farm_name="Konkan Alphonso Farms",
+            district="Ratnagiri",
+            state="Maharashtra",
+            default_latitude=16.9902,
+            default_longitude=73.3120
+        ))
+        db.add(FarmerProfile(
+            id="fp000000-0000-0000-0000-000000000004",
+            user_id=farmer4.id,
+            farm_name="Sahyadri Vineyards",
+            district="Nashik",
+            state="Maharashtra",
+            default_latitude=20.0000,
+            default_longitude=73.8000
+        ))
+        db.add(FarmerProfile(
+            id="fp000000-0000-0000-0000-000000000005",
+            user_id=farmer5.id,
+            farm_name="Gaikwad Berry Farm",
+            district="Mumbai",
+            state="Maharashtra",
+            default_latitude=19.0760,
+            default_longitude=72.8777
+        ))
 
         # Demo Static Operator
         static_op = User(
@@ -135,8 +176,29 @@ def seed_demo_data(db=None):
         db.add(OperatorProfile(
             id="opp00000-0000-0000-0000-000000000001",
             user_id=static_op.id,
-            business_name="Kisan Cold Storage Network",
+            business_name="Nashik Cold Chain Infrastructure",
             contact_phone="+91-9822022001",
+            district="Nashik",
+            state="Maharashtra"
+        ))
+
+        # Additional Operators
+        static_op2 = User(
+            id="op000000-0000-0000-0000-000000000003",
+            email="pune.operator@coldbridge.ai",
+            hashed_password=hash_password(demo_pw),
+            role="STATIC_OPERATOR",
+            full_name="Pune Perishable Hubs",
+            phone="+91-9822022002",
+            is_active=True
+        )
+        db.add(static_op2)
+        db.flush()
+        db.add(OperatorProfile(
+            id="opp00000-0000-0000-0000-000000000003",
+            user_id=static_op2.id,
+            business_name="Western Maharashtra Cold Hubs",
+            contact_phone="+91-9822022002",
             district="Pune",
             state="Maharashtra"
         ))
@@ -160,6 +222,28 @@ def seed_demo_data(db=None):
             contact_phone="+91-9822033001",
             district="Nashik",
             state="Maharashtra"
+        ))
+
+        # Demo Buyer (Phase 2)
+        buyer1 = User(
+            id="u1000000-0000-0000-0000-000000000099",
+            email="buyer.demo@coldbridge.ai",
+            hashed_password=hash_password("BuyerDemo123!"),
+            role="BUYER",
+            full_name="Vikram Mehta",
+            phone="+91-9822011999",
+            is_active=True
+        )
+        db.add(buyer1)
+        db.flush()
+        db.add(BuyerProfile(
+            id="bp000000-0000-0000-0000-000000000001",
+            user_id=buyer1.id,
+            business_name="Maharashtra Fresh Agro Wholesalers",
+            buyer_type="WHOLESALER",
+            district="Pune",
+            state="Maharashtra",
+            address="Plot 42, Gultekdi Market Yard, Pune"
         ))
 
         # Demo Admin
@@ -189,29 +273,29 @@ def seed_demo_data(db=None):
         for aid, name, tot_cap, avail_cap, price, lat, lng, crops, min_t, max_t, addr in static_rooms_data:
             asset = ColdAsset(
                 id=aid,
-                operator_id=static_op.id,
+                operator_id=static_op.id if ("Nashik" in name or "Godavari" in name) else static_op2.id,
                 name=name,
                 asset_type="STATIC",
+                latitude=lat,
+                longitude=lng,
                 total_capacity_kg=tot_cap,
                 available_capacity_kg=avail_cap,
                 price_per_kg_per_day=price,
-                latitude=lat,
-                longitude=lng,
                 is_active=True,
                 data_source="SIMULATED"
             )
             db.add(asset)
             db.flush()
             db.add(StaticAssetDetail(
-                id=f"sd{aid[2:]}",
-                asset_id=aid,
+                id=f"sad{aid[3:]}",
+                asset_id=asset.id,
                 supported_crops=crops,
                 min_temperature_c=min_t,
                 max_temperature_c=max_t,
                 address=addr
             ))
 
-        # 4 Mobile Vans with varying solar_reliability simulation inputs
+        # 4 Mobile Solar Vans
         mobile_vans_data = [
             ("a2000000-0000-0000-0000-000000000001", "SolarVan Alpha", 1200.0, 800.0, 2.4, 20.0100, 73.7800, "MH-15-AB-1001", 60.0, 0.95),
             ("a2000000-0000-0000-0000-000000000002", "SolarVan Beta", 800.0, 800.0, 2.0, 18.5300, 73.8400, "MH-12-CD-2002", 45.0, 0.85),
@@ -225,28 +309,28 @@ def seed_demo_data(db=None):
                 operator_id=van_op.id,
                 name=name,
                 asset_type="MOBILE",
+                latitude=lat,
+                longitude=lng,
                 total_capacity_kg=tot_cap,
                 available_capacity_kg=avail_cap,
                 price_per_kg_per_day=price,
-                latitude=lat,
-                longitude=lng,
                 is_active=True,
                 data_source="SIMULATED"
             )
             db.add(asset)
             db.flush()
             db.add(MobileAssetDetail(
-                id=f"md{aid[2:]}",
-                asset_id=aid,
+                id=f"mad{aid[3:]}",
+                asset_id=asset.id,
                 vehicle_ref=vref,
                 service_radius_km=radius,
-                solar_reliability=solar,  # Configurable simulation input
-                last_location_at=now - datetime.timedelta(minutes=15)
+                solar_reliability=solar,
+                last_location_at=now
             ))
 
-        # 3. 12 PRODUCE BATCHES
+        # 3. PRODUCE BATCHES (12 batches across 5 farmers)
         batches_data = [
-            ("b0000000-0000-0000-0000-000000000001", farmer1.id, "mango", 500.0, now - datetime.timedelta(hours=4), 32.5, 19.9975, 73.7898, "Alphonso harvest - urgent farmgate pickup"),
+            ("b0000000-0000-0000-0000-000000000001", farmer1.id, "mango", 500.0, now - datetime.timedelta(hours=4), 32.0, 19.9975, 73.7898, "Kesar mangoes harvested early morning"),
             ("b0000000-0000-0000-0000-000000000002", farmer1.id, "tomato", 800.0, now - datetime.timedelta(hours=8), 34.0, 19.9800, 73.7700, "Ripe red tomatoes"),
             ("b0000000-0000-0000-0000-000000000003", farmer1.id, "grapes", 1200.0, now - datetime.timedelta(hours=14), 29.0, 20.0200, 73.8200, "Thompson seedless table grapes"),
             ("b0000000-0000-0000-0000-000000000004", farmer2.id, "tomato", 1500.0, now - datetime.timedelta(hours=6), 33.0, 18.5204, 73.8567, "Hybrid tomatoes morning harvest"),
@@ -277,11 +361,7 @@ def seed_demo_data(db=None):
 
         db.flush()
 
-        # 4. MATCHING REQUEST & BIDS (Designed so Nearest, Cheapest, and ColdBridge picks differ)
-        # Using batch 1 (Farmer 1, 500 kg mango, Nashik)
-        # Option A (Nearest): Static room 1 (Nashik Agro Warehouse A) - 5 km, 65 min, Rs 1000
-        # Option B (ColdBridge Pick): SolarVan Alpha - 8 km, 35 min, Rs 1200, solar 0.95 -> high urgency farmgate winner
-        # Option C (Cheapest): Static room 2 (Godavari Cold Vault) - 25 km, 90 min, Rs 800
+        # 4. MATCHING REQUEST & BIDS (Deterministic Demo Match)
         req1 = MatchingRequest(
             id="mr000000-0000-0000-0000-000000000001",
             batch_id="b0000000-0000-0000-0000-000000000001",
@@ -292,13 +372,9 @@ def seed_demo_data(db=None):
         db.add(req1)
         db.flush()
 
-        # 3 bids on request 1
         bids_data = [
-            # A: Nearest room
             ("bd000000-0000-0000-0000-000000000001", req1.id, "a1000000-0000-0000-0000-000000000001", 1000.0, 1000.0, 65.0, now + datetime.timedelta(hours=2), 0.334, "Nearest static warehouse option"),
-            # B: Mobile Van (ColdBridge Pick when high urgency)
             ("bd000000-0000-0000-0000-000000000002", req1.id, "a2000000-0000-0000-0000-000000000001", 800.0, 1200.0, 35.0, now + datetime.timedelta(hours=2), 0.297, "Fast mobile solar cooling dispatch"),
-            # C: Cheapest static room
             ("bd000000-0000-0000-0000-000000000003", req1.id, "a1000000-0000-0000-0000-000000000002", 800.0, 800.0, 90.0, now + datetime.timedelta(hours=2), 0.444, "Budget economic storage option"),
         ]
 
@@ -318,8 +394,124 @@ def seed_demo_data(db=None):
                 is_expired=False
             ))
 
+        # 5. PHASE 2 SEED: Active Stored Inventory, Alerts & Surplus Listings
+        # Demo Booking in IN_STORAGE state
+        seed_booking = Booking(
+            id="bk000000-0000-0000-0000-000000000001",
+            request_id=req1.id,
+            batch_id="b0000000-0000-0000-0000-000000000002", # 800 kg tomato
+            asset_id="a1000000-0000-0000-0000-000000000001", # Nashik Agro Warehouse A
+            farmer_id=farmer1.id,
+            quantity_kg=800.0,
+            status="IN_STORAGE",
+            reserved_until=None,
+            rate_per_kg_per_day=1.5,
+            days_estimated=5,
+            estimated_total_inr=6000.0,
+            status_updated_by=static_op.id
+        )
+        db.add(seed_booking)
+        db.flush()
+
+        # Seed Inventory record
+        inv1 = Inventory(
+            id="inv00000-0000-0000-0000-000000000001",
+            batch_id=seed_booking.batch_id,
+            booking_id=seed_booking.id,
+            asset_id=seed_booking.asset_id,
+            farmer_id=seed_booking.farmer_id,
+            initial_quantity_kg=800.0,
+            current_quantity_kg=800.0,
+            storage_location="Main Cold Bay A-1",
+            received_at=now - datetime.timedelta(days=10),
+            expiry_risk_date=now + datetime.timedelta(days=2), # Nearing shelf life!
+            status="NEAR_EXPIRY",
+            quality_notes="High quality harvest, stored for 10 days at 4C. Color turning bright red."
+        )
+        db.add(inv1)
+        db.flush()
+
+        # Seed Alert for Operator
+        alert1 = Alert(
+            id="alt00000-0000-0000-0000-000000000001",
+            user_id=static_op.id,
+            asset_id=inv1.asset_id,
+            batch_id=inv1.batch_id,
+            inventory_id=inv1.id,
+            alert_type="NEAR_EXPIRY_WARNING",
+            severity="WARNING",
+            message=f"Surplus Alert: Inventory item {inv1.id[:8]} (800.0 kg tomato) nearing shelf-life threshold. Review quality and approve for surplus marketplace.",
+            is_read=False
+        )
+        db.add(alert1)
+
+        # Approved Surplus Listing (Visible to Buyer Demo immediately)
+        list_at = now - datetime.timedelta(hours=18)
+        exp_at = now + datetime.timedelta(hours=30)
+        disc_pct, disc_price = calculate_sliding_discount(
+            base_price_per_kg=40.0,
+            listed_at=list_at,
+            expires_at=exp_at,
+            now=now
+        )
+        listing_approved = BuyerListing(
+            id="lst00000-0000-0000-0000-000000000001",
+            inventory_id=inv1.id,
+            asset_id=inv1.asset_id,
+            operator_id=static_op.id,
+            crop_code="tomato",
+            initial_quantity_kg=400.0,
+            available_quantity_kg=400.0,
+            base_price_per_kg=40.0,
+            current_discount_pct=disc_pct,
+            discounted_price_per_kg=disc_price,
+            status="APPROVED",
+            quality_approved_by=static_op.id,
+            quality_approved_at=list_at,
+            quality_grade="GRADE_A",
+            listed_at=list_at,
+            expires_at=exp_at,
+            notes="Hydro-cooled farm tomatoes, visually inspected and certified intact."
+        )
+        db.add(listing_approved)
+
+        # Pending Approval Listing (To demonstrate operator quality check on stage)
+        listing_pending = BuyerListing(
+            id="lst00000-0000-0000-0000-000000000002",
+            inventory_id=inv1.id,
+            asset_id=inv1.asset_id,
+            operator_id=static_op.id,
+            crop_code="tomato",
+            initial_quantity_kg=250.0,
+            available_quantity_kg=250.0,
+            base_price_per_kg=35.0,
+            current_discount_pct=10.0,
+            discounted_price_per_kg=31.5,
+            status="PENDING_APPROVAL",
+            quality_approved_by=None,
+            quality_approved_at=None,
+            quality_grade="GRADE_B",
+            listed_at=now,
+            expires_at=now + datetime.timedelta(hours=48),
+            notes="Pending physical firmness and brix inspection before release."
+        )
+        db.add(listing_pending)
+
+        # 6. DEMAND FORECAST SEEDING
+        for est in DEFAULT_SEASONAL_ESTIMATES:
+            db.add(DemandForecast(
+                crop_code=est["crop_code"],
+                district=est["district"],
+                horizon_days=est["horizon_days"],
+                estimated_demand_kg=est["estimated_demand_kg"],
+                price_trend=est["price_trend"],
+                expected_price_inr_kg=est["expected_price_inr_kg"],
+                forecast_source="SEASONAL_RULE_BASED",
+                notes=est["notes"]
+            ))
+
         db.commit()
-        print("Demo data seeded successfully with deterministic records.")
+        print("Demo data seeded successfully with deterministic Phase 1 & Phase 2 records.")
     except Exception as e:
         db.rollback()
         raise e

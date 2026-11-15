@@ -53,7 +53,8 @@
                         <button type="button" class="btn btn-secondary btn-sm" id="btnFillFarmer">🧑‍🌾 Farmer</button>
                         <button type="button" class="btn btn-secondary btn-sm" id="btnFillStatic">🏭 Static Operator</button>
                         <button type="button" class="btn btn-secondary btn-sm" id="btnFillVan">🚐 Van Operator</button>
-                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillAdmin">⚙️ Admin</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillBuyer">🛒 Buyer (Phase 2)</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillAdmin" style="grid-column: span 2;">⚙️ System Admin</button>
                     </div>
                 </div>
             </form>
@@ -152,6 +153,10 @@
         document.getElementById('btnFillVan').addEventListener('click', () => {
             document.getElementById('loginEmail').value = 'van.demo@coldbridge.ai';
             document.getElementById('loginPassword').value = 'VanDemo123!';
+        });
+        document.getElementById('btnFillBuyer').addEventListener('click', () => {
+            document.getElementById('loginEmail').value = 'buyer.demo@coldbridge.ai';
+            document.getElementById('loginPassword').value = 'BuyerDemo123!';
         });
         document.getElementById('btnFillAdmin').addEventListener('click', () => {
             document.getElementById('loginEmail').value = 'admin.demo@coldbridge.ai';

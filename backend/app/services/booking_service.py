@@ -18,6 +18,7 @@ from app.models.asset import ColdAsset
 from app.models.produce import ProduceBatch
 from app.models.user import User
 from app.services.audit_service import log_audit_event
+from app.services.inventory_service import auto_create_inventory_for_booking
 from app.services.solar_adjustment import get_effective_capacity
 
 RESERVATION_DURATION_MINUTES = 15
@@ -297,6 +298,10 @@ def update_booking_status(
         },
         ip_address=ip_address
     )
+
+    # 8. Auto-create inventory record when produce arrives
+    if target_status == "PRODUCE_RECEIVED":
+        auto_create_inventory_for_booking(db=db, booking=booking, ip_address=ip_address)
 
     db.commit()
     db.refresh(booking)

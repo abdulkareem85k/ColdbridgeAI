@@ -14,9 +14,11 @@ class User(Base, TimestampMixin):
 
     farmer_profile = relationship("FarmerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     operator_profile = relationship("OperatorProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    buyer_profile = relationship("BuyerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     batches = relationship("ProduceBatch", back_populates="farmer", cascade="all, delete-orphan")
     assets = relationship("ColdAsset", back_populates="operator", cascade="all, delete-orphan")
     bookings = relationship("Booking", back_populates="farmer", cascade="all, delete-orphan")
+    orders = relationship("PurchaseOrder", back_populates="buyer", cascade="all, delete-orphan")
 
 class FarmerProfile(Base, TimestampMixin):
     __tablename__ = "farmer_profiles"
@@ -40,3 +42,16 @@ class OperatorProfile(Base, TimestampMixin):
     state = Column(String(100), default="Maharashtra", nullable=False)
 
     user = relationship("User", back_populates="operator_profile")
+
+class BuyerProfile(Base, TimestampMixin):
+    __tablename__ = "buyer_profiles"
+
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+    business_name = Column(String(255), nullable=False)
+    buyer_type = Column(String(100), default="WHOLESALER", nullable=False)
+    contact_phone = Column(String(50), nullable=True)
+    address = Column(String(500), nullable=True)
+    district = Column(String(100), nullable=False)
+    state = Column(String(100), default="Maharashtra", nullable=False)
+
+    user = relationship("User", back_populates="buyer_profile")
