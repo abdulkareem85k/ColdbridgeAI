@@ -1,0 +1,13 @@
+{
+  "price": 0.30,
+  "distance": 0.15,
+  "time": 0.20,
+  "reliability": 0.20,
+  "capacity": 0.15,
+  "urgency_bonus_max": 0.15,
+  "band_factor": {
+    "HIGH": 1.0,
+    "MEDIUM": 0.0,
+    "LOW": 0.0
+  }
+}

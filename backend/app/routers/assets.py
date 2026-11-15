@@ -212,3 +212,49 @@ def update_asset_availability(
     db.commit()
     db.refresh(asset)
     return format_asset_response(asset)
+
+@router.get("/my-assets/utilization")
+def get_my_assets_utilization(
+    current_user: User = Depends(require_role("STATIC_OPERATOR", "VAN_OPERATOR", "ADMIN")),
+    db: Session = Depends(get_db)
+):
+    """Capacity utilization metrics for operator dashboard."""
+    query = db.query(ColdAsset)
+    if current_user.role != "ADMIN":
+        query = query.filter(ColdAsset.operator_id == current_user.id)
+    assets = query.all()
+
+    items = []
+    total_cap = 0.0
+    total_avail = 0.0
+    for a in assets:
+        booked = max(0.0, a.total_capacity_kg - a.available_capacity_kg)
+        util_pct = (booked / a.total_capacity_kg * 100.0) if a.total_capacity_kg > 0 else 0.0
+        total_cap += a.total_capacity_kg
+        total_avail += a.available_capacity_kg
+        items.append({
+            "asset_id": a.id,
+            "name": a.name,
+            "asset_type": a.asset_type,
+            "total_capacity_kg": a.total_capacity_kg,
+            "available_capacity_kg": a.available_capacity_kg,
+            "booked_capacity_kg": round(booked, 2),
+            "utilization_pct": round(util_pct, 1),
+            "solar_reliability": a.mobile_detail.solar_reliability if a.mobile_detail else None,
+            "is_active": a.is_active
+        })
+
+    overall_booked = max(0.0, total_cap - total_avail)
+    overall_util = (overall_booked / total_cap * 100.0) if total_cap > 0 else 0.0
+
+    return {
+        "overall": {
+            "total_capacity_kg": total_cap,
+            "available_capacity_kg": total_avail,
+            "booked_capacity_kg": round(overall_booked, 2),
+            "utilization_pct": round(overall_util, 1)
+        },
+        "assets": items,
+        "data_source": "SIMULATED",
+        "data_status": "FRESH"
+    }

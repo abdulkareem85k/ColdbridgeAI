@@ -19,6 +19,8 @@
             <a href="#add" class="nav-link" data-tab="tabAdd">Add Produce</a>
             <a href="#cooling-map" class="nav-link" data-tab="tabCoolingMap">Cooling Map</a>
             <a href="#batches" class="nav-link" data-tab="tabBatches">My Batches & SRI</a>
+            <a href="#matching" class="nav-link" data-tab="tabMatching">Cooling Matches</a>
+            <a href="#bookings" class="nav-link" data-tab="tabBookings">My Bookings</a>
             <div class="user-pill">
                 <span id="userName">Farmer</span>
                 <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
@@ -182,6 +184,100 @@
                 </div>
             </div>
         </div>
+
+        <!-- TAB 5: COOLING MATCHES & REVERSE AUCTION (M5) -->
+        <div id="tabMatching" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.2rem;">Cross-Asset Cooling Matching</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Multi-criteria reverse-auction ranking across static cold rooms and mobile solar cooling vans.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span class="badge badge-source-simulated">DATA: SIMULATED</span>
+                    <span class="badge badge-status-fresh">STATUS: FRESH</span>
+                </div>
+            </div>
+
+            <div class="alert alert-info" style="margin-bottom: 1rem;">
+                ℹ️ <strong>Solar Fallback Notice:</strong> Solar fallback on mobile vans is a simplified prototype simulation
+                (<code>effective_capacity = available_capacity * solar_reliability</code>). Hardware telemetry is planned for subsequent phases.
+            </div>
+
+            <!-- Batch Selection Card -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <label for="matchBatchSelect" style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">Select Harvest Batch to Match:</label>
+                        <select id="matchBatchSelect" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                            <option value="">-- Choose a batch --</option>
+                        </select>
+                    </div>
+                    <div style="width: 160px;">
+                        <label for="matchDaysInput" style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">Storage Days:</label>
+                        <input type="number" id="matchDaysInput" min="1" max="90" value="3" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                    </div>
+                    <button type="button" id="btnRunMatching" class="btn btn-primary" style="padding: 0.55rem 1.25rem;">
+                        Find Best Matches ⚡
+                    </button>
+                </div>
+            </div>
+
+            <!-- Matching Results Workspace -->
+            <div id="matchingWorkspace" style="display: none;">
+                <!-- 3-Way Baseline Comparison Table (M5) -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-title">
+                        <span>🏆 3-Way Baseline Comparison</span>
+                        <span class="badge badge-success">ColdBridge Urgency Optimization</span>
+                    </div>
+                    <div id="baselinesContainer"></div>
+                </div>
+
+                <!-- Split layout: Ranked Offers List and Interactive Route Map -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <!-- Ranked Offers List -->
+                    <div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Ranked Provider Offers</h3>
+                        <div id="rankedOffersList"></div>
+                    </div>
+
+                    <!-- Selected Route Map -->
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <h3 style="font-size: 1.1rem; margin: 0;">Road Routing & Location</h3>
+                            <span id="routeSourceBadge" class="badge badge-secondary">OSRM_ROUTES</span>
+                        </div>
+                        <div class="card" style="padding: 0; overflow: hidden;">
+                            <div id="routeMapElement" style="height: 420px; width: 100%;"></div>
+                            <div style="padding: 0.5rem 0.75rem; background: #f8fafc; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                <span id="routeSummaryText">Select an offer to preview transit path</span>
+                                <span>OpenStreetMap + OSRM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: MY BOOKINGS & TIMELINE (M6) -->
+        <div id="tabBookings" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.2rem;">My Cold Storage Bookings</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Track capacity reservations, transit schedules, and produce storage status.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBookings">Refresh Bookings</button>
+            </div>
+
+            <div class="alert alert-info" style="margin-bottom: 1rem;">
+                ℹ️ <strong>Pay-Per-Use Pricing:</strong> Shown prices are prototype estimates (INR). No payment processing or payment gateway is required.
+                <br>⚠️ <strong>Cancellation Rule:</strong> Cancellation is permitted only <em>before</em> produce is received at the facility.
+            </div>
+
+            <div id="bookingsListContainer">
+                <div class="state-box">Loading your bookings...</div>
+            </div>
+        </div>
     </div>
 
     <!-- SRI Detail Modal -->
@@ -200,12 +296,17 @@
     <script type="module">
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
-        import { initMap, createMarker, fitToMarkers, mountLocationPicker, escapeHtml } from './js/maps.js';
+        import { initMap, createMarker, fitToMarkers, drawRoute, mountLocationPicker, escapeHtml } from './js/maps.js';
 
         let currentUser = null;
         let networkMap = null;
         let networkMarkers = [];
+        let routeMap = null;
+        let routePolyline = null;
+        let routeMarkers = [];
         let cachedBatches = [];
+        let currentMatchingData = null;
+        let activeMatchingRequestId = null;
 
         const globalAlert = document.getElementById('globalAlert');
         function showAlert(msg, type = 'error') {
@@ -247,6 +348,7 @@
                 document.getElementById('lngInput').value = '73.7898';
 
                 await loadBatches();
+                await loadBookings();
             } catch (err) {
                 showAlert('Failed to authenticate session: ' + err.message);
             }
@@ -267,6 +369,8 @@
 
                 if (targetTabId === 'tabCoolingMap') {
                     initNetworkMap();
+                } else if (targetTabId === 'tabBookings') {
+                    loadBookings();
                 }
             });
         });
@@ -293,7 +397,6 @@
         async function loadNetworkAssets() {
             if (!networkMap) return;
 
-            // Clear old markers
             networkMarkers.forEach(m => networkMap.removeLayer(m));
             networkMarkers = [];
 
@@ -318,7 +421,7 @@
                             </div>
                             <div class="badge-group" style="margin-top: 0.2rem;">
                                 <span class="badge ${a.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">${a.data_source}</span>
-                                <span class="badge ${a.data_status === 'FRESH' ? 'badge-status-fresh' : (a.data_status === 'STALE' ? 'badge-status-stale' : 'badge-status-unavailable')}">${a.data_status}</span>
+                                <span class="badge ${a.data_status === 'FRESH' ? 'badge-status-fresh' : 'badge-status-stale'}">${a.data_status}</span>
                             </div>
                         </div>
                     `;
@@ -333,7 +436,6 @@
                     networkMarkers.push(marker);
                 }
 
-                // Add farmer's batch locations as distinct markers
                 for (const b of cachedBatches) {
                     const bMarker = await createMarker(networkMap, {
                         lat: b.latitude,
@@ -363,10 +465,11 @@
         document.getElementById('mapFilterType').addEventListener('change', loadNetworkAssets);
         document.getElementById('btnRefreshMapAssets').addEventListener('click', loadNetworkAssets);
 
-        // Load Batches & Spoilage Status
+        // Load Batches & Populate Selection
         async function loadBatches() {
             const tableContainer = document.getElementById('batchesTableContainer');
             const overviewContainer = document.getElementById('overviewBatchesList');
+            const matchSelect = document.getElementById('matchBatchSelect');
             tableContainer.innerHTML = '<div class="state-box">Loading batches...</div>';
 
             try {
@@ -376,6 +479,15 @@
                 document.getElementById('statTotalBatches').textContent = cachedBatches.length;
                 const totalKg = cachedBatches.reduce((sum, b) => sum + b.quantity_kg, 0);
                 document.getElementById('statTotalKg').textContent = `${totalKg.toLocaleString()} kg`;
+
+                // Update select dropdown
+                matchSelect.innerHTML = '<option value="">-- Choose a batch --</option>';
+                cachedBatches.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b.id;
+                    opt.textContent = `${b.crop_code.toUpperCase()} (${b.quantity_kg} kg) - ${new Date(b.harvest_at).toLocaleDateString()}`;
+                    matchSelect.appendChild(opt);
+                });
 
                 if (cachedBatches.length === 0) {
                     const emptyHtml = `
@@ -390,7 +502,6 @@
                     return;
                 }
 
-                // Fetch SRI assessment for each batch (M4)
                 const batchesWithSri = await Promise.all(cachedBatches.map(async (b) => {
                     try {
                         const sri = await apiRequest(`/sri/${b.id}`);
@@ -443,6 +554,9 @@
                                 <button type="button" class="btn btn-secondary btn-sm btn-view-sri" data-id="${b.id}" data-crop="${escapeHtml(b.crop_code)}">
                                     Why this SRI?
                                 </button>
+                                <button type="button" class="btn btn-primary btn-sm btn-match-batch" data-id="${b.id}" style="margin-left: 4px;">
+                                    Find Match ⚡
+                                </button>
                             </td>
                         </tr>
                     `;
@@ -459,7 +573,7 @@
                                     <th>Field Temp</th>
                                     <th>Spoilage Risk Index (SRI)</th>
                                     <th>Data Source</th>
-                                    <th>Action</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -472,12 +586,21 @@
                 tableContainer.innerHTML = tableHtml;
                 overviewContainer.innerHTML = tableHtml;
 
-                // Attach modal handlers
+                // Event handlers
                 document.querySelectorAll('.btn-view-sri').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const batchId = btn.getAttribute('data-id');
                         const crop = btn.getAttribute('data-crop');
                         openSriModal(batchId, crop);
+                    });
+                });
+
+                document.querySelectorAll('.btn-match-batch').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const batchId = btn.getAttribute('data-id');
+                        matchSelect.value = batchId;
+                        document.querySelector('a[data-tab="tabMatching"]').click();
+                        document.getElementById('btnRunMatching').click();
                     });
                 });
             } catch (err) {
@@ -487,6 +610,437 @@
             }
         }
 
+        // Matching Engine Flow (M5)
+        document.getElementById('btnRunMatching').addEventListener('click', async () => {
+            const batchId = document.getElementById('matchBatchSelect').value;
+            const days = parseInt(document.getElementById('matchDaysInput').value, 10) || 3;
+            if (!batchId) {
+                showAlert('Please select a produce batch to find cooling matches');
+                return;
+            }
+
+            const batch = cachedBatches.find(b => b.id === batchId);
+            if (!batch) return;
+
+            hideAlert();
+            const btn = document.getElementById('btnRunMatching');
+            btn.disabled = true;
+            btn.textContent = 'Optimizing reverse auction...';
+
+            try {
+                // 1. Create or retrieve matching request
+                const req = await apiRequest('/matching/requests', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        batch_id: batchId,
+                        requested_quantity_kg: batch.quantity_kg
+                    })
+                });
+                activeMatchingRequestId = req.id;
+
+                // 2. Score and rank offers
+                const rankRes = await apiRequest(`/matching/requests/${req.id}/rank`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+                currentMatchingData = rankRes;
+
+                renderMatchingResults(rankRes, batch, days);
+            } catch (err) {
+                showAlert('Matching optimization error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Find Best Matches ⚡';
+            }
+        });
+
+        async function renderMatchingResults(data, batch, days) {
+            const workspace = document.getElementById('matchingWorkspace');
+            workspace.style.display = 'block';
+
+            // 1. Render Baselines Table (3-Way comparison: Nearest vs Cheapest vs ColdBridge)
+            const baselinesContainer = document.getElementById('baselinesContainer');
+            const b = data.baselines;
+            const cb = b.coldbridge_pick;
+            const near = b.nearest_pick;
+            const cheap = b.cheapest_pick;
+
+            baselinesContainer.innerHTML = `
+                <div style="overflow-x: auto; margin-bottom: 1rem;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="background: #f1f5f9; text-align: left; border-bottom: 2px solid var(--border);">
+                                <th style="padding: 0.6rem 0.8rem;">Pick Strategy</th>
+                                <th style="padding: 0.6rem 0.8rem;">Selected Facility / Van</th>
+                                <th style="padding: 0.6rem 0.8rem;">Type</th>
+                                <th style="padding: 0.6rem 0.8rem;">Distance</th>
+                                <th style="padding: 0.6rem 0.8rem;">ETA</th>
+                                <th style="padding: 0.6rem 0.8rem;">Total Price</th>
+                                <th style="padding: 0.6rem 0.8rem;">Auction Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: #ecfdf5; font-weight: 600; border-bottom: 1px solid var(--border);">
+                                <td style="padding: 0.6rem 0.8rem; color: #15803d;">🏆 ColdBridge Pick</td>
+                                <td style="padding: 0.6rem 0.8rem;">${escapeHtml(cb ? cb.asset_name : 'N/A')}</td>
+                                <td style="padding: 0.6rem 0.8rem;">${cb ? (cb.asset_type === 'MOBILE' ? '🚐 Mobile Van' : '🏭 Static Room') : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem;">${cb ? cb.distance_km.toFixed(1) : '-'} km</td>
+                                <td style="padding: 0.6rem 0.8rem;">${cb ? cb.eta_minutes.toFixed(0) : '-'} mins</td>
+                                <td style="padding: 0.6rem 0.8rem;">₹${cb ? cb.price_total.toLocaleString() : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem; color: #15803d;">${cb ? cb.score.toFixed(3) : '-'}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 0.6rem 0.8rem; color: var(--text-muted);">📍 Nearest Eligible</td>
+                                <td style="padding: 0.6rem 0.8rem;">${escapeHtml(near ? near.asset_name : 'N/A')}</td>
+                                <td style="padding: 0.6rem 0.8rem;">${near ? (near.asset_type === 'MOBILE' ? '🚐 Mobile Van' : '🏭 Static Room') : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem;">${near ? near.distance_km.toFixed(1) : '-'} km</td>
+                                <td style="padding: 0.6rem 0.8rem;">${near ? near.eta_minutes.toFixed(0) : '-'} mins</td>
+                                <td style="padding: 0.6rem 0.8rem;">₹${near ? near.price_total.toLocaleString() : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem;">${near ? near.score.toFixed(3) : '-'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.6rem 0.8rem; color: var(--text-muted);">💰 Lowest Price Eligible</td>
+                                <td style="padding: 0.6rem 0.8rem;">${escapeHtml(cheap ? cheap.asset_name : 'N/A')}</td>
+                                <td style="padding: 0.6rem 0.8rem;">${cheap ? (cheap.asset_type === 'MOBILE' ? '🚐 Mobile Van' : '🏭 Static Room') : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem;">${cheap ? cheap.distance_km.toFixed(1) : '-'} km</td>
+                                <td style="padding: 0.6rem 0.8rem;">${cheap ? cheap.eta_minutes.toFixed(0) : '-'} mins</td>
+                                <td style="padding: 0.6rem 0.8rem;">₹${cheap ? cheap.price_total.toLocaleString() : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem;">${cheap ? cheap.score.toFixed(3) : '-'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="background: #f8fafc; border-left: 4px solid var(--primary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; line-height: 1.5;">
+                    <strong>Why picks differ:</strong> ${escapeHtml(b.explanation)}
+                </div>
+            `;
+
+            // 2. Render Ranked Offers
+            const offersList = document.getElementById('rankedOffersList');
+            offersList.innerHTML = '';
+
+            data.ranked_offers.forEach((offer, idx) => {
+                const isWinner = offer.is_winner;
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.margin = '0 0 1rem 0';
+                card.style.border = isWinner ? '2px solid #15803d' : '1px solid var(--border)';
+                card.style.background = isWinner ? '#f0fdf4' : '#fff';
+
+                const comp = offer.components;
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <div>
+                            <span class="badge ${isWinner ? 'badge-success' : 'badge-secondary'}" style="margin-bottom: 0.25rem;">
+                                ${isWinner ? '🏆 #1 BEST MATCH (WINNER)' : `#${offer.rank}`}
+                            </span>
+                            <h4 style="font-size: 1.1rem; margin: 0.2rem 0;">${escapeHtml(offer.asset_name)}</h4>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                ${offer.asset_type === 'MOBILE' ? '🚐 Mobile Solar Cooling Van' : '🏭 Static Cold Storage'}
+                            </span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.35rem; font-weight: 800; color: ${isWinner ? '#15803d' : 'var(--text-main)'};">
+                                ₹${offer.price_total.toLocaleString()}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Total pay-per-use estimate</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; background: #fff; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 0.75rem; font-size: 0.8rem;">
+                        <div>
+                            <span style="color: var(--text-muted); display: block;">Road Distance</span>
+                            <strong>${offer.distance_km.toFixed(1)} km</strong>
+                            <span class="badge badge-secondary" style="font-size: 0.65rem; margin-top: 2px;">${offer.route_source}</span>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-muted); display: block;">Transit Time</span>
+                            <strong>${offer.eta_minutes.toFixed(0)} mins</strong>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-muted); display: block;">Auction Score</span>
+                            <strong style="color: ${isWinner ? '#15803d' : 'inherit'};">${offer.score.toFixed(3)}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Why this match breakdown -->
+                    <details style="margin-bottom: 0.75rem; font-size: 0.85rem;">
+                        <summary style="cursor: pointer; color: var(--primary); font-weight: 600;">
+                            🔍 Why this match? (Score Breakdown & Reasons)
+                        </summary>
+                        <div style="padding: 0.5rem 0; font-size: 0.8rem;">
+                            <ul style="padding-left: 1.2rem; margin-bottom: 0.5rem; line-height: 1.5;">
+                                ${offer.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}
+                            </ul>
+                            <div style="background: #f8fafc; padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-muted);">
+                                <div>Price Norm: ${comp.price_n} | Dist Norm: ${comp.distance_n} | Time Norm: ${comp.time_n}</div>
+                                <div>Reliability Penalty: ${comp.reliability_penalty} | Capacity Penalty: ${comp.capacity_penalty}</div>
+                                <div>Urgency Bonus: <strong>-${comp.urgency_bonus}</strong></div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                        <button type="button" class="btn btn-secondary btn-sm btnPreviewRoute" data-index="${idx}">
+                            📍 View on Map
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm btnAllocateOffer" data-bid="${offer.bid_id}" data-asset="${offer.asset_id}">
+                            Accept Offer & Reserve Capacity 🔒
+                        </button>
+                    </div>
+                `;
+
+                offersList.appendChild(card);
+            });
+
+            // Attach route preview and allocation handlers
+            document.querySelectorAll('.btnPreviewRoute').forEach(b => {
+                b.addEventListener('click', (e) => {
+                    const idx = parseInt(b.getAttribute('data-index'), 10);
+                    previewRouteOnMap(data.ranked_offers[idx], batch);
+                });
+            });
+
+            document.querySelectorAll('.btnAllocateOffer').forEach(b => {
+                b.addEventListener('click', async () => {
+                    const bidId = b.getAttribute('data-bid');
+                    await allocateOffer(activeMatchingRequestId, bidId, days);
+                });
+            });
+
+            // Initialize route map with winner route
+            await initRouteMap();
+            if (data.ranked_offers.length > 0) {
+                previewRouteOnMap(data.ranked_offers[0], batch);
+            }
+        }
+
+        async function initRouteMap() {
+            if (!routeMap) {
+                routeMap = await initMap('routeMapElement', {
+                    center: [19.9975, 73.7898],
+                    zoom: 11
+                });
+            }
+            setTimeout(() => routeMap.invalidateSize(), 200);
+        }
+
+        async function previewRouteOnMap(offer, batch) {
+            if (!routeMap) return;
+
+            // Clear old layers
+            if (routePolyline) {
+                routeMap.removeLayer(routePolyline);
+                routePolyline = null;
+            }
+            routeMarkers.forEach(m => routeMap.removeLayer(m));
+            routeMarkers = [];
+
+            // Add batch marker
+            const bMarker = await createMarker(routeMap, {
+                lat: batch.latitude,
+                lng: batch.longitude,
+                type: 'FARM',
+                title: 'Produce Harvest Location'
+            });
+            routeMarkers.push(bMarker);
+
+            // Add asset marker
+            const aMarker = await createMarker(routeMap, {
+                lat: offer.latitude,
+                lng: offer.longitude,
+                type: offer.asset_type,
+                title: offer.asset_name
+            });
+            routeMarkers.push(aMarker);
+
+            // Draw road polyline (or straight-line estimate)
+            let coords = [];
+            const isEst = (offer.route_source === 'ESTIMATED');
+            if (offer.encoded_polyline) {
+                try {
+                    coords = JSON.parse(offer.encoded_polyline);
+                } catch (_) {}
+            }
+
+            if (!coords || coords.length === 0) {
+                coords = [
+                    [batch.latitude, batch.longitude],
+                    [offer.latitude, offer.longitude]
+                ];
+            }
+
+            routePolyline = await drawRoute(routeMap, coords, {
+                color: offer.is_winner ? '#15803d' : '#2563eb',
+                isEstimated: isEst
+            });
+
+            document.getElementById('routeSourceBadge').textContent = offer.route_source;
+            document.getElementById('routeSourceBadge').className = isEst ? 'badge badge-secondary' : 'badge badge-primary';
+            document.getElementById('routeSummaryText').textContent = 
+                `${offer.asset_name} → ${offer.distance_km.toFixed(1)} km (${offer.eta_minutes.toFixed(0)} min ETA)`;
+        }
+
+        // Allocate Offer & Create RESERVED Booking (M6)
+        async function allocateOffer(requestId, bidId, days) {
+            if (!confirm('Confirm capacity allocation and reserve this cold storage option for 15 minutes?')) {
+                return;
+            }
+
+            try {
+                hideAlert();
+                const booking = await apiRequest(`/matching/requests/${requestId}/allocate`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        bid_id: bidId,
+                        days_estimated: days
+                    })
+                });
+
+                showAlert(`Successfully allocated! Booking reserved (${booking.quantity_kg} kg) until ${new Date(booking.reserved_until).toLocaleTimeString()}.`, 'success');
+
+                // Switch to Bookings Tab
+                document.querySelector('a[data-tab="tabBookings"]').click();
+                await loadBookings();
+            } catch (err) {
+                showAlert('Allocation conflict: ' + err.message);
+            }
+        }
+
+        // Load Bookings for Farmer (M6)
+        async function loadBookings() {
+            const container = document.getElementById('bookingsListContainer');
+            container.innerHTML = '<div class="state-box">Loading your bookings...</div>';
+
+            try {
+                const bookings = await apiRequest('/bookings/my-bookings');
+                if (!bookings || bookings.length === 0) {
+                    container.innerHTML = `
+                        <div class="state-box">
+                            <div class="state-icon">📋</div>
+                            <h3>No Active or Past Bookings</h3>
+                            <p>Match your registered produce batches to book cold storage facilities or mobile vans.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                bookings.forEach(b => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.marginBottom = '1.25rem';
+
+                    let statusBadgeClass = 'badge-secondary';
+                    if (b.status === 'RESERVED') statusBadgeClass = 'badge-warning';
+                    else if (['CONFIRMED', 'PICKUP_SCHEDULED', 'PRODUCE_RECEIVED', 'IN_STORAGE'].includes(b.status)) statusBadgeClass = 'badge-primary';
+                    else if (b.status === 'COMPLETED') statusBadgeClass = 'badge-success';
+                    else if (['CANCELLED', 'EXPIRED', 'FAILED'].includes(b.status)) statusBadgeClass = 'badge-danger';
+
+                    // Visual Progress Tracker
+                    const steps = ['RESERVED', 'CONFIRMED', b.asset_type === 'MOBILE' ? 'PICKUP_SCHEDULED' : null, 'PRODUCE_RECEIVED', 'IN_STORAGE', 'COMPLETED'].filter(Boolean);
+                    const currentIdx = steps.indexOf(b.status);
+
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <span class="badge ${statusBadgeClass}" style="font-size: 0.85rem; font-weight: 700;">
+                                    ${b.status}
+                                </span>
+                                <h3 style="font-size: 1.15rem; margin: 0.25rem 0;">Booking #${b.id.slice(0, 8)}: ${escapeHtml(b.asset_name)}</h3>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                    Facility Type: ${b.asset_type === 'MOBILE' ? '🚐 Mobile Van' : '🏭 Static Room'} | Created: ${new Date(b.created_at).toLocaleString()}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">₹${b.estimated_total_inr.toLocaleString()}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Pay-per-use estimate (${b.days_estimated} days)</div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Steps -->
+                        <div style="display: flex; gap: 0.25rem; margin: 1rem 0; background: #f8fafc; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border); overflow-x: auto;">
+                            ${steps.map((st, i) => {
+                                const isPassed = currentIdx >= i && !['CANCELLED', 'EXPIRED', 'FAILED'].includes(b.status);
+                                const isCurr = (b.status === st);
+                                return `
+                                    <div style="flex: 1; min-width: 80px; text-align: center; font-size: 0.75rem; padding: 0.25rem; border-radius: 4px; ${isCurr ? 'background: #2563eb; color: #fff; font-weight: 700;' : (isPassed ? 'background: #dbeafe; color: #1e40af;' : 'color: #94a3b8;')}">
+                                        ${st.replace('_', ' ')}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Pricing Breakdown Line Items -->
+                        <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.85rem; margin-bottom: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                <span>Produce Quantity Held:</span>
+                                <strong>${b.quantity_kg.toLocaleString()} kg</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                <span>Storage Rate:</span>
+                                <span>₹${b.rate_per_kg_per_day} / kg / day × ${b.days_estimated} days</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-weight: 700; border-top: 1px solid var(--border); padding-top: 0.25rem; margin-top: 0.25rem;">
+                                <span>Estimated Total (INR):</span>
+                                <span>₹${b.estimated_total_inr.toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <!-- Reservation countdown & Actions -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                ${b.status === 'RESERVED' && b.reserved_until ? `
+                                    <span style="font-size: 0.8rem; color: #d97706; font-weight: 600;">
+                                        ⏱️ Reservation expires: ${new Date(b.reserved_until).toLocaleTimeString()}
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <div>
+                                ${b.can_cancel ? `
+                                    <button type="button" class="btn btn-danger btn-sm btnCancelBooking" data-id="${b.id}">
+                                        Cancel Booking & Release Capacity
+                                    </button>
+                                ` : `
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">
+                                        Produce received – Cancellation closed
+                                    </span>
+                                `}
+                            </div>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+
+                document.querySelectorAll('.btnCancelBooking').forEach(b => {
+                    b.addEventListener('click', async () => {
+                        const bookingId = b.getAttribute('data-id');
+                        if (!confirm('Are you sure you want to cancel this booking? Held capacity will be immediately released back.')) {
+                            return;
+                        }
+                        try {
+                            hideAlert();
+                            await apiRequest(`/bookings/${bookingId}/status`, {
+                                method: 'PATCH',
+                                body: JSON.stringify({ status: 'CANCELLED' })
+                            });
+                            showAlert('Booking cancelled. Capacity released back to provider fleet.', 'success');
+                            await loadBookings();
+                        } catch (err) {
+                            showAlert('Cancellation error: ' + err.message);
+                        }
+                    });
+                });
+            } catch (err) {
+                container.innerHTML = `<div class="alert alert-error">Error loading bookings: ${err.message}</div>`;
+            }
+        }
+
+        document.getElementById('btnRefreshBookings').addEventListener('click', loadBookings);
+
+        // Open SRI Modal
         async function openSriModal(batchId, crop) {
             const modal = document.getElementById('sriModal');
             const content = document.getElementById('sriModalContent');
@@ -542,7 +1096,7 @@
         document.getElementById('btnRefreshBatches').addEventListener('click', loadBatches);
         document.getElementById('btnRefreshBatchesOverview').addEventListener('click', loadBatches);
 
-        // Add Batch Form Handler
+        // Add Batch Form
         const addBatchForm = document.getElementById('addBatchForm');
         addBatchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -577,7 +1131,6 @@
                     body: JSON.stringify(payload)
                 });
 
-                // Auto-trigger SRI Calculation (M4)
                 await apiRequest(`/sri/${batch.id}/calculate`, { method: 'POST' });
 
                 showAlert(`Successfully registered ${quantity_kg} kg of ${crop_code.toUpperCase()}! SRI assessed.`, 'success');

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.routers import health, auth, profiles, produce, assets, maps, sri
+from app.routers import health, auth, profiles, produce, assets, maps, sri, matching, bookings, admin
 
 app = FastAPI(
     title="ColdBridge AI API",
@@ -31,6 +31,9 @@ app.include_router(produce.router, prefix=API_V1_PREFIX)
 app.include_router(assets.router, prefix=API_V1_PREFIX)
 app.include_router(maps.router, prefix=API_V1_PREFIX)
 app.include_router(sri.router, prefix=API_V1_PREFIX)
+app.include_router(matching.router, prefix=API_V1_PREFIX)
+app.include_router(bookings.router, prefix=API_V1_PREFIX)
+app.include_router(admin.router, prefix=API_V1_PREFIX)
 
 @app.get("/")
 def root():
