@@ -12,10 +12,24 @@ app = FastAPI(
     version="1.1.0"
 )
 
-# Configure CORS strictly to FRONTEND_ORIGIN with credentials
-origins = [settings.FRONTEND_ORIGIN]
-if "127.0.0.1" in settings.FRONTEND_ORIGIN:
-    origins.append(settings.FRONTEND_ORIGIN.replace("127.0.0.1", "localhost"))
+# Configure CORS strictly to FRONTEND_ORIGIN (supports comma-separated list, no wildcards, credentials on)
+raw_origins = [o.strip() for o in settings.FRONTEND_ORIGIN.split(",") if o.strip()]
+origins = []
+for orig in raw_origins:
+    if orig == "*":
+        continue  # Wildcards strictly prohibited when allow_credentials=True
+    if orig not in origins:
+        origins.append(orig)
+    # Pair localhost and 127.0.0.1 only in development / testing environments
+    if settings.APP_ENV != "production":
+        if "127.0.0.1" in orig:
+            paired = orig.replace("127.0.0.1", "localhost")
+            if paired not in origins:
+                origins.append(paired)
+        elif "localhost" in orig:
+            paired = orig.replace("localhost", "127.0.0.1")
+            if paired not in origins:
+                origins.append(paired)
 
 app.add_middleware(
     CORSMiddleware,
