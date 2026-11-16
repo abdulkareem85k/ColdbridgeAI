@@ -28,6 +28,7 @@ from app.schemas.booking import AllocateOfferRequest, BookingResponse
 from app.services.matching_engine import run_cross_asset_matching
 from app.services.booking_service import allocate_offer_transaction
 from app.services.audit_service import log_audit_event
+from app.services.ownership_service import verify_matching_request_access
 
 router = APIRouter(prefix="/matching", tags=["Matching"])
 
@@ -111,7 +112,7 @@ def submit_bid(
         eta_minutes=payload.eta_minutes,
         valid_until=payload.valid_until,
         note=payload.note,
-        data_source="SIMULATED",
+        data_source="LIVE",
         is_accepted=False,
         is_expired=False
     )
@@ -148,13 +149,17 @@ def rank_matching_offers(
     if not matching_req:
         raise HTTPException(status_code=404, detail="Matching request not found")
 
+    verify_matching_request_access(db, matching_req, current_user)
+
     solar_overrides = payload.solar_overrides if payload else None
 
     result = run_cross_asset_matching(
         db=db,
         request=matching_req,
-        solar_overrides=solar_overrides
+        solar_overrides=solar_overrides,
+        persist_bids=True
     )
+    db.commit()
     return result
 
 
@@ -166,13 +171,16 @@ def get_matching_request(
 ):
     """
     Fetch matching request with all associated bids and live ranking.
+    Read-only: does not persist new bids.
     """
     matching_req = db.query(MatchingRequest).filter_by(id=id).first()
     if not matching_req:
         raise HTTPException(status_code=404, detail="Matching request not found")
 
-    # Run ranking over current state
-    ranking = run_cross_asset_matching(db=db, request=matching_req)
+    verify_matching_request_access(db, matching_req, current_user)
+
+    # Run ranking over current state in read-only mode
+    ranking = run_cross_asset_matching(db=db, request=matching_req, persist_bids=False)
     return {
         "matching_request": {
             "id": matching_req.id,

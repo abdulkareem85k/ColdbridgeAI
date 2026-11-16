@@ -751,9 +751,14 @@
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
                         <div>
-                            <span class="badge ${isWinner ? 'badge-success' : 'badge-secondary'}" style="margin-bottom: 0.25rem;">
-                                ${isWinner ? '🏆 #1 BEST MATCH (WINNER)' : `#${offer.rank}`}
-                            </span>
+                            <div style="display: flex; gap: 0.35rem; align-items: center; margin-bottom: 0.25rem;">
+                                <span class="badge ${isWinner ? 'badge-success' : 'badge-secondary'}">
+                                    ${isWinner ? '🏆 #1 BEST MATCH (WINNER)' : `#${offer.rank}`}
+                                </span>
+                                <span class="badge ${offer.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">
+                                    ${offer.data_source === 'LIVE' ? 'LIVE OPERATOR BID' : 'SIMULATED OFFER'}
+                                </span>
+                            </div>
                             <h4 style="font-size: 1.1rem; margin: 0.2rem 0;">${escapeHtml(offer.asset_name)}</h4>
                             <span style="font-size: 0.8rem; color: var(--text-muted);">
                                 ${offer.asset_type === 'MOBILE' ? '🚐 Mobile Solar Cooling Van' : '🏭 Static Cold Storage'}

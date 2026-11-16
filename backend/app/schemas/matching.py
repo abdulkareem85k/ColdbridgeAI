@@ -81,6 +81,8 @@ class RankedOfferDetail(BaseModel):
     reasons: List[str]
     latitude: float
     longitude: float
+    data_source: str = "SIMULATED"
+    is_persisted: bool = True
 
 
 class BaselinePick(BaseModel):
@@ -92,6 +94,7 @@ class BaselinePick(BaseModel):
     price_total: float
     distance_km: float
     eta_minutes: float
+    data_source: str = "SIMULATED"
 
 
 class BaselineComparison(BaseModel):

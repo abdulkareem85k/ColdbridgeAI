@@ -96,7 +96,10 @@ def allocate_offer_transaction(
     if not selected_bid:
         raise HTTPException(status_code=404, detail="Selected bid not found on this matching request")
 
-    if selected_bid.is_expired:
+    now = datetime.datetime.now(timezone.utc)
+    v_until = selected_bid.valid_until.replace(tzinfo=timezone.utc) if selected_bid.valid_until and selected_bid.valid_until.tzinfo is None else selected_bid.valid_until
+    if selected_bid.is_expired or (v_until and v_until < now):
+        selected_bid.is_expired = True
         raise HTTPException(status_code=400, detail="Selected bid has expired")
 
     # 3. Lock asset row for capacity check and update
@@ -160,7 +163,7 @@ def allocate_offer_transaction(
             bid.is_expired = True
 
     # 8. Update MatchingRequest status
-    req.status = "MATCHED"
+    req.status = "ALLOCATED"
 
     # 9. Audit Logging
     log_audit_event(
