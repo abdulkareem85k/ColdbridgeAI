@@ -9,7 +9,9 @@ import httpx
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.route import RouteCache
+from app.models.route import RouteCache, RouteUsage
+import uuid
+from sqlalchemy import text
 
 # Thread-safe rate limiter for OpenStreetMap Nominatim (enforcing <= 1 request/second)
 # NOTE: This rate limiter coordinates requests inside ONE Python process only.
@@ -49,21 +51,81 @@ def _acquire_nominatim_slot(timeout: float = 3.0) -> bool:
     finally:
         _nominatim_rate_lock.release()
 
-# In-memory counter for daily safety call capping
-_daily_routing_calls: Dict[str, int] = {}
-
 def get_today_key() -> str:
+    """Get current UTC date string key (YYYY-MM-DD)."""
     return datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-def increment_daily_calls() -> int:
-    today = get_today_key()
-    current = _daily_routing_calls.get(today, 0) + 1
-    _daily_routing_calls[today] = current
-    return current
+def check_and_increment_daily_limit(db: Session, max_limit: Optional[int] = None) -> bool:
+    """
+    Atomically verify that today's external OSRM calls are below max_limit,
+    and increment the persistent database counter in route_usage.
+    Failed external calls count towards the quota (recommended).
+    Returns True if quota was granted, False if daily limit is reached.
+    """
+    if max_limit is None:
+        max_limit = settings.MAX_ROUTE_CALLS_PER_DAY
 
-def get_daily_calls() -> int:
     today = get_today_key()
-    return _daily_routing_calls.get(today, 0)
+    now_utc = datetime.datetime.now(timezone.utc)
+    new_id = str(uuid.uuid4())
+
+    max_retries = 8
+    for attempt in range(max_retries):
+        try:
+            # 1. Ensure row for today exists (atomic insert-if-not-exists)
+            db.execute(text("""
+                INSERT INTO route_usage (id, usage_date, call_count, created_at, updated_at)
+                VALUES (:id, :today, 0, :created_at, :updated_at)
+                ON CONFLICT(usage_date) DO NOTHING
+            """), {
+                "id": new_id,
+                "today": today,
+                "created_at": now_utc,
+                "updated_at": now_utc
+            })
+            db.commit()
+
+            # 2. Atomic conditional increment: only increments if call_count < limit
+            result = db.execute(text("""
+                UPDATE route_usage
+                SET call_count = call_count + 1, updated_at = :updated_at
+                WHERE usage_date = :today AND call_count < :limit
+            """), {
+                "today": today,
+                "limit": max_limit,
+                "updated_at": now_utc
+            })
+            db.commit()
+            return result.rowcount > 0
+        except Exception as e:
+            db.rollback()
+            if "locked" in str(e).lower() and attempt < max_retries - 1:
+                time.sleep(0.05 * (attempt + 1))
+                continue
+            return False
+
+    return False
+
+def get_daily_calls(db: Optional[Session] = None) -> int:
+    """Get the current count of external OSRM route calls made today (UTC)."""
+    today = get_today_key()
+    if db is not None:
+        usage = db.query(RouteUsage).filter(RouteUsage.usage_date == today).first()
+        return usage.call_count if usage else 0
+    from app.db.session import SessionLocal
+    with SessionLocal() as session:
+        usage = session.query(RouteUsage).filter(RouteUsage.usage_date == today).first()
+        return usage.call_count if usage else 0
+
+def increment_daily_calls(db: Optional[Session] = None) -> int:
+    """Manually increment today's call counter (for testing or external calls)."""
+    if db is not None:
+        check_and_increment_daily_limit(db, max_limit=999999)
+        return get_daily_calls(db)
+    from app.db.session import SessionLocal
+    with SessionLocal() as session:
+        check_and_increment_daily_limit(session, max_limit=999999)
+        return get_daily_calls(session)
 
 def haversine_km(coord1: Tuple[float, float], coord2: Tuple[float, float]) -> float:
     """
@@ -91,37 +153,42 @@ def compute_route(
     Compute driving route distance (km), duration (minutes), and coordinates
     using OpenStreetMap / OSRM routing with intelligent SQLite/Postgres caching and straight-line fallback.
     """
+    if db is None:
+        from app.db.session import SessionLocal
+        with SessionLocal() as session:
+            return compute_route(origin, destination, db=session)
+
     orig_lat, orig_lng = round(origin[0], 4), round(origin[1], 4)
     dest_lat, dest_lng = round(destination[0], 4), round(destination[1], 4)
     now_utc = datetime.datetime.now(timezone.utc)
 
-    # 1. Check Route Cache
-    if db is not None:
-        cached = db.query(RouteCache).filter(
-            RouteCache.origin_lat == orig_lat,
-            RouteCache.origin_lng == orig_lng,
-            RouteCache.dest_lat == dest_lat,
-            RouteCache.dest_lng == dest_lng
-        ).first()
+    # 1. Check Route Cache (cache hits NEVER consume daily quota)
+    cached = db.query(RouteCache).filter(
+        RouteCache.origin_lat == orig_lat,
+        RouteCache.origin_lng == orig_lng,
+        RouteCache.dest_lat == dest_lat,
+        RouteCache.dest_lng == dest_lng
+    ).first()
 
-        if cached:
-            # Check TTL
-            cache_age = now_utc - cached.updated_at.replace(tzinfo=timezone.utc) if cached.updated_at.tzinfo is None else (now_utc - cached.updated_at)
-            if cache_age <= datetime.timedelta(minutes=settings.ROUTE_CACHE_MINUTES):
-                return {
-                    "distance_km": cached.distance_km,
-                    "duration_minutes": cached.duration_minutes,
-                    "encoded_polyline": cached.encoded_polyline,
-                    "route_source": cached.route_source,
-                    "cached": True
-                }
+    if cached:
+        cache_updated = cached.updated_at
+        if cache_updated.tzinfo is None:
+            cache_updated = cache_updated.replace(tzinfo=timezone.utc)
+        cache_age = now_utc - cache_updated
+        if cache_age <= datetime.timedelta(minutes=settings.ROUTE_CACHE_MINUTES):
+            return {
+                "distance_km": cached.distance_km,
+                "duration_minutes": cached.duration_minutes,
+                "encoded_polyline": cached.encoded_polyline,
+                "route_source": cached.route_source,
+                "cached": True
+            }
 
-    # 2. Check Daily Safety Cap
-    daily_count = get_daily_calls()
-    if daily_count >= settings.MAX_ROUTE_CALLS_PER_DAY:
-        # Fallback to straight-line haversine estimate
+    # 2. Check and Increment Persistent Daily Safety Cap (atomic DB counter)
+    quota_granted = check_and_increment_daily_limit(db, settings.MAX_ROUTE_CALLS_PER_DAY)
+    if not quota_granted:
+        # Daily limit reached: fallback to straight-line haversine estimate
         dist = haversine_km((orig_lat, orig_lng), (dest_lat, dest_lng))
-        # Estimate duration assuming average speed of 40 km/h plus 10 min setup
         est_duration = round((dist / 40.0) * 60.0 + 10.0, 1)
         return {
             "distance_km": dist,
@@ -142,7 +209,6 @@ def compute_route(
     source = "ESTIMATED"
 
     try:
-        increment_daily_calls()
         with httpx.Client(timeout=4.0) as client:
             resp = client.get(url, headers={"User-Agent": settings.OSM_USER_AGENT})
             if resp.status_code == 200:
@@ -154,7 +220,7 @@ def compute_route(
                     polyline_geojson = str(first_route.get("geometry", {}).get("coordinates", []))
                     source = "OSRM_ROUTES"
     except Exception:
-        # Fallback to haversine estimate if network times out or OSRM is unreachable
+        # Fallback to haversine estimate if network times out, OSRM errors, or non-200
         pass
 
     if distance_km is None:
@@ -163,35 +229,34 @@ def compute_route(
         source = "ESTIMATED"
 
     # 4. Save to Cache
-    if db is not None:
-        try:
-            cached_entry = db.query(RouteCache).filter(
-                RouteCache.origin_lat == orig_lat,
-                RouteCache.origin_lng == orig_lng,
-                RouteCache.dest_lat == dest_lat,
-                RouteCache.dest_lng == dest_lng
-            ).first()
+    try:
+        cached_entry = db.query(RouteCache).filter(
+            RouteCache.origin_lat == orig_lat,
+            RouteCache.origin_lng == orig_lng,
+            RouteCache.dest_lat == dest_lat,
+            RouteCache.dest_lng == dest_lng
+        ).first()
 
-            if cached_entry:
-                cached_entry.distance_km = distance_km
-                cached_entry.duration_minutes = duration_min
-                cached_entry.encoded_polyline = polyline_geojson
-                cached_entry.route_source = source
-                cached_entry.updated_at = now_utc
-            else:
-                db.add(RouteCache(
-                    origin_lat=orig_lat,
-                    origin_lng=orig_lng,
-                    dest_lat=dest_lat,
-                    dest_lng=dest_lng,
-                    distance_km=distance_km,
-                    duration_minutes=duration_min,
-                    encoded_polyline=polyline_geojson,
-                    route_source=source
-                ))
-            db.commit()
-        except Exception:
-            db.rollback()
+        if cached_entry:
+            cached_entry.distance_km = distance_km
+            cached_entry.duration_minutes = duration_min
+            cached_entry.encoded_polyline = polyline_geojson
+            cached_entry.route_source = source
+            cached_entry.updated_at = now_utc
+        else:
+            db.add(RouteCache(
+                origin_lat=orig_lat,
+                origin_lng=orig_lng,
+                dest_lat=dest_lat,
+                dest_lng=dest_lng,
+                distance_km=distance_km,
+                duration_minutes=duration_min,
+                encoded_polyline=polyline_geojson,
+                route_source=source
+            ))
+        db.commit()
+    except Exception:
+        db.rollback()
 
     return {
         "distance_km": distance_km,
@@ -207,14 +272,41 @@ def compute_route_matrix(
     db: Optional[Session] = None
 ) -> List[Dict[str, Any]]:
     """
-    Compute routes for multiple candidate destinations up to MAX_ROUTE_CALLS_PER_REQUEST.
-    Picks nearest by straight-line distance first.
+    Compute routes for multiple candidate destinations.
+    1. Sorts destinations by straight-line haversine distance, nearest first.
+    2. Computes road routes for nearest N destinations up to MAX_ROUTE_CALLS_PER_REQUEST.
+    3. Beyond the cap, destinations receive straight-line ESTIMATED routes (not silently dropped).
     """
-    capped_dests = destinations[:settings.MAX_ROUTE_CALLS_PER_REQUEST]
-    results = []
-    for dest in capped_dests:
+    if not destinations:
+        return []
+
+    # Sort candidates by straight-line distance (nearest first) BEFORE applying cap
+    sorted_destinations = sorted(destinations, key=lambda dest: haversine_km(origin, dest))
+    
+    cap = settings.MAX_ROUTE_CALLS_PER_REQUEST
+    nearest_dests = sorted_destinations[:cap]
+    excess_dests = sorted_destinations[cap:]
+
+    results: List[Dict[str, Any]] = []
+
+    # 1. Road routes for nearest N
+    for dest in nearest_dests:
         route = compute_route(origin, dest, db)
         results.append(route)
+
+    # 2. Straight-line estimates for excess candidates beyond cap
+    for dest in excess_dests:
+        dist = haversine_km(origin, dest)
+        est_duration = round((dist / 40.0) * 60.0 + 10.0, 1)
+        results.append({
+            "distance_km": dist,
+            "duration_minutes": est_duration,
+            "encoded_polyline": None,
+            "route_source": "ESTIMATED",
+            "cached": False,
+            "note": f"Exceeded per-request limit of {cap} road routes; using straight-line estimate."
+        })
+
     return results
 
 def reverse_geocode(lat: float, lng: float) -> Dict[str, Any]:

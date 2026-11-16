@@ -6,7 +6,7 @@ from app.models.asset import ColdAsset, StaticAssetDetail, MobileAssetDetail, As
 from app.models.produce import ProduceBatch, SpoilageAssessment
 from app.models.matching import MatchingRequest, Bid
 from app.models.booking import Booking
-from app.models.route import RouteCache
+from app.models.route import RouteCache, RouteUsage
 from app.models.audit import AuditLog
 from app.models.inventory import Inventory, Alert
 from app.models.marketplace import BuyerListing, PurchaseOrder
@@ -28,6 +28,7 @@ __all__ = [
     "Bid",
     "Booking",
     "RouteCache",
+    "RouteUsage",
     "AuditLog",
     "Inventory",
     "Alert",
