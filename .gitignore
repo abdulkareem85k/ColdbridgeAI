@@ -35,6 +35,7 @@ backups/
 # Environment secrets
 .env
 backend/.env
+frontend/js/config.local.js
 
 # Testing & Coverage
 .pytest_cache/
