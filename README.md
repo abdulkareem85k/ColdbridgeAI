@@ -151,6 +151,180 @@ python -m http.server 5500 --bind 127.0.0.1
 
 - **Open-Source Attribution:** Leaflet maps render standard OpenStreetMap raster tiles with mandatory attribution: `&copy; OpenStreetMap contributors`.
 - **Nominatim Usage Policy:** Reverse-geocoding requests include a descriptive User-Agent (`ColdBridgeAI/1.0 (Avishkar Competition)`).
-- **Route Caching & Safety Caps:** OSRM routes are cached in the database (default 60 min TTL) with daily request capping (`MAX_ROUTE_CALLS_PER_DAY=1000`).
+- **Route Caching & Safety Caps:** OSRM routes are cached in the database (default 60 min TTL) with daily request capping (`MAX_ROUTE_CALLS_PER_DAY=200`).
 - **Resilient Fallback:** If network connection or OSRM is unavailable, straight-line Haversine distance and duration are automatically calculated and clearly marked as `ESTIMATED`.
 - **Offline Demo Mode:** If map tiles fail to load, clean list views and coordinate presets (Nashik, Pune, Ratnagiri) allow uninterrupted offline demonstration.
+
+---
+
+## 📁 Project Directory Structure
+
+```text
+ColdBridgeAI/
+├── backend/
+│   ├── alembic/
+│   │   ├── versions/
+│   │   │   ├── 001_phase1_initial.py
+│   │   │   ├── 002_phase2_surplus_and_forecasting.py
+│   │   │   └── b6f914b3b6de_add_route_usage_table.py
+│   │   ├── env.py
+│   │   └── script.py.mako
+│   ├── app/
+│   │   ├── core/
+│   │   │   ├── config.py
+│   │   │   └── security.py
+│   │   ├── db/
+│   │   │   ├── base.py
+│   │   │   ├── base_class.py
+│   │   │   └── session.py
+│   │   ├── models/
+│   │   │   ├── asset.py
+│   │   │   ├── audit.py
+│   │   │   ├── base_class.py
+│   │   │   ├── booking.py
+│   │   │   ├── inventory.py
+│   │   │   ├── marketplace.py
+│   │   │   ├── matching.py
+│   │   │   ├── produce.py
+│   │   │   ├── route_usage.py
+│   │   │   ├── sri.py
+│   │   │   └── user.py
+│   │   ├── routers/
+│   │   │   ├── admin.py
+│   │   │   ├── assets.py
+│   │   │   ├── auth.py
+│   │   │   ├── bookings.py
+│   │   │   ├── health.py
+│   │   │   ├── maps.py
+│   │   │   ├── marketplace.py
+│   │   │   ├── matching.py
+│   │   │   ├── produce.py
+│   │   │   └── sri.py
+│   │   ├── schemas/
+│   │   │   ├── asset.py
+│   │   │   ├── auth.py
+│   │   │   ├── booking.py
+│   │   │   ├── maps.py
+│   │   │   ├── marketplace.py
+│   │   │   ├── matching.py
+│   │   │   ├── produce.py
+│   │   │   └── sri.py
+│   │   ├── seed/
+│   │   │   └── demo_data.py
+│   │   ├── services/
+│   │   │   ├── booking_service.py
+│   │   │   ├── maps_service.py
+│   │   │   ├── marketplace_service.py
+│   │   │   ├── matching_engine.py
+│   │   │   └── sri_service.py
+│   │   └── main.py
+│   ├── .env.example
+│   ├── alembic.ini
+│   ├── coldbridge.db
+│   └── requirements.txt
+├── backups/
+│   └── coldbridge_20261116_123751.db
+├── docs/
+│   ├── SOFTWARE_AUDIT_BEFORE_FIXES.md
+│   ├── SOFTWARE_CORRECTION_REPORT.md
+│   ├── ColdBridge_Part1_Audit_and_Plan.md
+│   ├── ColdBridge_Part2_Google_Maps_and_SRI.md
+│   ├── ColdBridge_Part3_Security_Config_and_Final_Check.md
+│   ├── ColdBridge_Fix_Part1_Audit_and_Bids.md
+│   ├── ColdBridge_Fix_Part2_OpenStreetMap_and_Limits.md
+│   └── ColdBridge_Fix_Part3_Security_Config_and_Final_Check.md
+├── frontend/
+│   ├── css/
+│   │   ├── main.css
+│   │   └── theme.css
+│   ├── js/
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── config.example.js
+│   │   ├── config.js
+│   │   ├── i18n.js
+│   │   ├── maps.js
+│   │   └── ui.js
+│   ├── admin.html
+│   ├── buyer.html
+│   ├── farmer.html
+│   ├── index.html
+│   └── operator.html
+├── tests/
+│   ├── conftest.py
+│   ├── test_admin_simulation.py
+│   ├── test_auth.py
+│   ├── test_booking.py
+│   ├── test_c6_security.py
+│   ├── test_c8_live_smoke.py
+│   ├── test_frontend_security.py
+│   ├── test_health.py
+│   ├── test_maps_c3.py
+│   ├── test_maps_c4.py
+│   ├── test_maps_c5.py
+│   ├── test_maps_routing.py
+│   ├── test_marketplace.py
+│   ├── test_matching.py
+│   ├── test_matching_c1.py
+│   ├── test_produce_assets.py
+│   ├── test_sri.py
+│   └── test_sri_c2.py
+└── README.md
+```
+
+---
+
+## ⚙️ Environment Configuration (`backend/.env`)
+
+| Variable | Default Value | Purpose & Invariants |
+|---|---|---|
+| `JWT_SECRET` | *(Random in Dev)* | Secret key for signing HS256 JWTs. Minimum 32 chars required. In production, startup halts if missing or placeholder. |
+| `ENVIRONMENT` | `development` | `development` allows relaxed dev origins and ephemeral keys; `production` enforces strict HTTPS cookies and explicit secrets. |
+| `COOKIE_SECURE` | `False` | Cookie `Secure` flag. Must be `False` for local HTTP (`127.0.0.1`), `True` for HTTPS production. |
+| `CORS_ORIGINS` | `http://127.0.0.1:5500,http://localhost:5500` | Comma-separated list of allowed origins. Wildcards (`*`) are strictly rejected. |
+| `MAX_ROUTE_CALLS_PER_DAY` | `200` | Persistent atomic daily quota for public OSRM routing calls. Stored in `route_usage` table. |
+| `MAX_ROUTE_CALLS_PER_MINUTE_PER_USER` | `30` | Sliding window in-memory rate limiter per authenticated user. |
+| `MAX_ROUTE_CALLS_PER_REQUEST` | `5` | Nearest N candidate destinations routed via road routing; excess candidates receive straight-line estimates. |
+| `DATABASE_URL` | `sqlite:///./coldbridge.db` | SQLAlchemy connection string. SQLite for local dev; PostgreSQL supported. |
+
+---
+
+## 💾 Database Migration & Backup Procedures
+
+### Creating a Database Backup
+Before performing any structural updates, seed resets, or migrations, always create a timestamped backup of the local database:
+
+```powershell
+# PowerShell:
+$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+Copy-Item backend/coldbridge.db "backups/coldbridge_$timestamp.db"
+```
+
+```bash
+# Bash:
+cp backend/coldbridge.db "backups/coldbridge_$(date +%Y%m%d_%H%M%S).db"
+```
+
+### Applying Migrations
+Alembic manages all database schema revisions:
+
+```powershell
+# Apply all pending migrations to current head:
+python -m alembic -c backend/alembic.ini upgrade head
+
+# Inspect migration history:
+python -m alembic -c backend/alembic.ini history
+
+# Rollback the last migration revision:
+python -m alembic -c backend/alembic.ini downgrade -1
+```
+
+---
+
+## ⚠️ Known Limitations & Exhibition Notes
+
+1. **Single-Worker Process Execution:** Nominatim reverse geocoding compliance (maximum 1 req/s) is managed via an in-memory thread lock and cache inside one process. For local demo and exhibition, start Uvicorn with a single worker (`uvicorn app.main:app` without `--workers`).
+2. **Transparent Labels:** All data generated by demo seeds or what-if simulations is explicitly flagged with `DATA_SOURCE: SIMULATED`. Live farmer batches and actual user bookings are labeled `DATA_SOURCE: LIVE`.
+3. **Prototype SRI Model:** The Spoilage Risk Index (SRI) uses an explainable heuristic formula factoring in harvest elapsed time, crop-specific temperature sensitivity, and ambient heat. It is a decision-support heuristic, not a certified thermodynamic sensor reading.
+4. **Offline Resilience:** If third-party map tiles or OSRM road routing are unreachable, ColdBridge AI falls back to straight-line Haversine calculations labeled `ESTIMATED`, ensuring zero demo interruptions.
+5. **Localization Coverage:** Core workflows across farmer, operator, buyer, and admin portals are localized in English, Hindi (हिंदी), and Marathi (मराठी). Complex medical or agricultural botanical definitions are marked for native-speaker agricultural review.

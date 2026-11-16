@@ -1,5 +1,9 @@
 # ColdBridge AI – Part 2 of 4: OpenStreetMap, Leaflet.js and Spoilage Risk Index
 
+> [!NOTE]
+> **Map Platform Specification:**
+> This project strictly utilizes **OpenStreetMap + Leaflet.js**, Nominatim (via backend rate-limited proxy), and OSRM for all mapping, location picking, and routing. Zero Google Maps Platform or proprietary paid map APIs are used.
+
 **Steps in this file:** P0, LM1, LM2, LM3, M4
 **Before you start:** Part 1 is finished and committed. OpenStreetMap + Leaflet.js requires no paid Google Cloud setup or API keys. Free, open-source tile layer and OSRM / Nominatim services.
 **When this part is done:** the Leaflet map, address picker, road routes and SRI all work. Then open Part 3.

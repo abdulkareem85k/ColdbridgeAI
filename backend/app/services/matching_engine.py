@@ -64,11 +64,19 @@ def run_cross_asset_matching(
             "disclaimer": sri_res.get("disclaimer")
         }
     else:
-        sri_band = sri_assessment.risk_band
+        sri_band = getattr(sri_assessment, "risk_category", None) or getattr(sri_assessment, "risk_band", "LOW")
+        sri_score = getattr(sri_assessment, "score", None) or getattr(sri_assessment, "sri_score", 0.0)
+        reasons_val = sri_assessment.reasons or []
+        if isinstance(reasons_val, str):
+            import json
+            try:
+                reasons_val = json.loads(reasons_val)
+            except Exception:
+                reasons_val = [reasons_val]
         sri_data = {
-            "sri_score": sri_assessment.sri_score,
-            "risk_band": sri_assessment.risk_band,
-            "reasons": sri_assessment.reasons or []
+            "sri_score": sri_score,
+            "risk_band": sri_band,
+            "reasons": reasons_val
         }
 
     # Check if request is already allocated / matched with an accepted bid
