@@ -10,15 +10,20 @@
     <header>
         <a href="admin.html" class="brand">
             <span>❄️ ColdBridge AI</span>
-            <span class="brand-badge" style="background: #475569;">Admin & Simulation</span>
+            <span class="brand-badge" style="background: #475569;" data-i18n="admin_portal">Admin & Simulation</span>
         </a>
         <nav>
-            <a href="#stats" class="nav-link active" data-tab="tabStats">System Overview</a>
-            <a href="#simulation" class="nav-link" data-tab="tabSimulation">Simulation Controls</a>
-            <a href="#audit" class="nav-link" data-tab="tabAudit">Audit Trail</a>
+            <a href="#stats" class="nav-link active" data-tab="tabStats" data-i18n="nav_system_overview">System Overview</a>
+            <a href="#simulation" class="nav-link" data-tab="tabSimulation" data-i18n="nav_simulation_controls">Simulation Controls</a>
+            <a href="#audit" class="nav-link" data-tab="tabAudit" data-i18n="nav_audit_trail">Audit Trail</a>
+            <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
+                <option value="en">🌐 English</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="mr">🚩 मराठी</option>
+            </select>
             <div class="user-pill">
                 <span id="adminName">Administrator</span>
-                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
             </div>
         </nav>
     </header>
@@ -30,13 +35,13 @@
         <div id="tabStats" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Platform Operations Dashboard</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">System health, infrastructure counts, and active cold-chain allocations.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="admin_title">Platform Operations Dashboard</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="admin_subtitle">System health, infrastructure counts, and active cold-chain allocations.</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
                     <span class="badge badge-source-simulated">DATA: SIMULATED</span>
                     <span class="badge badge-status-fresh">STATUS: FRESH</span>
-                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshStats">Refresh</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshStats" data-i18n="btn_refresh">Refresh</button>
                 </div>
             </div>
 
@@ -181,6 +186,7 @@
     <script type="module">
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
+        import { initI18n, setLanguage, getLanguage } from './js/i18n.js';
 
         let currentUser = null;
 
@@ -205,6 +211,15 @@
         // Initialize Authentication
         (async () => {
             try {
+                initI18n();
+                const langSwitcher = document.getElementById('langSwitcher');
+                if (langSwitcher) {
+                    langSwitcher.value = getLanguage();
+                    langSwitcher.addEventListener('change', (e) => {
+                        setLanguage(e.target.value);
+                    });
+                }
+
                 currentUser = await getMe();
                 if (!currentUser || currentUser.role !== 'ADMIN') {
                     window.location.href = 'index.html';

@@ -12,41 +12,48 @@
             <span>❄️ ColdBridge AI</span>
             <span class="brand-badge">MVP Prototype</span>
         </a>
-        <div style="font-size: 0.85rem; color: var(--text-muted);">
-            Avishkar Competition Prototype
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Avishkar Competition Prototype
+            </div>
+            <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
+                <option value="en">🌐 English</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="mr">🚩 मराठी</option>
+            </select>
         </div>
     </header>
 
     <div class="container" style="max-width: 520px; margin-top: 3rem;">
         <div class="card">
-            <h1 class="page-title" style="font-size: 1.5rem; text-align: center;">Welcome to ColdBridge AI</h1>
-            <p class="page-subtitle" style="text-align: center; margin-bottom: 1.5rem;">
+            <h1 class="page-title" style="font-size: 1.5rem; text-align: center;" data-i18n="auth_welcome">Welcome to ColdBridge AI</h1>
+            <p class="page-subtitle" style="text-align: center; margin-bottom: 1.5rem;" data-i18n="auth_subtitle">
                 Pay-per-use cold chain logistics & smart cross-asset matching
             </p>
 
             <div id="alertBox" class="alert" style="display: none;"></div>
 
             <div class="tab-bar" style="justify-content: center;">
-                <button class="tab-btn active" id="tabLoginBtn" type="button">Sign In</button>
-                <button class="tab-btn" id="tabRegisterBtn" type="button">Register</button>
+                <button class="tab-btn active" id="tabLoginBtn" type="button" data-i18n="tab_sign_in">Sign In</button>
+                <button class="tab-btn" id="tabRegisterBtn" type="button" data-i18n="tab_register">Register</button>
             </div>
 
             <!-- Login Form -->
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="loginEmail">Email Address</label>
+                    <label for="loginEmail" data-i18n="label_email">Email Address</label>
                     <input type="email" id="loginEmail" required placeholder="farmer.demo@coldbridge.ai" autocomplete="email">
                 </div>
                 <div class="form-group">
-                    <label for="loginPassword">Password</label>
+                    <label for="loginPassword" data-i18n="label_password">Password</label>
                     <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password">
                 </div>
-                <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" data-i18n="btn_sign_in">
                     Sign In
                 </button>
 
                 <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">
+                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;" data-i18n="demo_logins_title">
                         Quick Demo Logins (Maharashtra Demo Dataset):
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
@@ -62,19 +69,19 @@
             <!-- Register Form -->
             <form id="registerForm" style="display: none;">
                 <div class="form-group">
-                    <label for="regFullName">Full Name</label>
+                    <label for="regFullName" data-i18n="label_full_name">Full Name</label>
                     <input type="text" id="regFullName" required placeholder="e.g. Ramesh Patil">
                 </div>
                 <div class="form-group">
-                    <label for="regEmail">Email Address</label>
+                    <label for="regEmail" data-i18n="label_email">Email Address</label>
                     <input type="email" id="regEmail" required placeholder="you@domain.com">
                 </div>
                 <div class="form-group">
-                    <label for="regPassword">Password (min 8 characters)</label>
+                    <label for="regPassword" data-i18n="label_password">Password (min 8 characters)</label>
                     <input type="password" id="regPassword" required minlength="8" placeholder="••••••••">
                 </div>
                 <div class="form-group">
-                    <label for="regRole">Role</label>
+                    <label for="regRole" data-i18n="label_role">Role</label>
                     <select id="regRole" required>
                         <option value="FARMER">Farmer (Store & transport produce)</option>
                         <option value="STATIC_OPERATOR">Static Cold Room Operator</option>
@@ -83,10 +90,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="regPhone">Phone Number</label>
+                    <label for="regPhone" data-i18n="label_phone">Phone Number</label>
                     <input type="tel" id="regPhone" placeholder="+91-9822011001">
                 </div>
-                <button type="submit" id="regSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                <button type="submit" id="regSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" data-i18n="btn_create_account">
                     Create Account
                 </button>
             </form>
@@ -95,6 +102,7 @@
 
     <script type="module">
         import { login, register, getMe, redirectByRole } from './js/auth.js';
+        import { initI18n, setLanguage, getLanguage } from './js/i18n.js';
 
         const alertBox = document.getElementById('alertBox');
         const loginForm = document.getElementById('loginForm');
@@ -110,6 +118,16 @@
 
         function hideAlert() {
             alertBox.style.display = 'none';
+        }
+
+        // Initialize i18n
+        initI18n();
+        const langSwitcher = document.getElementById('langSwitcher');
+        if (langSwitcher) {
+            langSwitcher.value = getLanguage();
+            langSwitcher.addEventListener('change', (e) => {
+                setLanguage(e.target.value);
+            });
         }
 
         // Check if already authenticated on page load

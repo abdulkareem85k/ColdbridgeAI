@@ -12,19 +12,24 @@
     <header>
         <a href="operator.html" class="brand">
             <span>❄️ ColdBridge AI</span>
-            <span class="brand-badge">Operator Portal</span>
+            <span class="brand-badge" data-i18n="operator_portal">Operator Portal</span>
         </a>
         <nav>
-            <a href="#assets" class="nav-link active" data-tab="tabAssets">My Assets</a>
-            <a href="#bookings" class="nav-link" data-tab="tabBookings">Active Bookings</a>
-            <a href="#surplus" class="nav-link" data-tab="tabSurplus">Surplus & Inventory</a>
-            <a href="#utilization" class="nav-link" data-tab="tabUtilization">Capacity Utilization</a>
-            <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue">SRI Priority Queue</a>
-            <a href="#add-static" class="nav-link" data-tab="tabAddStatic">Add Cold Room</a>
-            <a href="#add-van" class="nav-link" data-tab="tabAddVan">Add Solar Van</a>
+            <a href="#assets" class="nav-link active" data-tab="tabAssets" data-i18n="nav_my_assets">My Assets</a>
+            <a href="#bookings" class="nav-link" data-tab="tabBookings" data-i18n="nav_active_bookings">Active Bookings</a>
+            <a href="#surplus" class="nav-link" data-tab="tabSurplus" data-i18n="nav_surplus_inv">Surplus & Inventory</a>
+            <a href="#utilization" class="nav-link" data-tab="tabUtilization" data-i18n="nav_utilization">Capacity Utilization</a>
+            <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue" data-i18n="nav_sri_queue">SRI Priority Queue</a>
+            <a href="#add-static" class="nav-link" data-tab="tabAddStatic" data-i18n="nav_add_static">Add Cold Room</a>
+            <a href="#add-van" class="nav-link" data-tab="tabAddVan" data-i18n="nav_add_van">Add Solar Van</a>
+            <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
+                <option value="en">🌐 English</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="mr">🚩 मराठी</option>
+            </select>
             <div class="user-pill">
                 <span id="operatorName">Operator</span>
-                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
             </div>
         </nav>
     </header>
@@ -36,8 +41,8 @@
         <div id="tabAssets" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Cooling Infrastructure Fleet</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Manage your registered static cold rooms and mobile solar cooling vans.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="fleet_title">Cooling Infrastructure Fleet</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="fleet_subtitle">Manage your registered static cold rooms and mobile solar cooling vans.</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
                     <select id="filterAssetType" class="form-group" style="margin: 0; padding: 0.4rem 0.8rem;">
@@ -45,7 +50,7 @@
                         <option value="STATIC">Static Rooms Only</option>
                         <option value="MOBILE">Mobile Vans Only</option>
                     </select>
-                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAssets">Refresh</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAssets" data-i18n="btn_refresh">Refresh</button>
                 </div>
             </div>
 
@@ -435,6 +440,7 @@
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
         import { mountLocationPicker, escapeHtml } from './js/maps.js';
+        import { initI18n, setLanguage, getLanguage } from './js/i18n.js';
 
         let currentUser = null;
         let cachedAssets = [];
@@ -453,6 +459,15 @@
         // Initialize Authentication
         (async () => {
             try {
+                initI18n();
+                const langSwitcher = document.getElementById('langSwitcher');
+                if (langSwitcher) {
+                    langSwitcher.value = getLanguage();
+                    langSwitcher.addEventListener('change', (e) => {
+                        setLanguage(e.target.value);
+                    });
+                }
+
                 currentUser = await getMe();
                 if (!currentUser) {
                     window.location.href = 'index.html';

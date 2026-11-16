@@ -55,15 +55,20 @@
     <header>
         <a href="buyer.html" class="brand">
             <span>❄️ ColdBridge AI</span>
-            <span class="brand-badge">Buyer Portal</span>
+            <span class="brand-badge" data-i18n="buyer_portal">Buyer Portal</span>
         </a>
         <nav>
-            <a href="#marketplace" class="nav-link active" data-tab="tabMarketplace">Surplus Marketplace</a>
-            <a href="#my-orders" class="nav-link" data-tab="tabOrders">My Orders</a>
-            <a href="#forecasts" class="nav-link" data-tab="tabForecasts">Demand Forecasts</a>
+            <a href="#marketplace" class="nav-link active" data-tab="tabMarketplace" data-i18n="nav_surplus_market">Surplus Marketplace</a>
+            <a href="#my-orders" class="nav-link" data-tab="tabOrders" data-i18n="nav_my_orders">My Orders</a>
+            <a href="#forecasts" class="nav-link" data-tab="tabForecasts" data-i18n="nav_demand_forecasts">Demand Forecasts</a>
+            <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
+                <option value="en">🌐 English</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="mr">🚩 मराठी</option>
+            </select>
             <div class="user-pill">
                 <span id="buyerName">Vikram Mehta</span>
-                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
             </div>
         </nav>
     </header>
@@ -88,8 +93,8 @@
         <div id="tabMarketplace" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Near-Expiry Surplus Marketplace</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Procure farm-fresh pre-cooled produce at sliding discounts certified by facility operators.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="surplus_market_title">Near-Expiry Surplus Marketplace</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="surplus_market_subtitle">Procure farm-fresh pre-cooled produce at sliding discounts certified by facility operators.</p>
                 </div>
             </div>
 
@@ -242,6 +247,7 @@
     <script type="module">
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
+        import { initI18n, setLanguage, getLanguage } from './js/i18n.js';
 
         let currentUser = null;
         let mapInstance = null;
@@ -263,6 +269,15 @@
         // Initialize Page & Verify Role
         async function init() {
             try {
+                initI18n();
+                const langSwitcher = document.getElementById('langSwitcher');
+                if (langSwitcher) {
+                    langSwitcher.value = getLanguage();
+                    langSwitcher.addEventListener('change', (e) => {
+                        setLanguage(e.target.value);
+                    });
+                }
+
                 currentUser = await getMe();
                 if (!currentUser) {
                     window.location.href = 'index.html';

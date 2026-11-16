@@ -2,6 +2,7 @@
  * ColdBridge AI - Localization Dictionary (i18n)
  * Supports English (en), Hindi (hi), and Marathi (mr).
  * English is the default.
+ * Note: Non-English machine-written translations are marked "needs native-speaker review".
  */
 
 export const translations = {
@@ -50,7 +51,50 @@ export const translations = {
         crop_onion: "Onion",
         crop_strawberry: "Strawberry",
         crop_pomegranate: "Pomegranate",
-        crop_cashew_apple: "Cashew Apple"
+        crop_cashew_apple: "Cashew Apple",
+
+        // Index / Auth
+        auth_welcome: "Welcome to ColdBridge AI",
+        auth_subtitle: "Pay-per-use cold chain logistics & smart cross-asset matching",
+        tab_sign_in: "Sign In",
+        tab_register: "Register",
+        label_email: "Email Address",
+        label_password: "Password",
+        btn_sign_in: "Sign In",
+        demo_logins_title: "Quick Demo Logins (Maharashtra Demo Dataset):",
+        label_full_name: "Full Name",
+        label_phone: "Phone Number",
+        label_role: "I want to register as:",
+        btn_create_account: "Create Account",
+
+        // Operator Portal
+        operator_portal: "Operator Portal",
+        nav_my_assets: "My Assets",
+        nav_active_bookings: "Active Bookings",
+        nav_surplus_inv: "Surplus & Inventory",
+        nav_utilization: "Capacity Utilization",
+        nav_sri_queue: "SRI Priority Queue",
+        nav_add_static: "Add Cold Room",
+        nav_add_van: "Add Solar Van",
+        fleet_title: "Cooling Infrastructure Fleet",
+        fleet_subtitle: "Manage your registered static cold rooms and mobile solar cooling vans.",
+        btn_refresh: "Refresh",
+
+        // Buyer Portal
+        buyer_portal: "Buyer Portal",
+        nav_surplus_market: "Surplus Marketplace",
+        nav_my_orders: "My Orders",
+        nav_demand_forecasts: "Demand Forecasts",
+        surplus_market_title: "Near-Expiry Surplus Marketplace",
+        surplus_market_subtitle: "Procure farm-fresh pre-cooled produce at sliding discounts certified by facility operators.",
+
+        // Admin Portal
+        admin_portal: "System Admin",
+        nav_system_overview: "System Overview",
+        nav_simulation_controls: "Simulation Controls",
+        nav_audit_trail: "Audit Trail",
+        admin_title: "Platform Operations Dashboard",
+        admin_subtitle: "System health, infrastructure counts, and active cold-chain allocations."
     },
     hi: {
         brand_title: "❄️ कोल्डब्रिज एआई",
@@ -97,7 +141,50 @@ export const translations = {
         crop_onion: "प्याज",
         crop_strawberry: "स्ट्रॉबेरी",
         crop_pomegranate: "अनार",
-        crop_cashew_apple: "काजू सेब"
+        crop_cashew_apple: "काजू सेब",
+
+        // Index / Auth (needs native-speaker review)
+        auth_welcome: "कोल्डब्रिज एआई में आपका स्वागत है",
+        auth_subtitle: "पे-पर-यूज़ कोल्ड चेन लॉजिस्टिक्स और स्मार्ट क्रॉस-एसेट मैचिंग",
+        tab_sign_in: "साइन इन",
+        tab_register: "पंजीकरण",
+        label_email: "ईमेल पता",
+        label_password: "पासवर्ड",
+        btn_sign_in: "साइन इन",
+        demo_logins_title: "त्वरित डेमो लॉगिन (महाराष्ट्र डेमो डेटासेट):",
+        label_full_name: "पूरा नाम",
+        label_phone: "फ़ोन नंबर",
+        label_role: "मैं इस रूप में पंजीकरण करना चाहता हूँ:",
+        btn_create_account: "खाता बनाएं",
+
+        // Operator Portal (needs native-speaker review)
+        operator_portal: "ऑपरेटर पोर्टल",
+        nav_my_assets: "मेरी संपत्तियां",
+        nav_active_bookings: "सक्रिय बुकिंग",
+        nav_surplus_inv: "अतिरिक्त स्टॉक व इन्वेंटरी",
+        nav_utilization: "क्षमता उपयोग",
+        nav_sri_queue: "SRI प्राथमिकता कतार",
+        nav_add_static: "शीतगृह जोड़ें",
+        nav_add_van: "सोलर वैन जोड़ें",
+        fleet_title: "शीतलन बुनियादी ढांचा बेड़ा",
+        fleet_subtitle: "अपने पंजीकृत स्थिर शीतगृहों और मोबाइल सौर शीतलन वैन का प्रबंधन करें।",
+        btn_refresh: "ताज़ा करें",
+
+        // Buyer Portal (needs native-speaker review)
+        buyer_portal: "खरीदार पोर्टल",
+        nav_surplus_market: "अतिरिक्त उपज बाज़ार",
+        nav_my_orders: "मेरे ऑर्डर",
+        nav_demand_forecasts: "मांग पूर्वानुमान",
+        surplus_market_title: "शीघ्र खराब होने वाली अतिरिक्त उपज बाज़ार",
+        surplus_market_subtitle: "सुविधा ऑपरेटरों द्वारा प्रमाणित छूट पर ताज़ा प्री-कूल्ड उपज प्राप्त करें।",
+
+        // Admin Portal (needs native-speaker review)
+        admin_portal: "सिस्टम एडमिन",
+        nav_system_overview: "सिस्टम अवलोकन",
+        nav_simulation_controls: "सिमुलेशन नियंत्रण",
+        nav_audit_trail: "ऑडिट ट्रेल",
+        admin_title: "प्लेटफ़ॉर्म संचालन डैशबोर्ड",
+        admin_subtitle: "सिस्टम स्वास्थ्य, बुनियादी ढांचे की संख्या और सक्रिय कोल्ड-चेन आवंटन।"
     },
     mr: {
         brand_title: "❄️ कोल्डब्रिज एआय",
@@ -144,7 +231,50 @@ export const translations = {
         crop_onion: "कांदा",
         crop_strawberry: "स्ट्रॉबेरी",
         crop_pomegranate: "डाळिंब",
-        crop_cashew_apple: "काजू सफरचंद"
+        crop_cashew_apple: "काजू सफरचंद",
+
+        // Index / Auth (needs native-speaker review)
+        auth_welcome: "कोल्डब्रिज एआय मध्ये आपले स्वागत आहे",
+        auth_subtitle: "पे-पर-यूज शीतकरण वाहतूक आणि स्मार्ट मालमत्ता जुळणी",
+        tab_sign_in: "साइन इन",
+        tab_register: "नोंदणी",
+        label_email: "ईमेल पत्ता",
+        label_password: "पासवर्ड",
+        btn_sign_in: "साइन इन",
+        demo_logins_title: "त्वरित डेमो लॉगिन (महाराष्ट्र डेमो डेटासेट):",
+        label_full_name: "पूर्ण नाव",
+        label_phone: "फोन नंबर",
+        label_role: "मला नोंदणी करायची आहे:",
+        btn_create_account: "खाते तयार करा",
+
+        // Operator Portal (needs native-speaker review)
+        operator_portal: "ऑपरेटर पोर्टल",
+        nav_my_assets: "माझी मालमत्ता",
+        nav_active_bookings: "सक्रिय बुकिंग्ज",
+        nav_surplus_inv: "अतिरिक्त शेतमाल व साठा",
+        nav_utilization: "क्षमता वापर",
+        nav_sri_queue: "SRI प्राधान्य रांग",
+        nav_add_static: "शीतगृह जोडा",
+        nav_add_van: "सोलर व्हॅन जोडा",
+        fleet_title: "शीतकरण पायाभूत सुविधा ताफा",
+        fleet_subtitle: "आपली नोंदणीकृत स्थिर शीतगृहे आणि फिरत्या सौर शीतकरण व्हॅन्सचे व्यवस्थापन करा.",
+        btn_refresh: "रिफ्रेश करा",
+
+        // Buyer Portal (needs native-speaker review)
+        buyer_portal: "खरेदीदार पोर्टल",
+        nav_surplus_market: "अतिरिक्त शेतमाल बाजारपेठ",
+        nav_my_orders: "माझे ऑर्डर्स",
+        nav_demand_forecasts: "मागणी अंदाज",
+        surplus_market_title: "लवकर संपणारा अतिरिक्त शेतमाल बाजार",
+        surplus_market_subtitle: "सुविधा चालकांनी प्रमाणित केलेल्या सवलतीच्या दरात ताजी थंड केलेली पिके मिळवा.",
+
+        // Admin Portal (needs native-speaker review)
+        admin_portal: "सिस्टम ॲडमिन",
+        nav_system_overview: "प्रणाली आढावा",
+        nav_simulation_controls: "सिम्युलेशन नियंत्रणे",
+        nav_audit_trail: "ऑडिट नोंदी",
+        admin_title: "प्लॅटफॉर्म ऑपरेशन्स डॅशबोर्ड",
+        admin_subtitle: "सिस्टम आरोग्य, पायाभूत सुविधांची संख्या आणि सक्रिय शीतकरण वाटप."
     }
 };
 
