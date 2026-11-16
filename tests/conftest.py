@@ -85,6 +85,7 @@ def farmer_user(db_session):
 
 @pytest.fixture
 def operator_user(db_session):
+    from app.models.asset import ColdAsset, StaticAssetDetail
     user = User(
         id="test-operator-001",
         email="operator@test.com",
@@ -101,6 +102,27 @@ def operator_user(db_session):
         business_name="Test Cold Chain",
         district="Pune",
         state="Maharashtra"
+    ))
+    db_session.flush()
+    asset = ColdAsset(
+        id="test-op-asset-001",
+        operator_id=user.id,
+        name="Nashik Cold Storage",
+        asset_type="STATIC",
+        total_capacity_kg=5000.0,
+        available_capacity_kg=4000.0,
+        price_per_kg_per_day=1.5,
+        latitude=19.9975,
+        longitude=73.7898,
+        is_active=True
+    )
+    db_session.add(asset)
+    db_session.flush()
+    db_session.add(StaticAssetDetail(
+        asset_id=asset.id,
+        supported_crops="tomato, onion, mango",
+        min_temperature_c=2.0,
+        max_temperature_c=12.0
     ))
     db_session.commit()
     return user

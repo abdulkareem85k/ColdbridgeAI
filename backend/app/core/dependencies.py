@@ -110,13 +110,20 @@ def get_current_user(
 
     return user
 
-def require_role(*allowed_roles: str) -> Callable:
-    """Reusable role-based access control dependency."""
+def require_role(*allowed_roles) -> Callable:
+    """Reusable role-based access control dependency. Accepts multiple roles as *args or as a single list."""
+    flattened_roles = []
+    for r in allowed_roles:
+        if isinstance(r, (list, tuple, set)):
+            flattened_roles.extend(r)
+        else:
+            flattened_roles.append(r)
+
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in allowed_roles:
+        if current_user.role not in flattened_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied. User role '{current_user.role}' is not authorized. Required: {list(allowed_roles)}"
+                detail=f"Access denied. User role '{current_user.role}' is not authorized. Required: {flattened_roles}"
             )
         return current_user
     return role_checker

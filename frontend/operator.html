@@ -776,7 +776,7 @@
 
             try {
                 const res = await apiRequest('/sri/priority-queue?limit=50');
-                const queue = res.queue || [];
+                const queue = Array.isArray(res) ? res : (res.queue || []);
 
                 if (queue.length === 0) {
                     container.innerHTML = '<div class="state-box">No active unallocated produce batches.</div>';

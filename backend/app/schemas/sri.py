@@ -17,8 +17,9 @@ class SriAssessmentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class SriPriorityQueueItem(BaseModel):
+    priority_rank: Optional[int] = None
     batch_id: str
-    farmer_id: str
+    farmer_id: Optional[str] = None
     crop_code: str
     quantity_kg: float
     ambient_temp_c: float
