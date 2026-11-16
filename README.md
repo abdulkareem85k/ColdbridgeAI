@@ -119,6 +119,10 @@ pytest -v
 cd backend
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
+
+> [!IMPORTANT]
+> **Single-Worker Process Requirement for Exhibition:**
+> The backend rate limiter for OpenStreetMap Nominatim enforces a strict <= 1 request/second rate limit and coordinates requests inside **one** Python process only using thread locks and in-memory TTL caching. The exhibition backend MUST run with a single worker (`uvicorn app.main:app` without `--workers`). It does not provide distributed rate limiting across multiple separate worker processes or server instances.
 - Interactive API Docs (Swagger UI): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - Health Check: [http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/health)
 

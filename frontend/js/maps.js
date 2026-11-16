@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js';
+import { apiRequest } from './api.js';
 
 let leafletLoadedPromise = null;
 
@@ -195,6 +196,9 @@ export async function mountLocationPicker(containerId, { initialLat = 19.9975, i
             <div style="padding: 0.75rem; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center;">
                 <input type="text" id="pickerSearchInput" placeholder="🔍 Search address in Maharashtra (e.g. Nashik APMC, Pune)..." 
                        style="flex: 1; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                <button type="button" id="pickerBtnSearch" class="btn btn-secondary btn-sm" title="Search Address">
+                    Search
+                </button>
                 <button type="button" id="pickerBtnLocate" class="btn btn-secondary btn-sm" title="Use My Current GPS Location">
                     📍 My Location
                 </button>
@@ -268,25 +272,30 @@ export async function mountLocationPicker(containerId, { initialLat = 19.9975, i
 
     async function updateLocation(lat, lng, knownAddress = null) {
         let address = knownAddress;
-        document.getElementById('pickerAddressText').textContent = `Resolving address for ${lat.toFixed(4)}, ${lng.toFixed(4)}...`;
+        const addressEl = document.getElementById('pickerAddressText');
+        if (addressEl) {
+            addressEl.textContent = `Resolving address for ${lat.toFixed(4)}, ${lng.toFixed(4)}...`;
+        }
 
         if (!address) {
             try {
-                // Call reverse-geocoding
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-                    headers: { 'User-Agent': 'ColdBridgeAI-Avishkar/1.0' }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    address = data.display_name;
+                // Call backend reverse-geocoding proxy
+                const data = await apiRequest(`/maps/reverse-geocode?lat=${lat}&lng=${lng}`);
+                if (data && data.address) {
+                    address = data.address;
+                } else {
+                    address = 'Address unavailable – coordinates saved';
                 }
             } catch (e) {
-                // Ignore network errors on reverse geocode
+                // Keep selected marker and coordinates, never throw or lose selection
+                address = 'Address unavailable – coordinates saved';
             }
         }
 
         const displayText = address || `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-        document.getElementById('pickerAddressText').textContent = `Selected: ${displayText}`;
+        if (addressEl) {
+            addressEl.textContent = `Selected: ${displayText}`;
+        }
 
         if (onChange) {
             onChange({ lat, lng, address: displayText });
@@ -313,34 +322,56 @@ export async function mountLocationPicker(containerId, { initialLat = 19.9975, i
         );
     });
 
-    // Debounced Address Search using OpenStreetMap Nominatim
-    let searchTimeout = null;
-    const searchInput = document.getElementById('pickerSearchInput');
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const query = e.target.value.trim();
+    // Explicit Address Search on submit (button click or Enter key)
+    // NOTE: Debounced search-as-you-type is removed to respect Nominatim usage policy
+    async function executeSearch() {
+        const searchInput = document.getElementById('pickerSearchInput');
+        if (!searchInput) return;
+        const query = searchInput.value.trim();
         if (query.length < 3) return;
 
-        searchTimeout = setTimeout(async () => {
-            try {
-                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Maharashtra, India')}&limit=1`;
-                const res = await fetch(url, { headers: { 'User-Agent': 'ColdBridgeAI-Avishkar/1.0' } });
-                if (res.ok) {
-                    const results = await res.json();
-                    if (results && results.length > 0) {
-                        const first = results[0];
-                        const lat = parseFloat(first.lat);
-                        const lng = parseFloat(first.lon);
-                        map.setView([lat, lng], 13);
-                        marker.setLatLng([lat, lng]);
-                        await updateLocation(lat, lng, first.display_name);
-                    }
+        const addressEl = document.getElementById('pickerAddressText');
+        if (addressEl) {
+            addressEl.textContent = `Searching for "${query}"...`;
+        }
+
+        try {
+            const results = await apiRequest(`/maps/search?q=${encodeURIComponent(query)}&limit=1`);
+            if (results && results.length > 0) {
+                const first = results[0];
+                const lat = parseFloat(first.lat != null ? first.lat : first.latitude);
+                const lng = parseFloat(first.lon != null ? first.lon : first.longitude);
+                if (map && marker) {
+                    map.setView([lat, lng], 13);
+                    marker.setLatLng([lat, lng]);
                 }
-            } catch (err) {
-                console.warn('Address search error:', err);
+                await updateLocation(lat, lng, first.display_name);
+            } else {
+                if (addressEl) {
+                    addressEl.textContent = `Location not found for "${query}". Coordinates unchanged.`;
+                }
             }
-        }, 500);
-    });
+        } catch (err) {
+            console.warn('Address search error:', err);
+            if (addressEl) {
+                addressEl.textContent = 'Address search service unavailable. Coordinates unchanged.';
+            }
+        }
+    }
+
+    const searchInput = document.getElementById('pickerSearchInput');
+    const searchBtn = document.getElementById('pickerBtnSearch');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', executeSearch);
+    }
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                executeSearch();
+            }
+        });
+    }
 
     // Trigger initial resolution
     setTimeout(() => {

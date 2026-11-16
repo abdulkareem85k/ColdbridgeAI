@@ -13,7 +13,6 @@ export const CONFIG = {
     // OpenStreetMap & Leaflet Settings
     OSM_TILE_URL: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     OSM_ATTRIBUTION: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    NOMINATIM_REVERSE_URL: "https://nominatim.openstreetmap.org/reverse",
     
     // Geographic defaults: Nashik, Maharashtra, India
     DEFAULT_CENTER: { lat: 19.9975, lng: 73.7898 },

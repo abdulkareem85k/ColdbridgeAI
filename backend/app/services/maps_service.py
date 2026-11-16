@@ -1,12 +1,53 @@
 import math
+import time
+import threading
 import datetime
 from datetime import timezone
 from typing import Tuple, List, Dict, Any, Optional
+from urllib.parse import quote
 import httpx
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.route import RouteCache
+
+# Thread-safe rate limiter for OpenStreetMap Nominatim (enforcing <= 1 request/second)
+# NOTE: This rate limiter coordinates requests inside ONE Python process only.
+# For the Avishkar exhibition, the backend MUST run with a single worker (`uvicorn app.main:app` without --workers).
+# This does NOT guarantee global rate limiting across multiple separate worker processes or server instances.
+_nominatim_rate_lock = threading.Lock()
+_last_nominatim_call_timestamp: float = 0.0
+
+# In-memory caches with 24-hour TTL
+# NOTE: In-memory cache entries do not persist across process restarts. Suitable for single-worker exhibition deployment.
+_nominatim_reverse_cache: Dict[Tuple[float, float], Tuple[str, float]] = {}
+_nominatim_search_cache: Dict[Tuple[str, int], Tuple[List[Dict[str, Any]], float]] = {}
+NOMINATIM_CACHE_TTL_SECONDS = 86400.0  # 24 hours
+
+def _acquire_nominatim_slot(timeout: float = 3.0) -> bool:
+    """
+    Acquire permission to call Nominatim, ensuring at least 1.0s spacing between external calls.
+    Returns True if slot acquired within timeout, False if timed out waiting.
+    """
+    start_time = time.time()
+    acquired = _nominatim_rate_lock.acquire(timeout=timeout)
+    if not acquired:
+        return False
+    
+    try:
+        global _last_nominatim_call_timestamp
+        now = time.time()
+        elapsed = now - _last_nominatim_call_timestamp
+        if elapsed < 1.0:
+            sleep_needed = 1.0 - elapsed
+            remaining = timeout - (time.time() - start_time)
+            if sleep_needed > remaining:
+                return False
+            time.sleep(sleep_needed)
+        _last_nominatim_call_timestamp = time.time()
+        return True
+    finally:
+        _nominatim_rate_lock.release()
 
 # In-memory counter for daily safety call capping
 _daily_routing_calls: Dict[str, int] = {}
@@ -176,11 +217,36 @@ def compute_route_matrix(
         results.append(route)
     return results
 
-def reverse_geocode(lat: float, lng: float) -> str:
+def reverse_geocode(lat: float, lng: float) -> Dict[str, Any]:
     """
-    Reverse geocode coordinates to a readable address using OpenStreetMap Nominatim.
-    Respects OSM 1 request/sec rate policy with sensible fallbacks.
+    Reverse geocode coordinates to an address using OpenStreetMap Nominatim.
+    Enforces <= 1 req/sec rate limit, 24h caching, and graceful fallback on timeout/failure.
+    Returns dict: {"address": str | None, "source": "NOMINATIM" | "CACHE" | "UNAVAILABLE", "latitude": lat, "longitude": lng}
     """
+    coord_key = (round(lat, 4), round(lng, 4))
+    now = time.time()
+
+    # 1. Check in-memory 24h cache
+    if coord_key in _nominatim_reverse_cache:
+        cached_address, timestamp = _nominatim_reverse_cache[coord_key]
+        if now - timestamp < NOMINATIM_CACHE_TTL_SECONDS:
+            return {
+                "address": cached_address,
+                "source": "CACHE",
+                "latitude": lat,
+                "longitude": lng
+            }
+
+    # 2. Acquire rate limiter slot (give up after 3s timeout)
+    if not _acquire_nominatim_slot(timeout=3.0):
+        return {
+            "address": None,
+            "source": "UNAVAILABLE",
+            "latitude": lat,
+            "longitude": lng
+        }
+
+    # 3. Call Nominatim
     url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}"
     try:
         with httpx.Client(timeout=3.0) as client:
@@ -189,7 +255,65 @@ def reverse_geocode(lat: float, lng: float) -> str:
                 data = resp.json()
                 display_name = data.get("display_name")
                 if display_name:
-                    return display_name
+                    _nominatim_reverse_cache[coord_key] = (display_name, now)
+                    return {
+                        "address": display_name,
+                        "source": "NOMINATIM",
+                        "latitude": lat,
+                        "longitude": lng
+                    }
     except Exception:
         pass
-    return f"Location ({lat:.4f}, {lng:.4f})"
+
+    return {
+        "address": None,
+        "source": "UNAVAILABLE",
+        "latitude": lat,
+        "longitude": lng
+    }
+
+def search_address(query: str, limit: int = 1) -> List[Dict[str, Any]]:
+    """
+    Forward geocode an address query using OpenStreetMap Nominatim with Maharashtra/India bias.
+    Enforces <= 1 req/sec rate limit, 24h caching, and returns list of search results.
+    """
+    norm_query = query.strip().lower()
+    cache_key = (norm_query, limit)
+    now = time.time()
+
+    # 1. Check in-memory cache
+    if cache_key in _nominatim_search_cache:
+        cached_results, timestamp = _nominatim_search_cache[cache_key]
+        if now - timestamp < NOMINATIM_CACHE_TTL_SECONDS:
+            return cached_results
+
+    # 2. Acquire rate limit slot
+    if not _acquire_nominatim_slot(timeout=3.0):
+        return []
+
+    # 3. Call Nominatim
+    search_q = f"{query.strip()}, Maharashtra, India" if "india" not in norm_query else query.strip()
+    url = f"https://nominatim.openstreetmap.org/search?format=json&q={quote(search_q)}&limit={limit}"
+    
+    try:
+        with httpx.Client(timeout=3.0) as client:
+            resp = client.get(url, headers={"User-Agent": settings.OSM_USER_AGENT})
+            if resp.status_code == 200:
+                data = resp.json()
+                results = []
+                for item in data:
+                    item_lat = float(item.get("lat", 0.0))
+                    item_lon = float(item.get("lon", 0.0))
+                    results.append({
+                        "display_name": item.get("display_name", ""),
+                        "latitude": item_lat,
+                        "longitude": item_lon,
+                        "lat": item_lat,
+                        "lon": item_lon
+                    })
+                _nominatim_search_cache[cache_key] = (results, now)
+                return results
+    except Exception:
+        pass
+
+    return []

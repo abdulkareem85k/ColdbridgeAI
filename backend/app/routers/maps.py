@@ -1,6 +1,6 @@
 import time
 import threading
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -10,8 +10,8 @@ from app.models.produce import ProduceBatch
 from app.models.asset import ColdAsset
 from app.models.matching import MatchingRequest, Bid
 from app.models.booking import Booking
-from app.schemas.maps import RouteResponse, ReverseGeocodeResponse
-from app.services.maps_service import compute_route, reverse_geocode
+from app.schemas.maps import RouteResponse, ReverseGeocodeResponse, SearchResult
+from app.services.maps_service import compute_route, reverse_geocode, search_address
 
 router = APIRouter(prefix="/maps", tags=["OpenStreetMap & Routing"])
 
@@ -158,16 +158,26 @@ def get_route(
 
 @router.get("/reverse-geocode", response_model=ReverseGeocodeResponse)
 def get_reverse_geocode(
-    lat: float = Query(..., ge=-90.0, le=90.0),
-    lng: float = Query(..., ge=-180.0, le=180.0),
+    lat: float = Query(..., ge=-90.0, le=90.0, description="Latitude between -90 and 90"),
+    lng: float = Query(..., ge=-180.0, le=180.0, description="Longitude between -180 and 180"),
     current_user: User = Depends(get_current_user)
 ):
     """
     Reverse geocode latitude and longitude into human-readable address via OpenStreetMap Nominatim.
+    Rate limited to <= 1 req/s per process, cached for 24 hours, with safe fallback shape on failure.
     """
-    address = reverse_geocode(lat, lng)
-    return {
-        "address": address,
-        "latitude": lat,
-        "longitude": lng
-    }
+    result = reverse_geocode(lat, lng)
+    return result
+
+@router.get("/search", response_model=List[SearchResult])
+def get_search(
+    q: str = Query(..., min_length=3, max_length=200, description="Address or place search query (3-200 chars)"),
+    limit: int = Query(1, ge=1, le=5, description="Maximum number of search results (1-5)"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Search OpenStreetMap Nominatim for addresses / places with Maharashtra bias.
+    Rate limited to <= 1 req/s per process, cached for 24 hours. Returns list of matches.
+    """
+    results = search_address(q, limit=limit)
+    return results
