@@ -17,18 +17,18 @@
 <body>
     <header>
         <a href="storage_operator.html" class="brand">
-            <span>❄️ ColdBridge AI</span>
-            <span class="brand-badge" style="background: #15803d; color: white;">🏭 Storage Operator</span>
+            <span data-i18n="brand_title">❄️ ColdBridge AI</span>
+            <span class="brand-badge" style="background: #15803d; color: white;" data-i18n="storage_operator_badge">🏭 Storage Operator</span>
         </a>
         <nav>
-            <a href="#assets" class="nav-link active" data-tab="tabAssets">My Cold Rooms</a>
-            <a href="#bookings" class="nav-link" data-tab="tabBookings">Incoming Bookings</a>
-            <a href="#surplus" class="nav-link" data-tab="tabSurplus">Inventory & Surplus</a>
-            <a href="#utilization" class="nav-link" data-tab="tabUtilization">Capacity Utilization</a>
-            <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue">SRI Priority Queue</a>
-            <a href="#bids" class="nav-link" data-tab="tabBids">Open Requests & Bids</a>
-            <a href="#add-static" class="nav-link" data-tab="tabAddStatic">Add Cold Room</a>
-            <a href="#directory" class="nav-link" data-tab="tabDirectory">Public Directory</a>
+            <a href="#assets" class="nav-link active" data-tab="tabAssets" data-i18n="nav_my_rooms">My Cold Rooms</a>
+            <a href="#bookings" class="nav-link" data-tab="tabBookings" data-i18n="nav_incoming_bookings">Incoming Bookings</a>
+            <a href="#surplus" class="nav-link" data-tab="tabSurplus" data-i18n="nav_inventory_surplus">Inventory & Surplus</a>
+            <a href="#utilization" class="nav-link" data-tab="tabUtilization" data-i18n="nav_utilization">Capacity Utilization</a>
+            <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue" data-i18n="nav_sri_queue">SRI Priority Queue</a>
+            <a href="#bids" class="nav-link" data-tab="tabBids" data-i18n="nav_open_requests">Open Requests & Bids</a>
+            <a href="#add-static" class="nav-link" data-tab="tabAddStatic" data-i18n="nav_add_static">Add Cold Room</a>
+            <a href="#directory" class="nav-link" data-tab="tabDirectory" data-i18n="nav_directory">Public Directory</a>
             <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
                 <option value="en">🌐 English</option>
                 <option value="hi">🇮🇳 हिंदी</option>
@@ -36,7 +36,7 @@
             </select>
             <div class="user-pill">
                 <span id="operatorName">Storage Operator</span>
-                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
             </div>
         </nav>
     </header>
@@ -48,11 +48,11 @@
         <div id="tabAssets" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">My Static Cold Rooms</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Manage your registered stationary cold rooms, temperature ranges, and storage capacity.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_static_rooms_title">My Static Cold Rooms</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_static_rooms_subtitle">Manage your registered stationary cold rooms, temperature ranges, and storage capacity.</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAssets">Refresh Rooms</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAssets" data-i18n="btn_refresh_rooms">Refresh Rooms</button>
                 </div>
             </div>
 
@@ -65,13 +65,13 @@
         <div id="tabBookings" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Incoming Facility Bookings</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Track produce delivery and advance facility drop-off status: Reserved → Confirmed → Produce Received → In Storage → Completed.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_incoming_bookings_title">Incoming Facility Bookings</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_incoming_bookings_subtitle">Track produce delivery and advance facility drop-off status: Reserved → Confirmed → Produce Received → In Storage → Completed.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBookings">Refresh Bookings</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBookings" data-i18n="btn_refresh_bookings">Refresh Bookings</button>
             </div>
 
-            <div class="alert alert-info" style="margin-bottom: 1.25rem;">
+            <div class="alert alert-info" style="margin-bottom: 1.25rem;" data-i18n-html="op_dropoff_lifecycle_info">
                 ℹ️ <strong>Drop-Off Lifecycle:</strong> Farmers transport produce to your facility. Status advances from <strong>CONFIRMED</strong> directly to <strong>PRODUCE_RECEIVED</strong> upon gate arrival.
             </div>
 
@@ -84,10 +84,10 @@
         <div id="tabSurplus" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Facility Inventory & Surplus Produce</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Perform required physical quality inspections and list verified surplus produce on the buyer marketplace.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_surplus_title">Facility Inventory & Surplus Produce</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_surplus_subtitle">Perform required physical quality inspections and list verified surplus produce on the buyer marketplace.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSurplus">Refresh Inventory</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSurplus" data-i18n="btn_refresh_inventory">Refresh Inventory</button>
             </div>
 
             <div class="notice-banner" style="margin-bottom: 1.5rem;">
@@ -96,17 +96,17 @@
                     <span class="badge badge-simulated">DATA: SIMULATED</span>
                     <span class="badge badge-fresh">STATUS: FRESH</span>
                 </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;" data-i18n-html="op_mandatory_inspection_notice">
                     <strong>Mandatory Quality Sign-Off:</strong> Time alone does not prove food safety. Physical operator inspection is strictly mandatory before surplus produce can be published to the buyer marketplace.
                 </div>
             </div>
 
-            <h3 style="margin-bottom: 0.75rem;">📦 Active Cold Room Inventory</h3>
+            <h3 style="margin-bottom: 0.75rem;" data-i18n="op_active_inventory_title">📦 Active Cold Room Inventory</h3>
             <div id="inventoryContainer" style="margin-bottom: 2rem;">
                 <div class="state-box">Loading facility inventory...</div>
             </div>
 
-            <h3 style="margin-bottom: 0.75rem;">🏷️ Published Surplus Marketplace Listings</h3>
+            <h3 style="margin-bottom: 0.75rem;" data-i18n="op_published_listings_title">🏷️ Published Surplus Marketplace Listings</h3>
             <div id="operatorListingsContainer">
                 <div class="state-box">Loading surplus listings...</div>
             </div>
@@ -116,32 +116,32 @@
         <div id="tabUtilization" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Facility Capacity Utilization</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Aggregate and per-room storage capacity occupancy metrics.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_utilization_title">Facility Capacity Utilization</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_utilization_subtitle">Aggregate and per-room storage capacity occupancy metrics.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshUtil">Refresh Metrics</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshUtil" data-i18n="btn_refresh_utilization">Refresh Metrics</button>
             </div>
 
             <div class="grid-cards" style="margin-bottom: 1.5rem;">
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">Total Storage Capacity</div>
+                    <div class="card-title" data-i18n="op_stat_total_capacity">Total Storage Capacity</div>
                     <div id="statUtilTotal" style="font-size: 2rem; font-weight: 700; color: var(--primary);">0 kg</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Registered cold rooms capacity</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="op_stat_total_capacity_sub">Registered cold rooms capacity</div>
                 </div>
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">Currently Occupied</div>
+                    <div class="card-title" data-i18n="op_stat_currently_occupied">Currently Occupied</div>
                     <div id="statUtilBooked" style="font-size: 2rem; font-weight: 700; color: #b45309;">0 kg</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Active reservations & stored produce</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="op_stat_currently_occupied_sub">Active reservations & stored produce</div>
                 </div>
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">Occupancy Rate</div>
+                    <div class="card-title" data-i18n="op_stat_occupancy_rate">Occupancy Rate</div>
                     <div id="statUtilPct" style="font-size: 2rem; font-weight: 700; color: #1e3a8a;">0.0%</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Current facility utilization</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="op_stat_occupancy_rate_sub">Current facility utilization</div>
                 </div>
             </div>
 
             <div class="card">
-                <h3 style="margin-bottom: 1rem;">Per-Room Capacity Breakdown</h3>
+                <h3 style="margin-bottom: 1rem;" data-i18n="op_per_room_breakdown">Per-Room Capacity Breakdown</h3>
                 <div id="assetBreakdownContainer">
                     <div class="state-box">Loading capacity breakdown...</div>
                 </div>
@@ -152,10 +152,10 @@
         <div id="tabSriQueue" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Spoilage Risk Index (SRI) Priority Queue</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Vulnerable harvest batches in your district requiring urgent static cooling intervention.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_sri_queue_title">Spoilage Risk Index (SRI) Priority Queue</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_sri_queue_subtitle">Vulnerable harvest batches in your district requiring urgent static cooling intervention.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSriQueue">Refresh Queue</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSriQueue" data-i18n="btn_refresh_sri_queue">Refresh Queue</button>
             </div>
 
             <div class="notice-banner" style="margin-bottom: 1.5rem;">
@@ -164,7 +164,7 @@
                     <span class="badge badge-simulated">DATA: SIMULATED</span>
                     <span class="badge badge-fresh">STATUS: FRESH</span>
                 </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;" data-i18n="op_sri_honesty_notice">
                     The Spoilage Risk Index (SRI) is an explainable heuristic prototype ranking (0–100) based on ambient field temperature and harvest elapsed time. It is not a lab-certified sensor reading.
                 </div>
             </div>
@@ -177,44 +177,44 @@
         <!-- TAB 6: ADD COLD ROOM -->
         <div id="tabAddStatic" class="tab-content">
             <div class="card" style="max-width: 800px; margin: 0 auto;">
-                <h1 class="page-title" style="margin-bottom: 0.5rem;">Register New Static Cold Room</h1>
-                <p class="page-subtitle" style="margin-bottom: 1.5rem;">Add a stationary refrigerated storage chamber to the ColdBridge network.</p>
+                <h1 class="page-title" style="margin-bottom: 0.5rem;" data-i18n="op_add_room_title">Register New Static Cold Room</h1>
+                <p class="page-subtitle" style="margin-bottom: 1.5rem;" data-i18n="op_add_room_subtitle">Add a stationary refrigerated storage chamber to the ColdBridge network.</p>
 
                 <form id="formAddStatic">
                     <div class="form-group">
-                        <label for="staticName">Facility / Chamber Name *</label>
+                        <label for="staticName" data-i18n="op_label_facility_name">Facility / Chamber Name *</label>
                         <input type="text" id="staticName" required placeholder="e.g. Sahyadri Agro Cold Vault A">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
-                            <label for="staticCapacity">Total Storage Capacity (kg) *</label>
+                            <label for="staticCapacity" data-i18n="op_label_total_capacity">Total Storage Capacity (kg) *</label>
                             <input type="number" id="staticCapacity" required min="100" step="50" placeholder="e.g. 5000">
                         </div>
                         <div class="form-group">
-                            <label for="staticPrice">Storage Rate (INR ₹ / kg / day) *</label>
+                            <label for="staticPrice" data-i18n="op_label_storage_rate">Storage Rate (INR ₹ / kg / day) *</label>
                             <input type="number" id="staticPrice" required min="0.1" step="0.1" placeholder="e.g. 2.0">
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
-                            <label for="staticMinTemp">Min Operating Temp (°C) *</label>
+                            <label for="staticMinTemp" data-i18n="op_label_min_temp">Min Operating Temp (°C) *</label>
                             <input type="number" id="staticMinTemp" required step="0.5" placeholder="e.g. 2.0">
                         </div>
                         <div class="form-group">
-                            <label for="staticMaxTemp">Max Operating Temp (°C) *</label>
+                            <label for="staticMaxTemp" data-i18n="op_label_max_temp">Max Operating Temp (°C) *</label>
                             <input type="number" id="staticMaxTemp" required step="0.5" placeholder="e.g. 10.0">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="staticSupportedCrops">Supported Crops (comma-separated)</label>
+                        <label for="staticSupportedCrops" data-i18n="op_label_supported_crops">Supported Crops (comma-separated)</label>
                         <input type="text" id="staticSupportedCrops" placeholder="e.g. TOMATO, MANGO, GRAPES, ONION">
                     </div>
 
                     <div class="form-group">
-                        <label>Facility Location (OpenStreetMap Picker) *</label>
+                        <label data-i18n="op_label_location_picker">Facility Location (OpenStreetMap Picker) *</label>
                         <div id="staticLocationPickerContainer" style="height: 280px; width: 100%; border-radius: var(--radius); margin-bottom: 0.5rem; border: 1px solid var(--border);"></div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
                             <input type="number" id="staticLat" step="0.0001" required placeholder="Latitude" readonly style="background: #f1f5f9;">
@@ -223,7 +223,7 @@
                     </div>
 
                     <div style="margin-top: 1.5rem;">
-                        <button type="submit" class="btn btn-primary" id="btnSubmitStatic" style="width: 100%;">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitStatic" style="width: 100%;" data-i18n="btn_register_cold_room">
                             Register Cold Room
                         </button>
                     </div>
@@ -235,10 +235,10 @@
         <div id="tabBids" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Open Farmgate Requests & Bids</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Review pending harvest requests and submit direct operator offers to store produce in your facilities.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_open_bids_title">Open Farmgate Requests & Bids</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_open_bids_subtitle">Review pending harvest requests and submit direct operator offers to store produce in your facilities.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBids">Refresh Requests</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBids" data-i18n="btn_refresh_requests">Refresh Requests</button>
             </div>
 
             <div class="card" style="padding: 0; overflow-x: auto;">
@@ -252,30 +252,30 @@
         <div id="tabDirectory" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Regional Public Cold Storage Directory</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Verified commercial directory of real cold storage facilities in Nashik and Pune.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_directory_title">Regional Public Cold Storage Directory</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_directory_subtitle">Verified commercial directory of real cold storage facilities in Nashik and Pune.</p>
                 </div>
             </div>
 
             <!-- Judge statement -->
             <div class="alert alert-info" style="margin-bottom: 1.5rem; background: #eff6ff; border-left: 4px solid #15803d; color: #14532d;">
-                📢 <strong>Public Directory Notice:</strong>
-                <p style="margin: 0.5rem 0 0 0; font-size: 0.95rem; font-weight: 500;">These are real cold storage facilities in Nashik and Pune, taken from public directories. A farmer can contact them directly. The ranking and bids in our prototype are still simulated.</p>
+                <span data-i18n-html="op_public_directory_notice_heading">📢 <strong>Public Directory Notice:</strong></span>
+                <p style="margin: 0.5rem 0 0 0; font-size: 0.95rem; font-weight: 500;" data-i18n="dir_judge_statement">These are real cold storage facilities in Nashik and Pune, taken from public directories. A farmer can contact them directly. The ranking and bids in our prototype are still simulated.</p>
             </div>
 
             <!-- Filter Controls -->
             <div class="card" style="margin-bottom: 1.5rem; padding: 1rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.25rem;">District:</span>
-                        <button type="button" class="btn btn-sm btn-op-dir-filter active" data-district="" style="background: #15803d; color: white;">All Districts</button>
-                        <button type="button" class="btn btn-sm btn-op-dir-filter" data-district="Nashik" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">Nashik</button>
-                        <button type="button" class="btn btn-sm btn-op-dir-filter" data-district="Pune" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">Pune</button>
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.25rem;" data-i18n="dir_filter_district">District:</span>
+                        <button type="button" class="btn btn-sm btn-op-dir-filter active" data-district="" data-i18n="dir_filter_all" style="background: #15803d; color: white;">All Districts</button>
+                        <button type="button" class="btn btn-sm btn-op-dir-filter" data-district="Nashik" data-i18n="dir_filter_nashik" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">Nashik</button>
+                        <button type="button" class="btn btn-sm btn-op-dir-filter" data-district="Pune" data-i18n="dir_filter_pune" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">Pune</button>
                     </div>
 
                     <form id="opDirSearchForm" style="display: flex; gap: 0.5rem; align-items: center; flex: 1; max-width: 480px;">
-                        <input type="text" id="opDirSearchInput" placeholder="Search by facility name, area, or address..." maxlength="100" style="flex: 1; padding: 0.4rem 0.75rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 4px;">
-                        <button type="submit" id="btnOpDirSearch" class="btn btn-primary btn-sm">Search</button>
+                        <input type="text" id="opDirSearchInput" placeholder="Search by facility name, area, or address..." data-i18n="dir_search_placeholder" maxlength="100" style="flex: 1; padding: 0.4rem 0.75rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 4px;">
+                        <button type="submit" id="btnOpDirSearch" class="btn btn-primary btn-sm" data-i18n="dir_btn_search">Search</button>
                     </form>
                 </div>
             </div>
@@ -290,7 +290,7 @@
     <div id="bidModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
         <div class="card" style="max-width: 520px; width: 90%; margin: auto;">
             <div class="card-title">
-                <span>Submit Operator Offer to Store</span>
+                <span data-i18n="op_modal_bid_title">Submit Operator Offer to Store</span>
                 <button type="button" id="btnCloseBidModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
             </div>
             <form id="bidSubmissionForm" style="margin-top: 1rem;">
@@ -332,7 +332,7 @@
                     <input type="text" id="bidNote" placeholder="e.g., Pre-cooled chamber available immediately.">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
-                    <button type="button" id="btnCancelBid" class="btn btn-secondary">Cancel</button>
+                    <button type="button" id="btnCancelBid" class="btn btn-secondary" data-i18n="btn_cancel">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="btnConfirmBid">Submit Offer to Store 📤</button>
                 </div>
             </form>
@@ -343,7 +343,7 @@
     <div id="surplusModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
         <div class="card" style="max-width: 520px; width: 90%; margin: auto;">
             <div class="card-title">
-                <span>List Near-Expiry Surplus Produce</span>
+                <span data-i18n="op_modal_surplus_title">List Near-Expiry Surplus Produce</span>
             </div>
             <form id="surplusListingForm" style="margin-top: 1rem;">
                 <input type="hidden" id="surplusInventoryId">
@@ -390,8 +390,8 @@
                     </label>
                 </div>
                 <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
-                    <button type="button" class="btn btn-secondary" id="btnCancelSurplusModal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="btnSubmitSurplus">Publish Listing</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelSurplusModal" data-i18n="btn_cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitSurplus" data-i18n="btn_publish_listing">Publish Listing</button>
                 </div>
             </form>
         </div>
@@ -401,7 +401,7 @@
     <div id="qualityApprovalModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
         <div class="card" style="max-width: 480px; width: 90%; margin: auto;">
             <div class="card-title">
-                <span>Produce Quality Inspection Sign-Off</span>
+                <span data-i18n="op_modal_quality_title">Produce Quality Inspection Sign-Off</span>
             </div>
             <form id="qualityApprovalForm" style="margin-top: 1rem;">
                 <input type="hidden" id="approvalListingId">
@@ -422,8 +422,8 @@
                     ℹ️ Time alone does NOT prove food safety. By signing off, you confirm that physical inspection was performed and produce is fit for human consumption.
                 </div>
                 <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" id="btnCancelApprovalModal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="btnConfirmApproval">Approve & Release to Buyers</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelApprovalModal" data-i18n="btn_cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnConfirmApproval" data-i18n="btn_approve_release">Approve & Release to Buyers</button>
                 </div>
             </form>
         </div>
@@ -433,7 +433,7 @@
     <div id="capacityModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
         <div class="card" style="max-width: 480px; width: 90%; margin: auto;">
             <div class="card-title">
-                <span>Update Cold Room Capacity & Availability</span>
+                <span data-i18n="op_modal_capacity_title">Update Cold Room Capacity & Availability</span>
             </div>
             <form id="capacityUpdateForm" style="margin-top: 1rem;">
                 <input type="hidden" id="modalAssetId">
@@ -452,8 +452,8 @@
                     <label for="modalIsActive" style="margin: 0; cursor: pointer;">Cold Room is Active for Matching</label>
                 </div>
                 <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;">
-                    <button type="button" class="btn btn-secondary" id="btnCancelModal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelModal" data-i18n="btn_cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="btn_save_changes">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -759,7 +759,7 @@
                 }
 
                 breakdown.innerHTML = `
-                    <div style="overflow-x: auto;">
+                    <div class="table-container">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                             <thead>
                                 <tr style="border-bottom: 2px solid var(--border); text-align: left;">
@@ -1060,6 +1060,7 @@
                 }
 
                 container.innerHTML = `
+                    <div class="table-container">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                         <thead>
                             <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid var(--border);">

@@ -23,16 +23,16 @@
 <body>
     <header>
         <a href="van_operator.html" class="brand">
-            <span>❄️ ColdBridge AI</span>
-            <span class="brand-badge" style="background: #0284c7; color: white;">🚐 Solar Van Operator</span>
+            <span data-i18n="brand_title">❄️ ColdBridge AI</span>
+            <span class="brand-badge" style="background: #0284c7; color: white;" data-i18n="van_operator_badge">🚐 Solar Van Operator</span>
         </a>
         <nav>
-            <a href="#assets" class="nav-link active" data-tab="tabAssets">My Vans</a>
-            <a href="#bookings" class="nav-link" data-tab="tabBookings">Pickup Jobs</a>
-            <a href="#solar-capacity" class="nav-link" data-tab="tabSolarCapacity">Solar & Capacity</a>
-            <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue">SRI Priority Queue</a>
-            <a href="#bids" class="nav-link" data-tab="tabBids">Open Requests & Bids</a>
-            <a href="#add-van" class="nav-link" data-tab="tabAddVan">Add Solar Van</a>
+            <a href="#assets" class="nav-link active" data-tab="tabAssets" data-i18n="nav_my_vans">My Vans</a>
+            <a href="#bookings" class="nav-link" data-tab="tabBookings" data-i18n="nav_pickup_jobs">Pickup Jobs</a>
+            <a href="#solar-capacity" class="nav-link" data-tab="tabSolarCapacity" data-i18n="nav_solar_capacity">Solar & Capacity</a>
+            <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue" data-i18n="nav_sri_queue">SRI Priority Queue</a>
+            <a href="#bids" class="nav-link" data-tab="tabBids" data-i18n="nav_open_requests">Open Requests & Bids</a>
+            <a href="#add-van" class="nav-link" data-tab="tabAddVan" data-i18n="nav_add_van">Add Solar Van</a>
             <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
                 <option value="en">🌐 English</option>
                 <option value="hi">🇮🇳 हिंदी</option>
@@ -40,7 +40,7 @@
             </select>
             <div class="user-pill">
                 <span id="operatorName">Van Operator</span>
-                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
             </div>
         </nav>
     </header>
@@ -52,11 +52,11 @@
         <div id="tabAssets" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">My Mobile Solar Vans</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Fleet monitoring for mobile solar-powered cooling vans, operating radius, and battery health.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_mobile_vans_title">My Mobile Solar Vans</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_mobile_vans_subtitle">Fleet monitoring for mobile solar-powered cooling vans, operating radius, and battery health.</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAssets">Refresh Vans</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAssets" data-i18n="btn_refresh_vans">Refresh Vans</button>
                 </div>
             </div>
 
@@ -69,13 +69,13 @@
         <div id="tabBookings" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Mobile Farmgate Pickup Jobs</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Manage farm dispatch jobs through the pickup lifecycle: Confirmed → Pickup Scheduled → Produce Received → Completed.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_pickup_jobs_title">Mobile Farmgate Pickup Jobs</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_pickup_jobs_subtitle">Manage farm dispatch jobs through the pickup lifecycle: Confirmed → Pickup Scheduled → Produce Received → Completed.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBookings">Refresh Jobs</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBookings" data-i18n="btn_refresh_jobs">Refresh Jobs</button>
             </div>
 
-            <div class="alert alert-info" style="margin-bottom: 1.25rem;">
+            <div class="alert alert-info" style="margin-bottom: 1.25rem;" data-i18n-html="op_pickup_lifecycle_info">
                 ℹ️ <strong>Mobile Pickup Lifecycle:</strong> As a solar van operator, advance to <strong>PICKUP_SCHEDULED</strong> to notify the farmer that your van is dispatched, then <strong>PRODUCE_RECEIVED</strong> upon loading at the farmgate.
             </div>
 
@@ -88,10 +88,10 @@
         <div id="tabSolarCapacity" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Solar Degradation & Effective Capacity</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Simulation model calculating usable payload under degraded solar irradiance conditions.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_solar_capacity_title">Solar Degradation & Effective Capacity</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_solar_capacity_subtitle">Simulation model calculating usable payload under degraded solar irradiance conditions.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSolar">Refresh Metrics</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSolar" data-i18n="btn_refresh_solar">Refresh Metrics</button>
             </div>
 
             <div class="notice-banner" style="margin-bottom: 1.5rem;">
@@ -100,21 +100,21 @@
                     <span class="badge badge-simulated">DATA: SIMULATED</span>
                     <span class="badge badge-fresh">STATUS: FRESH</span>
                 </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;" data-i18n-html="op_solar_simulation_notice">
                     <strong>Degraded-Solar Fallback:</strong> Calculated via <code>effective_capacity = available_capacity × solar_reliability</code>. This transparently models cooling system performance under overcast skies. Physical IoT telemetry belongs to a subsequent hardware phase.
                 </div>
             </div>
 
             <div class="grid-cards" style="margin-bottom: 1.5rem;">
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">Total Van Fleet Capacity</div>
+                    <div class="card-title" data-i18n="op_stat_aggregate_nominal">Total Van Fleet Capacity</div>
                     <div id="statVanTotal" style="font-size: 2rem; font-weight: 700; color: var(--primary);">0 kg</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Nominal van capacity</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="op_stat_aggregate_nominal_sub">Nominal van capacity</div>
                 </div>
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">Simulated Effective Capacity</div>
+                    <div class="card-title" data-i18n="op_stat_effective_capacity">Simulated Effective Capacity</div>
                     <div id="statVanEffective" style="font-size: 2rem; font-weight: 700; color: #0284c7;">0 kg</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Adjusted for solar reliability</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="op_stat_effective_capacity_sub">Adjusted for solar reliability</div>
                 </div>
                 <div class="card" style="margin: 0;">
                     <div class="card-title">Active Capacity Reserved</div>
@@ -124,7 +124,7 @@
             </div>
 
             <div class="card">
-                <h3 style="margin-bottom: 1rem;">Per-Van Solar Reliability Breakdown</h3>
+                <h3 style="margin-bottom: 1rem;" data-i18n="op_per_van_breakdown">Per-Van Solar Reliability Breakdown</h3>
                 <div id="solarBreakdownContainer">
                     <div class="state-box">Loading solar metrics...</div>
                 </div>
@@ -135,10 +135,10 @@
         <div id="tabSriQueue" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Spoilage Risk Index (SRI) Priority Queue</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Critical farmgate batches within van dispatch radius requiring on-site pre-cooling.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_sri_queue_title">Spoilage Risk Index (SRI) Priority Queue</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_sri_queue_subtitle">Critical farmgate batches within van dispatch radius requiring on-site pre-cooling.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSriQueue">Refresh Queue</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSriQueue" data-i18n="btn_refresh_sri_queue">Refresh Queue</button>
             </div>
 
             <div class="notice-banner" style="margin-bottom: 1.5rem;">
@@ -147,7 +147,7 @@
                     <span class="badge badge-simulated">DATA: SIMULATED</span>
                     <span class="badge badge-fresh">STATUS: FRESH</span>
                 </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;" data-i18n="op_sri_honesty_notice">
                     The Spoilage Risk Index (SRI) prioritizes highly perishable crops (e.g., tomatoes, strawberries) harvested in high ambient temperatures. Mobile vans provide critical on-field rapid pre-cooling.
                 </div>
             </div>
@@ -160,45 +160,45 @@
         <!-- TAB 5: ADD SOLAR VAN -->
         <div id="tabAddVan" class="tab-content">
             <div class="card" style="max-width: 800px; margin: 0 auto;">
-                <h1 class="page-title" style="margin-bottom: 0.5rem;">Register New Solar Cooling Van</h1>
-                <p class="page-subtitle" style="margin-bottom: 1.5rem;">Onboard a mobile solar refrigerated transport vehicle to provide on-farm pre-cooling and collection.</p>
+                <h1 class="page-title" style="margin-bottom: 0.5rem;" data-i18n="op_add_van_title">Register New Solar Cooling Van</h1>
+                <p class="page-subtitle" style="margin-bottom: 1.5rem;" data-i18n="op_add_van_subtitle">Onboard a mobile solar refrigerated transport vehicle to provide on-farm pre-cooling and collection.</p>
 
                 <form id="formAddVan">
                     <div class="form-group">
-                        <label for="vanName">Van Unit Name *</label>
+                        <label for="vanName" data-i18n="op_label_van_name">Van Unit Name *</label>
                         <input type="text" id="vanName" required placeholder="e.g. Nashik Solar Mobile Chiller 1">
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
-                            <label for="vanVehicleRef">Vehicle Registration / Reference *</label>
+                            <label for="vanVehicleRef" data-i18n="op_label_vehicle_ref">Vehicle Registration / Reference *</label>
                             <input type="text" id="vanVehicleRef" required placeholder="e.g. MH-15-EG-4412">
                         </div>
                         <div class="form-group">
-                            <label for="vanRadius">Service Radius (km) *</label>
+                            <label for="vanRadius" data-i18n="op_label_operating_radius">Service Radius (km) *</label>
                             <input type="number" id="vanRadius" required min="5" max="150" step="5" placeholder="e.g. 50">
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
-                            <label for="vanCapacity">Total Van Payload Capacity (kg) *</label>
+                            <label for="vanCapacity" data-i18n="op_label_van_capacity">Total Van Payload Capacity (kg) *</label>
                             <input type="number" id="vanCapacity" required min="100" step="50" placeholder="e.g. 1500">
                         </div>
                         <div class="form-group">
-                            <label for="vanPrice">Rate (INR ₹ / kg / day) *</label>
+                            <label for="vanPrice" data-i18n="op_label_van_rate">Rate (INR ₹ / kg / day) *</label>
                             <input type="number" id="vanPrice" required min="0.1" step="0.1" placeholder="e.g. 3.0">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="vanSolarRel">Baseline Solar Reliability (0.1 to 1.0) *</label>
+                        <label for="vanSolarRel" data-i18n="op_label_solar_reliability">Baseline Solar Reliability (0.1 to 1.0) *</label>
                         <input type="number" id="vanSolarRel" required min="0.1" max="1.0" step="0.05" value="0.95">
                         <span class="form-help">Simulated coefficient: 1.0 = full direct sunlight; 0.7 = cloudy monsoon</span>
                     </div>
 
                     <div class="form-group">
-                        <label>Base / Current Van Location (OpenStreetMap Picker) *</label>
+                        <label data-i18n="op_label_base_location">Base / Current Van Location (OpenStreetMap Picker) *</label>
                         <div id="vanLocationPickerContainer" style="height: 280px; width: 100%; border-radius: var(--radius); margin-bottom: 0.5rem; border: 1px solid var(--border);"></div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
                             <input type="number" id="vanLat" step="0.0001" required placeholder="Latitude" readonly style="background: #f1f5f9;">
@@ -207,7 +207,7 @@
                     </div>
 
                     <div style="margin-top: 1.5rem;">
-                        <button type="submit" class="btn btn-primary" id="btnSubmitVan" style="width: 100%;">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitVan" style="width: 100%;" data-i18n="btn_register_van">
                             Register Solar Van
                         </button>
                     </div>
@@ -219,10 +219,10 @@
         <div id="tabBids" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Open Farmgate Requests & Pickup Bids</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Review pending harvest requests within your service radius and submit direct operator offers to pick up and store produce.</p>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="op_open_bids_title">Open Farmgate Requests & Pickup Bids</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="op_open_bids_subtitle">Review pending harvest requests within your service radius and submit direct operator offers to pick up and store produce.</p>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBids">Refresh Requests</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBids" data-i18n="btn_refresh_requests">Refresh Requests</button>
             </div>
 
             <div class="card" style="padding: 0; overflow-x: auto;">
@@ -237,7 +237,7 @@
     <div id="bidModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
         <div class="card" style="max-width: 520px; width: 90%; margin: auto;">
             <div class="card-title">
-                <span>Submit Offer to Pick Up & Store</span>
+                <span data-i18n="op_modal_van_bid_title">Submit Offer to Pick Up & Store</span>
                 <button type="button" id="btnCloseBidModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
             </div>
             <form id="bidSubmissionForm" style="margin-top: 1rem;">
@@ -247,7 +247,7 @@
                     <input type="text" id="bidRequestSummary" disabled style="background: #f1f5f9;">
                 </div>
                 <div class="form-group">
-                    <label for="bidAssetSelect">Select Solar Van *</label>
+                    <label for="bidAssetSelect" data-i18n="op_label_select_van">Select Solar Van *</label>
                     <select id="bidAssetSelect" required></select>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -279,8 +279,8 @@
                     <input type="text" id="bidNote" placeholder="e.g., Solar pre-cooling van ready for immediate farmgate dispatch.">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
-                    <button type="button" id="btnCancelBid" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="btnConfirmBid">Submit Offer to Pick Up & Store 🚐</button>
+                    <button type="button" id="btnCancelBid" class="btn btn-secondary" data-i18n="btn_cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnConfirmBid" data-i18n="btn_submit_pickup_offer">Submit Offer to Pick Up & Store 🚐</button>
                 </div>
             </form>
         </div>
@@ -623,7 +623,7 @@
                 }
 
                 breakdown.innerHTML = `
-                    <div style="overflow-x: auto;">
+                    <div class="table-container">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                             <thead>
                                 <tr style="border-bottom: 2px solid var(--border); text-align: left;">
@@ -758,6 +758,7 @@
                 }
 
                 container.innerHTML = `
+                    <div class="table-container">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
                         <thead>
                             <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid var(--border);">

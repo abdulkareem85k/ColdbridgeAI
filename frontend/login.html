@@ -51,14 +51,14 @@
                 </button>
 
                 <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;" data-i18n="demo_logins_title">
+                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.6rem;" data-i18n="demo_logins_title">
                         Quick Demo Logins (Maharashtra Demo Dataset):
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillFarmer">🧑‍🌾 Farmer</button>
-                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillStatic">🏭 Static Operator</button>
-                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillVan">🚐 Van Operator</button>
-                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillBuyer">🛒 Buyer (Phase 2)</button>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillFarmer" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.55rem 0.6rem; font-weight: 600;">🧑‍🌾 Farmer</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillStatic" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.55rem 0.6rem; font-weight: 600;">🏭 Static Operator</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillVan" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.55rem 0.6rem; font-weight: 600;">🚐 Van Operator</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillBuyer" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.55rem 0.6rem; font-weight: 600;">🛒 Produce Buyer</button>
                     </div>
                 </div>
             </form>
@@ -203,10 +203,6 @@
             document.getElementById('loginEmail').value = 'buyer.demo@coldbridge.ai';
             document.getElementById('loginPassword').value = 'BuyerDemo123!';
         }
-        function fillAdmin() {
-            document.getElementById('loginEmail').value = 'admin.demo@coldbridge.ai';
-            document.getElementById('loginPassword').value = 'AdminDemo123!';
-        }
 
         document.getElementById('btnFillFarmer').addEventListener('click', fillFarmer);
         document.getElementById('btnFillStatic').addEventListener('click', fillStatic);
@@ -233,8 +229,6 @@
                 fillVan();
             } else if (hash.includes('buyer') || roleParam === 'buyer') {
                 fillBuyer();
-            } else if (hash.includes('admin') || roleParam === 'admin') {
-                fillAdmin();
             }
         }
 

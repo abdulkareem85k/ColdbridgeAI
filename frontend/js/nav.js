@@ -134,7 +134,8 @@ header.nav-v2 .nav-link:focus-visible {
     .user-pill span,
     #userName,
     #buyerName,
-    #operatorName {
+    #operatorName,
+    #adminName {
         display: none !important;
     }
     #btnLogout {

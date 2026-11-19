@@ -133,7 +133,101 @@ export const translations = {
         dir_loading: "Loading directory listings...",
         dir_empty: "No public cold storage facilities found matching your criteria.",
         dir_error: "Unable to load public directory listings. Please try again later.",
-        dir_copied_alert: "Phone number copied to clipboard!"
+        dir_copied_alert: "Phone number copied to clipboard!",
+
+        // Operator Portals (Issue 2)
+        storage_operator_badge: "🏭 Storage Operator",
+        van_operator_badge: "🚐 Solar Van Operator",
+        nav_my_rooms: "My Cold Rooms",
+        nav_incoming_bookings: "Incoming Bookings",
+        nav_inventory_surplus: "Inventory & Surplus",
+        nav_open_requests: "Open Requests & Bids",
+        nav_directory: "Public Directory",
+        nav_my_vans: "My Vans",
+        nav_pickup_jobs: "Pickup Jobs",
+        nav_solar_capacity: "Solar & Capacity",
+        op_static_rooms_title: "My Static Cold Rooms",
+        op_static_rooms_subtitle: "Manage your registered stationary cold rooms, temperature ranges, and storage capacity.",
+        btn_refresh_rooms: "Refresh Rooms",
+        op_incoming_bookings_title: "Incoming Facility Bookings",
+        op_incoming_bookings_subtitle: "Track produce delivery and advance facility drop-off status: Reserved → Confirmed → Produce Received → In Storage → Completed.",
+        btn_refresh_bookings: "Refresh Bookings",
+        op_dropoff_lifecycle_info: "ℹ️ <strong>Drop-Off Lifecycle:</strong> Farmers transport produce to your facility. Status advances from <strong>CONFIRMED</strong> directly to <strong>PRODUCE_RECEIVED</strong> upon gate arrival.",
+        op_surplus_title: "Facility Inventory & Surplus Produce",
+        op_surplus_subtitle: "Perform required physical quality inspections and list verified surplus produce on the buyer marketplace.",
+        btn_refresh_inventory: "Refresh Inventory",
+        op_mandatory_inspection_notice: "<strong>Mandatory Quality Sign-Off:</strong> Time alone does not prove food safety. Physical operator inspection is strictly mandatory before surplus produce can be published to the buyer marketplace.",
+        op_active_inventory_title: "📦 Active Cold Room Inventory",
+        op_published_listings_title: "🏷️ Published Surplus Marketplace Listings",
+        op_utilization_title: "Facility Capacity Utilization",
+        op_utilization_subtitle: "Aggregate and per-room storage capacity occupancy metrics.",
+        btn_refresh_utilization: "Refresh Metrics",
+        op_stat_total_capacity: "Total Storage Capacity",
+        op_stat_total_capacity_sub: "Registered cold rooms capacity",
+        op_stat_currently_occupied: "Currently Occupied",
+        op_stat_currently_occupied_sub: "Active reservations & stored produce",
+        op_stat_occupancy_rate: "Occupancy Rate",
+        op_stat_occupancy_rate_sub: "Current facility utilization",
+        op_per_room_breakdown: "Per-Room Capacity Breakdown",
+        op_sri_queue_title: "Spoilage Risk Index (SRI) Priority Queue",
+        op_sri_queue_subtitle: "Vulnerable harvest batches in your district requiring urgent static cooling intervention.",
+        btn_refresh_sri_queue: "Refresh Queue",
+        op_sri_honesty_notice: "The Spoilage Risk Index (SRI) is an explainable heuristic prototype ranking (0–100) based on ambient field temperature and harvest elapsed time. It is not a lab-certified sensor reading.",
+        op_add_room_title: "Register New Static Cold Room",
+        op_add_room_subtitle: "Add a stationary refrigerated storage chamber to the ColdBridge network.",
+        op_label_facility_name: "Facility / Chamber Name *",
+        op_label_total_capacity: "Total Storage Capacity (kg) *",
+        op_label_storage_rate: "Storage Rate (INR ₹ / kg / day) *",
+        op_label_min_temp: "Min Operating Temp (°C) *",
+        op_label_max_temp: "Max Operating Temp (°C) *",
+        op_label_supported_crops: "Supported Crops (comma-separated)",
+        op_label_location_picker: "Facility Location (OpenStreetMap Picker) *",
+        btn_register_cold_room: "Register Cold Room",
+        op_open_bids_title: "Open Farmgate Requests & Bids",
+        op_open_bids_subtitle: "Review pending harvest requests and submit direct operator offers to store produce in your facilities.",
+        btn_refresh_requests: "Refresh Requests",
+        op_directory_title: "Regional Public Cold Storage Directory",
+        op_directory_subtitle: "Verified commercial directory of real cold storage facilities in Nashik and Pune.",
+        op_public_directory_notice_heading: "📢 <strong>Public Directory Notice:</strong>",
+        op_modal_bid_title: "Submit Operator Offer to Store",
+        op_modal_surplus_title: "List Near-Expiry Surplus Produce",
+        op_modal_quality_title: "Produce Quality Inspection Sign-Off",
+        op_modal_capacity_title: "Update Cold Room Capacity & Availability",
+        btn_cancel: "Cancel",
+        btn_save_changes: "Save Changes",
+        btn_publish_listing: "Publish Listing",
+        btn_approve_release: "Approve & Release to Buyers",
+        op_mobile_vans_title: "My Mobile Solar Vans",
+        op_mobile_vans_subtitle: "Fleet monitoring for mobile solar-powered cooling vans, operating radius, and battery health.",
+        btn_refresh_vans: "Refresh Vans",
+        op_pickup_jobs_title: "Mobile Farmgate Pickup Jobs",
+        op_pickup_jobs_subtitle: "Manage farm dispatch jobs through the pickup lifecycle: Confirmed → Pickup Scheduled → Produce Received → Completed.",
+        btn_refresh_jobs: "Refresh Jobs",
+        op_pickup_lifecycle_info: "ℹ️ <strong>Mobile Pickup Lifecycle:</strong> As a solar van operator, advance to <strong>PICKUP_SCHEDULED</strong> to notify the farmer that your van is dispatched, then <strong>PRODUCE_RECEIVED</strong> upon loading at the farmgate.",
+        op_solar_capacity_title: "Solar Degradation & Effective Capacity",
+        op_solar_capacity_subtitle: "Simulation model calculating usable payload under degraded solar irradiance conditions.",
+        btn_refresh_solar: "Refresh Metrics",
+        op_solar_simulation_notice: "<strong>Degraded-Solar Fallback:</strong> Real hardware battery telemetry and solar irradiance sensors belong to later phase. Current model calculates: <code>effective_capacity = available_capacity × solar_reliability</code>.",
+        op_stat_fleet_size: "Fleet Size",
+        op_stat_fleet_size_sub: "Registered mobile cooling vans",
+        op_stat_aggregate_nominal: "Aggregate Nominal Capacity",
+        op_stat_aggregate_nominal_sub: "Total payload capacity at 100% solar",
+        op_stat_effective_capacity: "Effective Usable Capacity",
+        op_stat_effective_capacity_sub: "Adjusted for simulated solar reliability",
+        op_per_van_breakdown: "Per-Van Solar Degradation Breakdown",
+        op_add_van_title: "Register New Mobile Solar Cooling Van",
+        op_add_van_subtitle: "Add a refrigerated solar-assisted vehicle to your mobile fleet with service radius.",
+        op_label_van_name: "Van Name / Identifier *",
+        op_label_vehicle_ref: "Vehicle Registration / Plate Number *",
+        op_label_van_capacity: "Payload Capacity (kg) *",
+        op_label_van_rate: "Base Rate (INR ₹ / kg / day) *",
+        op_label_operating_radius: "Operating Service Radius (km) *",
+        op_label_solar_reliability: "Initial Solar Reliability Factor (0.0 to 1.0) *",
+        op_label_base_location: "Base Hub Location (OpenStreetMap Picker) *",
+        btn_register_van: "Register Solar Van",
+        op_modal_van_bid_title: "Submit Operator Offer for Mobile Pickup",
+        op_label_select_van: "Select Solar Van *",
+        btn_submit_pickup_offer: "Submit Pickup Offer 📤",
     },
     hi: {
         brand_title: "❄️ कोल्डब्रिज एआई",
@@ -262,7 +356,101 @@ export const translations = {
         dir_loading: "निर्देशिका सूचियां लोड हो रही हैं...",
         dir_empty: "आपके खोज मानदंडों से मेल खाने वाली कोई सार्वजनिक कोल्ड स्टोरेज सुविधा नहीं मिली।",
         dir_error: "सार्वजनिक निर्देशिका लोड करने में असमर्थ। कृपया बाद में पुनः प्रयास करें।",
-        dir_copied_alert: "फ़ोन नंबर क्लिपबोर्ड पर कॉपी हो गया!"
+        dir_copied_alert: "फ़ोन नंबर क्लिपबोर्ड पर कॉपी हो गया!",
+
+        // Operator Portals (Issue 2)
+        storage_operator_badge: "🏭 स्टोरेज ऑपरेटर",
+        van_operator_badge: "🚐 सोलर वैन ऑपरेटर",
+        nav_my_rooms: "मेरे कोल्ड रूम",
+        nav_incoming_bookings: "आने वाली बुकिंग",
+        nav_inventory_surplus: "इन्वेंट्री और अधिशेष",
+        nav_open_requests: "खुले अनुरोध और बोलियां",
+        nav_directory: "सार्वजनिक निर्देशिका",
+        nav_my_vans: "मेरी वैन",
+        nav_pickup_jobs: "पिकअप कार्य",
+        nav_solar_capacity: "सौर और क्षमता",
+        op_static_rooms_title: "मेरे स्थिर कोल्ड रूम",
+        op_static_rooms_subtitle: "अपने पंजीकृत स्थिर कोल्ड रूम, तापमान सीमा और भंडारण क्षमता का प्रबंधन करें।",
+        btn_refresh_rooms: "कमरे रीफ्रेश करें",
+        op_incoming_bookings_title: "सुविधा में आने वाली बुकिंग",
+        op_incoming_bookings_subtitle: "उत्पाद वितरण ट्रैक करें और सुविधा ड्रॉप-ऑफ स्थिति आगे बढ़ाएं: आरक्षित → पुष्ट → उत्पाद प्राप्त → भंडारण में → पूर्ण।",
+        btn_refresh_bookings: "बुकिंग रीफ्रेश करें",
+        op_dropoff_lifecycle_info: "ℹ️ <strong>ड्रॉप-ऑफ चक्र:</strong> किसान आपकी सुविधा तक उपज लाते हैं। गेट पर पहुंचने पर स्थिति सीधे <strong>पुष्ट</strong> से <strong>उत्पाद प्राप्त</strong> हो जाती है।",
+        op_surplus_title: "सुविधा इन्वेंट्री और अधिशेष उपज",
+        op_surplus_subtitle: "आवश्यक भौतिक गुणवत्ता निरीक्षण करें और क्रेता बाज़ार में सत्यापित अधिशेष उपज सूचीबद्ध करें।",
+        btn_refresh_inventory: "इन्वेंट्री रीफ्रेश करें",
+        op_mandatory_inspection_notice: "<strong>अनिवार्य गुणवत्ता सत्यापन:</strong> केवल समय खाद्य सुरक्षा साबित नहीं करता। खरीदार बाज़ार में अधिशेष उपज प्रकाशित करने से पहले ऑपरेटर द्वारा भौतिक निरीक्षण अनिवार्य है।",
+        op_active_inventory_title: "📦 सक्रिय कोल्ड रूम इन्वेंट्री",
+        op_published_listings_title: "🏷️ प्रकाशित अधिशेष बाज़ार सूचियां",
+        op_utilization_title: "सुविधा क्षमता उपयोग",
+        op_utilization_subtitle: "कुल और प्रति-कक्ष भंडारण क्षमता उपयोग मेट्रिक्स।",
+        btn_refresh_utilization: "मेट्रिक्स रीफ्रेश करें",
+        op_stat_total_capacity: "कुल भंडारण क्षमता",
+        op_stat_total_capacity_sub: "पंजीकृत कोल्ड रूम की क्षमता",
+        op_stat_currently_occupied: "वर्तमान में व्यस्त",
+        op_stat_currently_occupied_sub: "सक्रिय आरक्षण और संग्रहीत उपज",
+        op_stat_occupancy_rate: "उपयोग दर",
+        op_stat_occupancy_rate_sub: "वर्तमान सुविधा उपयोग",
+        op_per_room_breakdown: "प्रति-कक्ष क्षमता विवरण",
+        op_sri_queue_title: "खराबी जोखिम सूचकांक (SRI) प्राथमिकता कतार",
+        op_sri_queue_subtitle: "आपके जिले में कमजोर फसल बैच जिन्हें तत्काल शीतलन की आवश्यकता है।",
+        btn_refresh_sri_queue: "कतार रीफ्रेश करें",
+        op_sri_honesty_notice: "खराबी जोखिम सूचकांक (SRI) क्षेत्र के तापमान और फसल कटाई के बाद बीते समय पर आधारित एक व्याख्यात्मक अनुमान (0-100) है। यह प्रयोगशाला प्रमाणित रीडिंग नहीं है।",
+        op_add_room_title: "नया स्थिर कोल्ड रूम पंजीकृत करें",
+        op_add_room_subtitle: "कोल्डब्रिज नेटवर्क में एक स्थिर प्रशीतित भंडारण कक्ष जोड़ें।",
+        op_label_facility_name: "सुविधा / कक्ष का नाम *",
+        op_label_total_capacity: "कुल भंडारण क्षमता (किग्रा) *",
+        op_label_storage_rate: "भंडारण दर (INR ₹ / किग्रा / दिन) *",
+        op_label_min_temp: "न्यूनतम परिचालन तापमान (°C) *",
+        op_label_max_temp: "अधिकतम परिचालन तापमान (°C) *",
+        op_label_supported_crops: "समर्थित फसलें (अल्पविराम से अलग)",
+        op_label_location_picker: "सुविधा स्थान (ओपनस्ट्रीटमैप पिकर) *",
+        btn_register_cold_room: "कोल्ड रूम पंजीकृत करें",
+        op_open_bids_title: "खुले फार्मगेट अनुरोध और बोलियां",
+        op_open_bids_subtitle: "लंबित फसल अनुरोधों की समीक्षा करें और अपनी सुविधाओं में उपज संग्रहीत करने के लिए प्रत्यक्ष बोलियां प्रस्तुत करें।",
+        btn_refresh_requests: "अनुरोध रीफ्रेश करें",
+        op_directory_title: "क्षेत्रीय सार्वजनिक कोल्ड स्टोरेज निर्देशिका",
+        op_directory_subtitle: "नासिक और पुणे में वास्तविक कोल्ड स्टोरेज सुविधाओं की सत्यापित वाणिज्यिक निर्देशिका।",
+        op_public_directory_notice_heading: "📢 <strong>सार्वजनिक निर्देशिका सूचना:</strong>",
+        op_modal_bid_title: "भंडारण के लिए ऑपरेटर प्रस्ताव प्रस्तुत करें",
+        op_modal_surplus_title: "निकट-समाप्ति अधिशेष उपज सूचीबद्ध करें",
+        op_modal_quality_title: "उपज गुणवत्ता निरीक्षण सत्यापन",
+        op_modal_capacity_title: "कोल्ड रूम क्षमता और उपलब्धता अपडेट करें",
+        btn_cancel: "रद्द करें",
+        btn_save_changes: "परिवर्तन सहेजें",
+        btn_publish_listing: "सूची प्रकाशित करें",
+        btn_approve_release: "स्वीकृत करें और खरीदारों के लिए जारी करें",
+        op_mobile_vans_title: "मेरी मोबाइल सोलर वैन",
+        op_mobile_vans_subtitle: "मोबाइल सौर-संचालित कूलिंग वैन, परिचालन त्रिज्या और बैटरी स्वास्थ्य के लिए बेड़े की निगरानी।",
+        btn_refresh_vans: "वैन रीफ्रेश करें",
+        op_pickup_jobs_title: "मोबाइल फार्मगेट पिकअप कार्य",
+        op_pickup_jobs_subtitle: "पिकअप चक्र के माध्यम से कृषि प्रेषण कार्यों का प्रबंधन करें: पुष्ट → पिकअप निर्धारित → उत्पाद प्राप्त → पूर्ण।",
+        btn_refresh_jobs: "कार्य रीफ्रेश करें",
+        op_pickup_lifecycle_info: "ℹ️ <strong>मोबाइल पिकअप चक्र:</strong> एक सोलर वैन ऑपरेटर के रूप में, किसान को वैन रवाना होने की सूचना देने के लिए <strong>पिकअप निर्धारित</strong> पर आगे बढ़ें, फिर फार्मगेट पर लोड करने पर <strong>उत्पाद प्राप्त</strong> करें।",
+        op_solar_capacity_title: "सौर क्षरण और प्रभावी क्षमता",
+        op_solar_capacity_subtitle: "कम सौर विकिरण स्थितियों के तहत उपयोग करने योग्य पेलोड की गणना करने वाला सिमुलेशन मॉडल।",
+        btn_refresh_solar: "मेट्रिक्स रीफ्रेश करें",
+        op_solar_simulation_notice: "<strong>घटी हुई सौर बैकअप:</strong> वास्तविक हार्डवेयर बैटरी टेलीमेट्री और सौर विकिरण सेंसर बाद के चरण के हैं। वर्तमान मॉडल गणना करता है: <code>प्रभावी क्षमता = उपलब्ध क्षमता × सौर विश्वसनीयता</code>।",
+        op_stat_fleet_size: "बेड़े का आकार",
+        op_stat_fleet_size_sub: "पंजीकृत मोबाइल कूलिंग वैन",
+        op_stat_aggregate_nominal: "कुल नाममात्र क्षमता",
+        op_stat_aggregate_nominal_sub: "100% सौर पर कुल पेलोड क्षमता",
+        op_stat_effective_capacity: "प्रभावी उपयोगी क्षमता",
+        op_stat_effective_capacity_sub: "सिम्युलेटेड सौर विश्वसनीयता के लिए समायोजित",
+        op_per_van_breakdown: "प्रति-वैन सौर क्षरण विवरण",
+        op_add_van_title: "नई मोबाइल सोलर कूलिंग वैन पंजीकृत करें",
+        op_add_van_subtitle: "सेवा त्रिज्या के साथ अपने मोबाइल बेड़े में एक प्रशीतित सौर-सहायता प्राप्त वाहन जोड़ें।",
+        op_label_van_name: "वैन का नाम / पहचानकर्ता *",
+        op_label_vehicle_ref: "वाहन पंजीकरण / नंबर प्लेट *",
+        op_label_van_capacity: "पेलोड क्षमता (किग्रा) *",
+        op_label_van_rate: "आधार दर (INR ₹ / किग्रा / दिन) *",
+        op_label_operating_radius: "परिचालन सेवा त्रिज्या (किमी) *",
+        op_label_solar_reliability: "प्रारंभिक सौर विश्वसनीयता कारक (0.0 से 1.0) *",
+        op_label_base_location: "बेस हब स्थान (ओपनस्ट्रीटमैप पिकर) *",
+        btn_register_van: "सोलर वैन पंजीकृत करें",
+        op_modal_van_bid_title: "मोबाइल पिकअप के लिए ऑपरेटर प्रस्ताव प्रस्तुत करें",
+        op_label_select_van: "सोलर वैन चुनें *",
+        btn_submit_pickup_offer: "पिकअप प्रस्ताव प्रस्तुत करें 📤",
     },
     mr: {
         brand_title: "❄️ कोल्डब्रिज एआय",
@@ -391,7 +579,101 @@ export const translations = {
         dir_loading: "निर्देशिका यादी लोड होत आहे...",
         dir_empty: "तुमच्या निकषांशी जुळणारी कोणतीही सार्वजनिक कोल्ड स्टोरेज सुविधा आढळली नाही.",
         dir_error: "सार्वजनिक निर्देशिका लोड करता आली नाही. कृपया नंतर पुन्हा प्रयत्न करा.",
-        dir_copied_alert: "फोन नंबर क्लिपबोर्डवर कॉपी झाला!"
+        dir_copied_alert: "फोन नंबर क्लिपबोर्डवर कॉपी झाला!",
+
+        // Operator Portals (Issue 2)
+        storage_operator_badge: "🏭 स्टोरेज ऑपरेटर",
+        van_operator_badge: "🚐 सोलर व्हॅन ऑपरेटर",
+        nav_my_rooms: "माझे कोल्ड रूम्स",
+        nav_incoming_bookings: "येणाऱ्या बुकिंग्ज",
+        nav_inventory_surplus: "इन्व्हेंटरी व अतिरिक्त शेतमाल",
+        nav_open_requests: "खुले विनंत्या व बोली",
+        nav_directory: "सार्वजनिक निर्देशिका",
+        nav_my_vans: "माझ्या व्हॅन्स",
+        nav_pickup_jobs: "पिकअप कामे",
+        nav_solar_capacity: "सौर आणि क्षमता",
+        op_static_rooms_title: "माझे स्थिर कोल्ड रूम्स",
+        op_static_rooms_subtitle: "तुमचे नोंदणीकृत स्थिर कोल्ड रूम्स, तापमान श्रेणी आणि साठवण क्षमता व्यवस्थापित करा.",
+        btn_refresh_rooms: "खोल्या रीफ्रेश करा",
+        op_incoming_bookings_title: "सुविधेतील येणाऱ्या बुकिंग्ज",
+        op_incoming_bookings_subtitle: "शेतमाल वितरण ट्रॅक करा आणि सुविधा ड्रॉप-ऑफ स्थिती पुढे न्या: आरक्षित → पुष्ट → शेतमाल प्राप्त → साठवणुकीत → पूर्ण.",
+        btn_refresh_bookings: "बुकिंग्ज रीफ्रेश करा",
+        op_dropoff_lifecycle_info: "ℹ️ <strong>ड्रॉप-ऑफ जीवनचक्र:</strong> शेतकरी तुमच्या सुविधेपर्यंत शेतमाल आणतात. गेटवर आल्यावर स्थिती थेट <strong>पुष्ट</strong> वरून <strong>शेतमाल प्राप्त</strong> होते.",
+        op_surplus_title: "सुविधा इन्व्हेंटरी आणि अतिरिक्त शेतमाल",
+        op_surplus_subtitle: "आवश्यक प्रत्यक्ष गुणवत्ता तपासणी करा आणि खरेदीदार बाजारात पडताळलेला अतिरिक्त शेतमाल सूचीबद्ध करा.",
+        btn_refresh_inventory: "इन्व्हेंटरी रीफ्रेश करा",
+        op_mandatory_inspection_notice: "<strong>अनिवार्य गुणवत्ता स्वाक्षरी:</strong> केवळ वेळ अन्न सुरक्षा सिद्ध करत नाही. खरेदीदार बाजारात अतिरिक्त शेतमाल प्रकाशित करण्यापूर्वी ऑपरेटरची प्रत्यक्ष तपासणी अनिवार्य आहे.",
+        op_active_inventory_title: "📦 सक्रिय कोल्ड रूम इन्व्हेंटरी",
+        op_published_listings_title: "🏷️ प्रकाशित अतिरिक्त बाजार याद्या",
+        op_utilization_title: "सुविधा क्षमता वापर",
+        op_utilization_subtitle: "एकूण आणि प्रति-खोली साठवण क्षमता वापर मेट्रिक्स.",
+        btn_refresh_utilization: "मेट्रिक्स रीफ्रेश करा",
+        op_stat_total_capacity: "एकूण साठवण क्षमता",
+        op_stat_total_capacity_sub: "नोंदणीकृत कोल्ड रूम्स क्षमता",
+        op_stat_currently_occupied: "सध्या व्यापलेले",
+        op_stat_currently_occupied_sub: "सक्रिय आरक्षण आणि साठवलेला शेतमाल",
+        op_stat_occupancy_rate: "वापर दर",
+        op_stat_occupancy_rate_sub: "वर्तमान सुविधा वापर",
+        op_per_room_breakdown: "प्रति-खोली क्षमता तपशील",
+        op_sri_queue_title: "खराब होण्याचा धोका निर्देशांक (SRI) प्राधान्य रांग",
+        op_sri_queue_subtitle: "तुमच्या जिल्ह्यातील संवेदनशील शेतमाल ज्यांना तातडीच्या शीतकरणाची गरज आहे.",
+        btn_refresh_sri_queue: "रांग रीफ्रेश करा",
+        op_sri_honesty_notice: "खराब होण्याचा धोका निर्देशांक (SRI) शेतातील तापमान आणि काढणीनंतरच्या वेळेवर आधारित एक स्पष्टीकरण देणारा प्रोटोटाइप अंदाज (0-100) आहे. हे प्रयोगशाळा प्रमाणित वाचन नाही.",
+        op_add_room_title: "नवीन स्थिर कोल्ड रूम नोंदवा",
+        op_add_room_subtitle: "कोल्डब्रिज नेटवर्कमध्ये एक स्थिर शीत साठवणूक कक्ष जोडा.",
+        op_label_facility_name: "सुविधा / कक्षाचे नाव *",
+        op_label_total_capacity: "एकूण साठवण क्षमता (किलो) *",
+        op_label_storage_rate: "साठवणूक दर (INR ₹ / किलो / दिवस) *",
+        op_label_min_temp: "किमान कार्य तापमान (°C) *",
+        op_label_max_temp: "कमाल कार्य तापमान (°C) *",
+        op_label_supported_crops: "समर्थित पिके (स्वल्पविरामाने वेगळी)",
+        op_label_location_picker: "सुविधा स्थान (ओपनस्ट्रीटमॅप पिकर) *",
+        btn_register_cold_room: "कोल्ड रूम नोंदवा",
+        op_open_bids_title: "खुले शेतमाल विनंत्या व बोली",
+        op_open_bids_subtitle: "प्रलंबित काढणी विनंत्यांचे पुनरावलोकन करा आणि तुमच्या सुविधांमध्ये साठवण्यासाठी थेट बोली सादर करा.",
+        btn_refresh_requests: "विनंत्या रीफ्रेश करा",
+        op_directory_title: "प्रादेशिक सार्वजनिक कोल्ड स्टोरेज निर्देशिका",
+        op_directory_subtitle: "नाशिक आणि पुण्यातील प्रत्यक्ष कोल्ड स्टोरेज सुविधांची पडताळलेली व्यावसायिक निर्देशिका.",
+        op_public_directory_notice_heading: "📢 <strong>सार्वजनिक निर्देशिका सूचना:</strong>",
+        op_modal_bid_title: "साठवणुकीसाठी ऑपरेटर प्रस्ताव सादर करा",
+        op_modal_surplus_title: "मुदत संपत आलेला अतिरिक्त शेतमाल सूचीबद्ध करा",
+        op_modal_quality_title: "शेतमाल गुणवत्ता तपासणी स्वाक्षरी",
+        op_modal_capacity_title: "कोल्ड रूम क्षमता आणि उपलब्धता अपडेट करा",
+        btn_cancel: "रद्द करा",
+        btn_save_changes: "बदल जतन करा",
+        btn_publish_listing: "यादी प्रकाशित करा",
+        btn_approve_release: "मंजूर करा आणि खरेदीदारांसाठी प्रसिद्ध करा",
+        op_mobile_vans_title: "माझ्या फिरत्या सोलर व्हॅन्स",
+        op_mobile_vans_subtitle: "फिरत्या सौर-ऊर्जेवरील कुलिंग व्हॅन्स, कार्यक्षेत्र त्रिज्या आणि बॅटरी आरोग्यासाठी ताफा देखरेख.",
+        btn_refresh_vans: "व्हॅन्स रीफ्रेश करा",
+        op_pickup_jobs_title: "शेतकऱ्यांकडील फिरती पिकअप कामे",
+        op_pickup_jobs_subtitle: "पिकअप जीवनचक्राद्वारे शेतमाल पाठवणी कामांचे व्यवस्थापन करा: पुष्ट → पिकअप नियोजित → शेतमाल प्राप्त → पूर्ण.",
+        btn_refresh_jobs: "कामे रीफ्रेश करा",
+        op_pickup_lifecycle_info: "ℹ️ <strong>मोबाइल पिकअप जीवनचक्र:</strong> सोलर व्हॅन ऑपरेटर म्हणून, तुमची व्हॅन रवाना झाल्याचे शेतकऱ्याला कळवण्यासाठी <strong>पिकअप नियोजित</strong> करा, नंतर शेतात माल भरल्यावर <strong>शेतमाल प्राप्त</strong> करा.",
+        op_solar_capacity_title: "सौर क्षीणता आणि प्रभावी क्षमता",
+        op_solar_capacity_subtitle: "कमी सौर प्रारण स्थितीत वापरण्यायोग्य भार मोजणारे सिम्युलेशन मॉडेल.",
+        btn_refresh_solar: "मेट्रिक्स रीफ्रेश करा",
+        op_solar_simulation_notice: "<strong>सौर घट फॉलबॅक:</strong> प्रत्यक्ष हार्डवेअर बॅटरी टेलिमेट्री आणि सौर सेन्सर्स पुढील टप्प्यातील आहेत. सध्याचे मॉडेल गणना करते: <code>प्रभावी क्षमता = उपलब्ध क्षमता × सौर विश्वसनीयता</code>.",
+        op_stat_fleet_size: "ताफ्याचा आकार",
+        op_stat_fleet_size_sub: "नोंदणीकृत फिरत्या कुलिंग व्हॅन्स",
+        op_stat_aggregate_nominal: "एकूण नाममात्र क्षमता",
+        op_stat_aggregate_nominal_sub: "100% सौर ऊर्जेवर एकूण भार क्षमता",
+        op_stat_effective_capacity: "प्रभावी वापरण्यायोग्य क्षमता",
+        op_stat_effective_capacity_sub: "सिम्युलेटेड सौर विश्वासासाठी समायोजित",
+        op_per_van_breakdown: "प्रति-व्हॅन सौर क्षीणता तपशील",
+        op_add_van_title: "नवीन फिरती सोलर कुलिंग व्हॅन नोंदवा",
+        op_add_van_subtitle: "सेवा कार्यक्षेत्रासह तुमच्या फिरत्या ताफ्यात सौर-सक्षम शीत वाहन जोडा.",
+        op_label_van_name: "व्हॅनचे नाव / ओळख *",
+        op_label_vehicle_ref: "वाहन नोंदणी / नंबर प्लेट *",
+        op_label_van_capacity: "पेलोड क्षमता (किलो) *",
+        op_label_van_rate: "मूळ दर (INR ₹ / किलो / दिवस) *",
+        op_label_operating_radius: "कार्यक्षेत्र त्रिज्या (किमी) *",
+        op_label_solar_reliability: "प्रारंभिक सौर विश्वासार्हता घटक (0.0 ते 1.0) *",
+        op_label_base_location: "बेस हब स्थान (ओपनस्ट्रीटमॅप पिकर) *",
+        btn_register_van: "सोलर व्हॅन नोंदवा",
+        op_modal_van_bid_title: "शेतमाल पिकअपसाठी ऑपरेटर प्रस्ताव सादर करा",
+        op_label_select_van: "सोलर व्हॅन निवडा *",
+        btn_submit_pickup_offer: "पिकअप प्रस्ताव सादर करा 📤",
     }
 };
 
@@ -416,8 +698,11 @@ export function t(key) {
     return dict[key] || translations.en[key] || key;
 }
 
-export function applyTranslations() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
+export function applyTranslations(root = document) {
+    if (!root) return;
+    const scope = root === document ? document : (root.querySelectorAll ? root : document);
+
+    scope.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         const translated = t(key);
         if (translated) {
@@ -429,8 +714,50 @@ export function applyTranslations() {
         }
     });
 
-    // Update document language attribute
-    document.documentElement.lang = currentLanguage;
+    scope.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        const translated = t(key);
+        if (translated) {
+            el.innerHTML = translated;
+        }
+    });
+
+    if (document.documentElement) {
+        document.documentElement.lang = currentLanguage;
+    }
+}
+
+let isObserverApplying = false;
+let i18nObserver = null;
+
+export function setupI18nObserver() {
+    if (i18nObserver || typeof MutationObserver === 'undefined' || !document.body) return;
+    i18nObserver = new MutationObserver((mutations) => {
+        if (isObserverApplying) return;
+        let shouldApply = false;
+        for (const m of mutations) {
+            for (const node of m.addedNodes) {
+                if (node.nodeType === 1) { // ELEMENT_NODE
+                    if (node.hasAttribute('data-i18n') || node.hasAttribute('data-i18n-html') || (node.querySelector && node.querySelector('[data-i18n], [data-i18n-html]'))) {
+                        shouldApply = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldApply) break;
+        }
+
+        if (shouldApply) {
+            isObserverApplying = true;
+            try {
+                applyTranslations();
+            } finally {
+                setTimeout(() => { isObserverApplying = false; }, 0);
+            }
+        }
+    });
+
+    i18nObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 export function initI18n() {
@@ -441,4 +768,9 @@ export function initI18n() {
     if (!translations[saved]) saved = 'en';
     currentLanguage = saved;
     applyTranslations();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupI18nObserver);
+    } else {
+        setupI18nObserver();
+    }
 }

@@ -56,9 +56,6 @@ export function redirectByRole(user) {
         case 'BUYER':
             window.location.href = 'buyer.html';
             break;
-        case 'ADMIN':
-            window.location.href = 'admin.html';
-            break;
         default:
             window.location.href = 'farmer.html';
     }

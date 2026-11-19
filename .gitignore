@@ -52,4 +52,6 @@ files (1}/
 Thumbs.db
 chrome_profile/
 chrome_capture_profile/
+chrome_verify_profile/
+scratch/
 test_screen.png

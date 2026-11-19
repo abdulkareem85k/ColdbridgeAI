@@ -197,9 +197,9 @@ export async function mountLocationPicker(containerId, { initialLat = 19.9975, i
 
     container.innerHTML = `
         <div class="location-picker-widget" style="border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: #fff;">
-            <div style="padding: 0.75rem; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center;">
+            <div style="padding: 0.75rem; background: #f8fafc; border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                 <input type="text" id="pickerSearchInput" placeholder="🔍 Search address in Maharashtra (e.g. Nashik APMC, Pune)..." 
-                       style="flex: 1; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                       style="flex: 1 1 200px; min-width: 0; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem;">
                 <button type="button" id="pickerBtnSearch" class="btn btn-secondary btn-sm" title="Search Address">
                     Search
                 </button>
@@ -208,7 +208,7 @@ export async function mountLocationPicker(containerId, { initialLat = 19.9975, i
                 </button>
             </div>
             <div id="pickerMapElement" style="height: 250px; width: 100%;"></div>
-            <div style="padding: 0.5rem 0.75rem; background: #f8fafc; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+            <div style="padding: 0.5rem 0.75rem; background: #f8fafc; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                 <span id="pickerAddressText">Selected: 19.9975, 73.7898 (Click map or drag pin)</span>
                 <span class="badge badge-source-live">OpenStreetMap</span>
             </div>
