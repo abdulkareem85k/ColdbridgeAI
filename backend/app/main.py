@@ -1,4 +1,13 @@
+import sys
 from pathlib import Path
+
+# Ensure backend directory is on sys.path so the application runs seamlessly
+# whether started from the repo root (uvicorn backend.app.main:app)
+# or from the backend folder (uvicorn app.main:app).
+backend_dir = Path(__file__).resolve().parent.parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -62,6 +71,45 @@ app.include_router(inventory.router, prefix=API_V1_PREFIX)
 app.include_router(marketplace.router, prefix=API_V1_PREFIX)
 app.include_router(forecast.router, prefix=API_V1_PREFIX)
 app.include_router(directory.router, prefix=API_V1_PREFIX)
+
+@app.on_event("startup")
+def ensure_database_initialized():
+    """
+    Auto-initialize and seed the database on startup if it does not exist or is empty.
+    Enables zero-configuration, 1-command startup for anyone who clones the repository.
+    """
+    if "pytest" in sys.modules or settings.APP_ENV == "testing":
+        return
+
+    try:
+        from app.db.base import Base
+        from app.db.session import engine, SessionLocal
+        from app.models.user import User
+
+        # 1. Ensure all tables are created
+        Base.metadata.create_all(bind=engine)
+
+        # 2. Check if users table is populated
+        db = SessionLocal()
+        try:
+            has_users = db.query(User).first() is not None
+        finally:
+            db.close()
+
+        if not has_users:
+            from app.seed.demo_data import seed_demo_data
+            from app.seed.public_directory import seed_public_directory
+
+            print("INFO: Fresh database detected. Auto-seeding Maharashtra demo dataset...")
+            seed_demo_data()
+            db_dir = SessionLocal()
+            try:
+                seed_public_directory(db_dir)
+            finally:
+                db_dir.close()
+            print("INFO: Auto-seed complete. 4 demo operator accounts and public directory are ready!")
+    except Exception as exc:
+        print(f"WARNING: Database auto-initialization check skipped: {exc}")
 
 @app.get("/api")
 def api_info():
