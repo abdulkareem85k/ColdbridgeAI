@@ -50,3 +50,6 @@ htmlcov/
 .DS_Store
 files (1}/
 Thumbs.db
+chrome_profile/
+chrome_capture_profile/
+test_screen.png

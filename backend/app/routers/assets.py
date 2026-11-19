@@ -54,12 +54,12 @@ def create_asset(
     # Role validation against asset type
     if current_user.role == "STATIC_OPERATOR" and req.asset_type != "STATIC":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="A Static Operator cannot register mobile cooling vans."
         )
     if current_user.role == "VAN_OPERATOR" and req.asset_type != "MOBILE":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="A Van Operator cannot register static cold rooms."
         )
 
@@ -115,10 +115,18 @@ def list_assets(
     """List cooling assets with pagination and filters."""
     query = db.query(ColdAsset)
 
-    if asset_type:
-        query = query.filter(ColdAsset.asset_type == asset_type.upper())
-    if operator_id:
-        query = query.filter(ColdAsset.operator_id == operator_id)
+    if current_user.role in ["STATIC_OPERATOR", "VAN_OPERATOR"]:
+        query = query.filter(ColdAsset.operator_id == current_user.id)
+        if current_user.role == "STATIC_OPERATOR":
+            query = query.filter(ColdAsset.asset_type == "STATIC")
+        elif current_user.role == "VAN_OPERATOR":
+            query = query.filter(ColdAsset.asset_type == "MOBILE")
+    else:
+        if asset_type:
+            query = query.filter(ColdAsset.asset_type == asset_type.upper())
+        if operator_id:
+            query = query.filter(ColdAsset.operator_id == operator_id)
+
     if is_active is not None:
         query = query.filter(ColdAsset.is_active == is_active)
 

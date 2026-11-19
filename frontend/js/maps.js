@@ -19,16 +19,20 @@ export function ensureLeafletLoaded() {
         if (!document.querySelector('link[data-leaflet-css]')) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            link.href = new URL('../vendor/leaflet/leaflet.css', import.meta.url).href;
             link.setAttribute('data-leaflet-css', 'true');
             document.head.appendChild(link);
         }
 
         // Load JS
         const script = document.createElement('script');
-        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        script.crossOrigin = '';
-        script.onload = () => resolve(window.L);
+        script.src = new URL('../vendor/leaflet/leaflet.js', import.meta.url).href;
+        script.onload = () => {
+            if (window.L && window.L.Icon && window.L.Icon.Default) {
+                window.L.Icon.Default.imagePath = new URL('../vendor/leaflet/images/', import.meta.url).href;
+            }
+            resolve(window.L);
+        };
         script.onerror = (err) => reject(new Error('Failed to load Leaflet.js library'));
         document.head.appendChild(script);
     });

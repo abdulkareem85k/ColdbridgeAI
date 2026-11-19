@@ -8,7 +8,9 @@
     --accent: #f57f17;
     --bg-page: #f8fafc;
     --bg-card: #ffffff;
+    --surface: #ffffff;
     --text-main: #1e293b;
+    --text: var(--text-main);
     --text-muted: #64748b;
     --border: #e2e8f0;
     --border-focus: #1b5e20;
@@ -429,3 +431,410 @@ tbody tr:hover {
 .asset-meta span.val {
     font-weight: 600;
 }
+
+/* ==========================================================================
+   Navigation V2 - Enhanced Two-Row Responsive Header
+   ========================================================================== */
+
+/* Two-row header container */
+header.nav-v2 {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Row 1: Brand (left) and Utilities/Actions (right) */
+.nav-v2-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+}
+
+.nav-v2-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Row 2: Tabs Wrapper and Horizontal Scrollable Strip */
+.nav-v2-tabs-wrapper {
+    position: relative;
+    width: 100%;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.nav-v2-tabs-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1.5rem;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.nav-v2-tabs-strip::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+/* Tab Links in V2 */
+header.nav-v2 .nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 0.85rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+    background: transparent;
+    outline: none;
+}
+
+header.nav-v2 .nav-link:hover {
+    color: var(--primary);
+    background: transparent;
+}
+
+/* Active Tab: Bottom underline in --primary, bold text */
+header.nav-v2 .nav-link.active,
+header.nav-v2 .nav-link[aria-current="page"] {
+    color: var(--primary);
+    font-weight: 700;
+    border-bottom: 2px solid var(--primary);
+    background: transparent;
+}
+
+/* Visible outline for keyboard focus */
+header.nav-v2 .nav-link:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+    border-radius: var(--radius-sm);
+}
+
+header.nav-v2 #langSwitcher:focus-visible,
+header.nav-v2 #btnLogout:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
+/* Edge fades via CSS mask when more tabs exist off-screen */
+.nav-v2-tabs-strip.mask-right {
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 2.5rem), transparent 100%);
+    mask-image: linear-gradient(to right, #000 0%, #000 calc(100% - 2.5rem), transparent 100%);
+}
+
+.nav-v2-tabs-strip.mask-left {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 2.5rem, #000 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 2.5rem, #000 100%);
+}
+
+.nav-v2-tabs-strip.mask-both {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 2.5rem, #000 calc(100% - 2.5rem), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 2.5rem, #000 calc(100% - 2.5rem), transparent 100%);
+}
+
+/* Mobile responsive styles (<= 640px) */
+@media (max-width: 640px) {
+    .nav-v2-top {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .nav-v2-actions {
+        gap: 0.5rem;
+    }
+
+    .nav-v2-tabs-strip {
+        padding: 0 0.75rem;
+        gap: 0.25rem;
+    }
+
+    header.nav-v2 .nav-link {
+        padding: 0.6rem 0.65rem;
+        font-size: 0.85rem;
+    }
+
+    /* Hide brand badge on mobile */
+    .brand-badge {
+        display: none !important;
+    }
+
+    /* In user pill: hide user name text, keep Logout button */
+    .user-pill {
+        padding: 0.2rem 0.4rem;
+        gap: 0.35rem;
+        background: transparent;
+    }
+
+    .user-pill span {
+        display: none !important;
+    }
+
+    #btnLogout {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        display: inline-flex !important;
+    }
+
+    #langSwitcher {
+        font-size: 0.75rem !important;
+        padding: 0.2rem 0.35rem !important;
+    }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .nav-v2-tabs-strip {
+        scroll-behavior: auto !important;
+    }
+
+    header.nav-v2 .nav-link {
+        transition: none !important;
+    }
+}
+
+/* ==========================================================================
+   Comprehensive Responsive Alignment & Anti-Overlap System
+   ========================================================================== */
+
+/* Prevent page horizontal scroll across mobile and desktop */
+html {
+    scroll-padding-top: 115px;
+    box-sizing: border-box;
+}
+
+body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+}
+
+/* Base images, maps and canvas containers */
+img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.leaflet-container {
+    max-width: 100% !important;
+    z-index: 1 !important;
+}
+
+/* Content cards and text word-break protection */
+.card,
+.asset-card,
+.state-box {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.asset-meta span.val,
+.asset-meta span.label {
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Responsive Grid Cards (320px -> adaptive) */
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 1.25rem;
+    width: 100%;
+}
+
+/* Split Match Layout for Farmer Portal */
+.split-match-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+/* Modal System (Centering, Scroll containment, Anti-overlap) */
+.modal-backdrop,
+div[id$="Modal"] {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    box-sizing: border-box;
+    z-index: 2000 !important;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.modal {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    padding: 1.5rem;
+    position: relative;
+}
+
+.modal,
+div[id$="Modal"] > .card {
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    width: 92% !important;
+    max-width: 540px !important;
+    box-sizing: border-box;
+}
+
+/* Table horizontal responsiveness */
+.table-container,
+div[style*="overflow-x: auto"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+}
+
+table {
+    min-width: 500px;
+}
+
+/* Form and input boundaries */
+input, select, textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Tablet & Mobile Alignment Rules (<= 900px) */
+@media (max-width: 900px) {
+    .split-match-layout,
+    div[style*="grid-template-columns: 1fr 1fr"][style*="gap: 1.5rem"] {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+    }
+}
+
+/* Mobile Alignment & Overlap Prevention (<= 640px) */
+@media (max-width: 640px) {
+    .container {
+        margin: 1rem auto;
+        padding: 0 0.75rem;
+    }
+
+    .page-title {
+        font-size: 1.35rem;
+        word-break: break-word;
+    }
+
+    .page-subtitle {
+        font-size: 0.88rem;
+        word-break: break-word;
+    }
+
+    .grid-cards {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+
+    .card {
+        padding: 1rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+    }
+
+    /* Auto-collapse inline 2-col / 3-col grids on mobile */
+    div[style*="grid-template-columns: 1fr 1fr"],
+    div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Reduce map heights for smaller screens to save vertical space */
+    #marketplaceMap,
+    #coolingNetworkMap,
+    #routeMapElement {
+        height: 300px !important;
+    }
+
+    /* Modals on mobile */
+    .modal,
+    div[id$="Modal"] > .card {
+        width: 96% !important;
+        padding: 1rem !important;
+        max-height: 92vh !important;
+    }
+
+    /* Alert and notification banner wrap */
+    .alert {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Form action button rows on mobile */
+    form div[style*="justify-content: flex-end"] {
+        flex-direction: column-reverse;
+        width: 100%;
+        gap: 0.5rem !important;
+    }
+
+    form div[style*="justify-content: flex-end"] .btn {
+        width: 100%;
+    }
+
+    /* Offer card action buttons wrap */
+    .btnPreviewRoute,
+    .btnAllocateOffer {
+        width: 100%;
+    }
+}
+
+/* Small phones (<= 480px) */
+@media (max-width: 480px) {
+    header .brand span.brand-badge {
+        display: none !important;
+    }
+
+    .auth-container {
+        margin-top: 1.5rem !important;
+        padding: 0 0.75rem;
+    }
+
+    .asset-meta {
+        grid-template-columns: 1fr !important;
+        gap: 0.4rem;
+    }
+
+    #loginForm div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    .badge-group {
+        gap: 0.25rem;
+    }
+}
+
+

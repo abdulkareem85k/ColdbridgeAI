@@ -3,26 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColdBridge AI – Admin & Simulation Portal</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>ColdBridge AI – System Administration</title>
+    <link rel="stylesheet" href="css/style.css?v=2.2">
+    <style>
+        :root {
+            --primary: #4338ca;
+            --primary-hover: #3730a3;
+        }
+        .stat-badge {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 0.25rem;
+        }
+        .json-detail {
+            font-family: monospace;
+            font-size: 0.75rem;
+            background: #f8fafc;
+            padding: 0.4rem;
+            border-radius: 4px;
+            max-width: 320px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
 </head>
 <body>
-    <header>
+    <header class="nav-v2">
         <a href="admin.html" class="brand">
             <span>❄️ ColdBridge AI</span>
-            <span class="brand-badge" style="background: #475569;" data-i18n="admin_portal">Admin & Simulation</span>
+            <span class="brand-badge" style="background: #4338ca; color: white;">👑 System Admin</span>
         </a>
         <nav>
-            <a href="#stats" class="nav-link active" data-tab="tabStats" data-i18n="nav_system_overview">System Overview</a>
-            <a href="#simulation" class="nav-link" data-tab="tabSimulation" data-i18n="nav_simulation_controls">Simulation Controls</a>
-            <a href="#audit" class="nav-link" data-tab="tabAudit" data-i18n="nav_audit_trail">Audit Trail</a>
+            <a href="#overview" class="nav-link active" data-tab="tabOverview" data-i18n="nav_system_overview">Overview</a>
+            <a href="#audit" class="nav-link" data-tab="tabAudit" data-i18n="nav_audit_trail">Audit Logs</a>
+            <a href="#simulation" class="nav-link" data-tab="tabSimulation" data-i18n="nav_simulation_controls">Simulation</a>
             <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
                 <option value="en">🌐 English</option>
                 <option value="hi">🇮🇳 हिंदी</option>
                 <option value="mr">🚩 मराठी</option>
             </select>
             <div class="user-pill">
-                <span id="adminName">Administrator</span>
+                <span id="adminName">Admin</span>
                 <button type="button" id="btnLogout" class="btn btn-secondary btn-sm" data-i18n="logout">Logout</button>
             </div>
         </nav>
@@ -32,152 +55,168 @@
         <div id="globalAlert" class="alert" style="display: none;"></div>
 
         <!-- TAB 1: SYSTEM OVERVIEW -->
-        <div id="tabStats" class="tab-content active">
+        <div id="tabOverview" class="tab-content active">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <div>
                     <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="admin_title">Platform Operations Dashboard</h1>
                     <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="admin_subtitle">System health, infrastructure counts, and active cold-chain allocations.</p>
                 </div>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <span class="badge badge-source-simulated">DATA: SIMULATED</span>
-                    <span class="badge badge-status-fresh">STATUS: FRESH</span>
-                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshStats" data-i18n="btn_refresh">Refresh</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshStats" data-i18n="refresh">Refresh</button>
+            </div>
+
+            <div class="notice-banner" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">PROTOTYPE HONESTY</span>
+                    <span class="badge badge-simulated">DATA: SIMULATED</span>
+                    <span class="badge badge-fresh">STATUS: FRESH</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;">
+                    Admin dashboard displays live infrastructure and transaction metrics across the Maharashtra demonstration network.
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="grid-cards" style="margin-bottom: 2rem;">
+            <div class="grid-cards" id="overviewCountsGrid" style="margin-bottom: 2rem;">
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">🧑‍🌾 Registered Farmers</div>
-                    <div id="statFarmers" style="font-size: 2.2rem; font-weight: 700; color: var(--primary);">0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Nashik, Pune, Ratnagiri</div>
+                    <div class="card-title">👨‍🌾 Registered Farmers</div>
+                    <div class="stat-badge" id="statFarmers">-</div>
                 </div>
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">🏭 Facility Operators</div>
-                    <div id="statOperators" style="font-size: 2.2rem; font-weight: 700; color: var(--secondary);">0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Static & mobile fleets</div>
+                    <div class="card-title">🏭 Facility & Van Operators</div>
+                    <div class="stat-badge" id="statOperators">-</div>
                 </div>
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">📦 Produce Batches</div>
-                    <div id="statBatches" style="font-size: 2.2rem; font-weight: 700; color: #b45309;">0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Total harvest volume</div>
+                    <div class="card-title">🏢 Static Cold Rooms</div>
+                    <div class="stat-badge" id="statStaticRooms">-</div>
                 </div>
                 <div class="card" style="margin: 0;">
-                    <div class="card-title">🚐 Mobile Vans / ❄️ Rooms</div>
-                    <div id="statAssets" style="font-size: 2.2rem; font-weight: 700; color: #0284c7;">0 / 0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Active cold assets</div>
+                    <div class="card-title">🚐 Mobile Solar Vans</div>
+                    <div class="stat-badge" id="statMobileVans">-</div>
+                </div>
+                <div class="card" style="margin: 0;">
+                    <div class="card-title">📦 Total Produce Batches</div>
+                    <div class="stat-badge" id="statBatches">-</div>
                 </div>
                 <div class="card" style="margin: 0;">
                     <div class="card-title">🔄 Active Bookings</div>
-                    <div id="statActiveBookings" style="font-size: 2.2rem; font-weight: 700; color: #15803d;">0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Reserved / Storage pipeline</div>
+                    <div class="stat-badge" id="statActiveBookings">-</div>
                 </div>
-                <div class="card" style="margin: 0;">
-                    <div class="card-title">✅ Completed Bookings</div>
-                    <div id="statCompletedBookings" style="font-size: 2.2rem; font-weight: 700; color: #475569;">0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Successful lifecycles</div>
+            </div>
+
+            <div class="card">
+                <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;">Recent System Activity</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                                <th>Resource Type</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentLogsTableBody">
+                            <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading activity...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 2: SIMULATION CONTROLS -->
-        <div id="tabSimulation" class="tab-content">
-            <h1 class="page-title">Admin Simulation Controls</h1>
-            <p class="page-subtitle">Interactive controls for Avishkar live evaluation, what-if stress tests, and degraded-solar scenario simulations.</p>
-
-            <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
-                ⚠️ <strong>Prototype Simulation Disclosure:</strong> Solar fallback adjustments simulate sunlight / weather variation.
-                They compute <code>effective_capacity = available_capacity * solar_reliability</code>. This software MVP does not monitor physical ESP32 sensors or Peltier wattage.
+        <!-- TAB 2: AUDIT LOGS -->
+        <div id="tabAudit" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">System Audit Trail</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Complete immutable audit trail of actions, logins, capacity reservations, and simulation states.</p>
+                </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
-                <!-- Reset Demo Data -->
-                <div class="card" style="margin: 0;">
-                    <div class="card-title">🔄 Reset Demo Data</div>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-                        Restores the entire database to the official Maharashtra deterministic benchmark dataset (5 farmers, 6 static rooms, 4 vans, 12 batches, sample bids).
-                    </p>
-                    <button type="button" id="btnResetDemoData" class="btn btn-danger" style="width: 100%;">
-                        Reset All Demo Data
-                    </button>
-                </div>
-
-                <!-- Van Solar Reliability Control -->
-                <div class="card" style="margin: 0;">
-                    <div class="card-title">☀️ Van Solar Reliability Toggle</div>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                        Adjust the sunlight level on a mobile van. Lowering below threshold will reduce effective capacity and dynamically alter matching winners.
-                    </p>
-                    <div class="form-group">
-                        <label for="simVanSelect">Select Mobile Cooling Van</label>
-                        <select id="simVanSelect">
-                            <option value="a2000000-0000-0000-0000-000000000001">SolarVan Alpha (Nashik - 800 kg capacity)</option>
-                            <option value="a2000000-0000-0000-0000-000000000002">SolarVan Beta (Pune - 800 kg capacity)</option>
-                            <option value="a2000000-0000-0000-0000-000000000003">SolarVan Gamma (Ratnagiri - 750 kg capacity)</option>
-                            <option value="a2000000-0000-0000-0000-000000000004">SolarVan Delta (Mumbai - 400 kg capacity)</option>
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <form id="auditFilterForm" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                    <div style="flex: 1; min-width: 180px;">
+                        <label for="filterAction" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Filter by Action</label>
+                        <select id="filterAction" style="width: 100%; padding: 0.45rem 0.6rem; border: 1px solid var(--border); border-radius: 4px;">
+                            <option value="">All Actions</option>
                         </select>
                     </div>
-
-                    <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                            <label for="solarSlider">Solar Reliability Factor</label>
-                            <span id="solarValLabel" style="font-weight: 700; color: var(--primary);">0.95 (95%)</span>
-                        </div>
-                        <input type="range" id="solarSlider" min="0.0" max="1.0" step="0.05" value="0.95" style="width: 100%;">
+                    <div style="flex: 1; min-width: 180px;">
+                        <label for="filterResourceType" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Filter by Resource</label>
+                        <select id="filterResourceType" style="width: 100%; padding: 0.45rem 0.6rem; border: 1px solid var(--border); border-radius: 4px;">
+                            <option value="">All Resources</option>
+                        </select>
                     </div>
-
-                    <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.85rem; margin-bottom: 1rem;">
-                        <div>Simulated Effective Capacity: <strong id="simEffectiveCap">760 kg</strong></div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                            Test: Setting to 0.50 reduces capacity below 500 kg, excluding the van in the worked example.
-                        </div>
+                    <div style="width: 100px;">
+                        <label for="filterLimit" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Per Page</label>
+                        <select id="filterLimit" style="width: 100%; padding: 0.45rem 0.6rem; border: 1px solid var(--border); border-radius: 4px;">
+                            <option value="25">25</option>
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                        </select>
                     </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary" style="padding: 0.45rem 1rem;">Apply Filter</button>
+                    </div>
+                </form>
+            </div>
 
-                    <button type="button" id="btnUpdateSolar" class="btn btn-primary" style="width: 100%;">
-                        Update Solar Reliability
-                    </button>
+            <div class="card" style="padding: 0;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr style="background: #f8fafc; border-bottom: 1px solid var(--border);">
+                                <th style="padding: 0.75rem 1rem;">Time (UTC)</th>
+                                <th style="padding: 0.75rem 1rem;">User / Actor</th>
+                                <th style="padding: 0.75rem 1rem;">Action</th>
+                                <th style="padding: 0.75rem 1rem;">Resource</th>
+                                <th style="padding: 0.75rem 1rem;">Details</th>
+                                <th style="padding: 0.75rem 1rem;">IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditLogsTableBody">
+                            <tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading audit logs...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                <!-- Advance Clock -->
-                <div class="card" style="margin: 0;">
-                    <div class="card-title">⏳ Advance Simulated Clock</div>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-                        Shift harvest timestamps into the past to simulate produce aging, causing SRI urgency to escalate.
-                    </p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                        <button type="button" class="btn btn-secondary btn-sm btnAdvanceHours" data-hours="2">+2 Hours</button>
-                        <button type="button" class="btn btn-secondary btn-sm btnAdvanceHours" data-hours="6">+6 Hours</button>
-                        <button type="button" class="btn btn-secondary btn-sm btnAdvanceHours" data-hours="12">+12 Hours</button>
-                        <button type="button" class="btn btn-secondary btn-sm btnAdvanceHours" data-hours="24">+24 Hours</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-top: 1px solid var(--border); background: #fafafa; flex-wrap: wrap; gap: 0.5rem;">
+                    <div id="auditPaginationInfo" style="font-size: 0.85rem; color: var(--text-muted);">Showing 0 of 0</div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnPrevPage" disabled>Previous</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnNextPage" disabled>Next</button>
                     </div>
-                </div>
-
-                <!-- Reservation Expiration Check -->
-                <div class="card" style="margin: 0;">
-                    <div class="card-title">⏱️ Reservation Expiration Check</div>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-                        Scan for any RESERVED bookings older than 15 minutes and immediately release held capacity.
-                    </p>
-                    <button type="button" id="btnTriggerExpiryCheck" class="btn btn-secondary" style="width: 100%;">
-                        Run Expiration Audit Check
-                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: AUDIT TRAIL -->
-        <div id="tabAudit" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Security & Operational Audit Log</h1>
-                    <p class="page-subtitle" style="margin-bottom: 0;">Immutable record of capacity reservations, bid allocations, state transitions, and simulation updates.</p>
-                </div>
-                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAudit">Refresh Logs</button>
+        <!-- TAB 3: SIMULATION CONTROLS -->
+        <div id="tabSimulation" class="tab-content">
+            <div style="margin-bottom: 1.5rem;">
+                <h1 class="page-title" style="margin-bottom: 0.25rem;">Demonstration & Simulation Sandbox</h1>
+                <p class="page-subtitle" style="margin-bottom: 0;">Simulate agricultural time lapse, test degraded-solar scenarios, and manage demo datasets.</p>
             </div>
 
-            <div class="card" style="padding: 0; overflow: hidden;">
-                <div id="auditLogTableContainer">
-                    <div class="state-box">Loading audit logs...</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <!-- Clock Advance -->
+                <div class="card">
+                    <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem;">⏰ Advance Simulated Clock</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Shifts produce harvest timestamps backward into the past. As elapsed post-harvest time increases, the Spoilage Risk Index (SRI) increases urgency, demonstrating system elasticity.
+                    </p>
+                    <form id="advanceClockForm">
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="clockHours" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">Hours to Advance</label>
+                            <input type="number" id="clockHours" value="4" min="1" max="168" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btnAdvanceClock">Advance Clock</button>
+                    </form>
+                </div>
+
+                <!-- Reset Demo Data -->
+                <div class="card" style="border: 1px solid #fecaca; background: #fffaf0;">
+                    <h2 style="font-size: 1.15rem; font-weight: 600; color: #991b1b; margin-bottom: 0.5rem;">🔄 Reset Demo Dataset</h2>
+                    <p style="font-size: 0.85rem; color: #7f1d1d; margin-bottom: 1rem;">
+                        Wipes and restores the database to the deterministic Maharashtra benchmark state (Nashik, Pune, Ratnagiri, Mumbai). All user-created mock records will be reset.
+                    </p>
+                    <button type="button" class="btn btn-danger" id="btnResetDemoData" style="background: #dc2626; color: white;">Reset Demo Data</button>
                 </div>
             </div>
         </div>
@@ -186,218 +225,234 @@
     <script type="module">
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
-        import { initI18n, setLanguage, getLanguage } from './js/i18n.js';
+        import { initI18n, setLanguage, getLanguage, t } from './js/i18n.js';
 
         let currentUser = null;
+        let currentOffset = 0;
+        let currentLimit = 50;
+        let totalLogs = 0;
 
-        const globalAlert = document.getElementById('globalAlert');
-        function showAlert(msg, type = 'error') {
-            globalAlert.className = `alert alert-${type}`;
-            globalAlert.textContent = msg;
-            globalAlert.style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        function hideAlert() {
-            globalAlert.style.display = 'none';
+        function showAlert(msg, type = 'info') {
+            const el = document.getElementById('globalAlert');
+            if (!el) return;
+            el.className = `alert alert-${type}`;
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 6000);
         }
 
         function escapeHtml(str) {
             if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
+            const d = document.createElement('div');
+            d.textContent = String(str);
+            return d.innerHTML;
         }
 
-        // Initialize Authentication
-        (async () => {
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
             try {
+                const d = new Date(dateStr);
+                return d.toLocaleString('en-IN', { timeZone: 'UTC' }) + ' UTC';
+            } catch (_) {
+                return dateStr;
+            }
+        }
+
+        // Tab Switching
+        function setupTabs() {
+            const links = document.querySelectorAll('nav a.nav-link[data-tab]');
+            links.forEach(l => {
+                l.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    links.forEach(x => x.classList.remove('active'));
+                    l.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    const target = document.getElementById(l.getAttribute('data-tab'));
+                    if (target) target.classList.add('active');
+
+                    if (l.getAttribute('data-tab') === 'tabOverview') loadOverview();
+                    if (l.getAttribute('data-tab') === 'tabAudit') loadAuditLogs();
+                });
+            });
+        }
+
+        async function loadOverview() {
+            try {
+                const stats = await apiRequest('/admin/stats');
+                document.getElementById('statFarmers').textContent = stats.counts.farmers ?? 0;
+                document.getElementById('statOperators').textContent = stats.counts.operators ?? 0;
+                document.getElementById('statStaticRooms').textContent = stats.counts.static_rooms ?? 0;
+                document.getElementById('statMobileVans').textContent = stats.counts.mobile_vans ?? 0;
+                document.getElementById('statBatches').textContent = stats.counts.produce_batches ?? 0;
+                document.getElementById('statActiveBookings').textContent = stats.counts.active_bookings ?? 0;
+
+                const tbody = document.getElementById('recentLogsTableBody');
+                if (stats.recent_audit_logs && stats.recent_audit_logs.length > 0) {
+                    tbody.innerHTML = stats.recent_audit_logs.slice(0, 10).map(l => `
+                        <tr>
+                            <td style="white-space: nowrap;">${formatDate(l.created_at)}</td>
+                            <td><span class="badge" style="background:#e0e7ff; color:#3730a3;">${escapeHtml(l.action)}</span></td>
+                            <td>${escapeHtml(l.resource_type)}</td>
+                            <td><div class="json-detail">${escapeHtml(typeof l.details === 'object' ? JSON.stringify(l.details) : l.details)}</div></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No activity recorded.</td></tr>';
+                }
+            } catch (err) {
+                showAlert('Failed to load system statistics: ' + err.message, 'danger');
+            }
+        }
+
+        async function loadAuditLogs() {
+            const action = document.getElementById('filterAction').value;
+            const resource = document.getElementById('filterResourceType').value;
+            currentLimit = parseInt(document.getElementById('filterLimit').value, 10) || 50;
+
+            const tbody = document.getElementById('auditLogsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading audit logs...</td></tr>';
+
+            const params = new URLSearchParams({
+                limit: currentLimit,
+                offset: currentOffset
+            });
+            if (action) params.append('action', action);
+            if (resource) params.append('resource_type', resource);
+
+            try {
+                const res = await apiRequest(`/admin/audit-logs?${params.toString()}`);
+                totalLogs = res.total;
+
+                // Update filter dropdown options if needed
+                const actSel = document.getElementById('filterAction');
+                if (actSel.options.length <= 1 && res.available_actions) {
+                    res.available_actions.forEach(a => {
+                        const opt = document.createElement('option');
+                        opt.value = a;
+                        opt.textContent = a;
+                        actSel.appendChild(opt);
+                    });
+                }
+                const resSel = document.getElementById('filterResourceType');
+                if (resSel.options.length <= 1 && res.available_resource_types) {
+                    res.available_resource_types.forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r;
+                        opt.textContent = r;
+                        resSel.appendChild(opt);
+                    });
+                }
+
+                if (res.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">No audit records found matching criteria.</td></tr>';
+                } else {
+                    tbody.innerHTML = res.items.map(item => `
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 0.6rem 0.8rem; font-size: 0.8rem; white-space: nowrap;">${formatDate(item.created_at)}</td>
+                            <td style="padding: 0.6rem 0.8rem; font-size: 0.85rem; font-weight: 500;">${escapeHtml(item.user_email || item.user_id || 'System')}</td>
+                            <td style="padding: 0.6rem 0.8rem;"><span class="badge" style="background:#e0e7ff; color:#3730a3; font-size:0.75rem;">${escapeHtml(item.action)}</span></td>
+                            <td style="padding: 0.6rem 0.8rem; font-size: 0.85rem;">${escapeHtml(item.resource_type)} ${item.resource_id ? `<span style="font-family:monospace; color:var(--text-muted); font-size:0.75rem;">(${escapeHtml(item.resource_id.slice(0, 8))}...)</span>` : ''}</td>
+                            <td style="padding: 0.6rem 0.8rem;"><div class="json-detail">${escapeHtml(JSON.stringify(item.details, null, 1))}</div></td>
+                            <td style="padding: 0.6rem 0.8rem; font-size: 0.8rem; color: var(--text-muted); font-family: monospace;">${escapeHtml(item.ip_address || '-')}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Update pagination info
+                const start = totalLogs === 0 ? 0 : currentOffset + 1;
+                const end = Math.min(currentOffset + currentLimit, totalLogs);
+                document.getElementById('auditPaginationInfo').textContent = `Showing ${start}–${end} of ${totalLogs}`;
+                document.getElementById('btnPrevPage').disabled = currentOffset <= 0;
+                document.getElementById('btnNextPage').disabled = end >= totalLogs;
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #dc2626; padding: 1.5rem;">Error loading audit logs: ${escapeHtml(err.message)}</td></tr>`;
+            }
+        }
+
+        async function init() {
+            try {
+                currentUser = await getMe();
+                if (!currentUser) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                if (currentUser.role !== 'ADMIN') {
+                    showAlert('Access denied: System Administrator privileges required', 'danger');
+                    setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+                    return;
+                }
+                const nameEl = document.getElementById('adminName');
+                if (nameEl) nameEl.textContent = currentUser.full_name || currentUser.email;
+
+                setupTabs();
                 initI18n();
+
                 const langSwitcher = document.getElementById('langSwitcher');
                 if (langSwitcher) {
                     langSwitcher.value = getLanguage();
-                    langSwitcher.addEventListener('change', (e) => {
-                        setLanguage(e.target.value);
-                    });
+                    langSwitcher.addEventListener('change', (e) => setLanguage(e.target.value));
                 }
 
-                currentUser = await getMe();
-                if (!currentUser || currentUser.role !== 'ADMIN') {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                document.getElementById('adminName').textContent = `${currentUser.full_name} (ADMIN)`;
-                await loadStats();
-            } catch (err) {
-                console.error(err);
-                window.location.href = 'index.html';
-            }
-        })();
+                const logoutBtn = document.getElementById('btnLogout');
+                if (logoutBtn) logoutBtn.addEventListener('click', () => logout());
 
-        // Navigation Tabs
-        document.querySelectorAll('header nav a.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const tabId = link.getAttribute('data-tab');
-                document.querySelectorAll('header nav a.nav-link').forEach(l => l.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                link.classList.add('active');
-                const target = document.getElementById(tabId);
-                if (target) target.classList.add('active');
-                if (tabId === 'tabStats') loadStats();
-                if (tabId === 'tabAudit') loadStats();
-            });
-        });
+                document.getElementById('btnRefreshStats').addEventListener('click', loadOverview);
 
-        document.getElementById('btnLogout').addEventListener('click', logout);
-
-        // Load Platform Stats
-        async function loadStats() {
-            try {
-                const res = await apiRequest('/admin/stats', { method: 'GET' });
-                const c = res.counts || {};
-                document.getElementById('statFarmers').textContent = c.farmers || 0;
-                document.getElementById('statOperators').textContent = c.operators || 0;
-                document.getElementById('statBatches').textContent = c.produce_batches || 0;
-                document.getElementById('statAssets').textContent = `${c.mobile_vans || 0} / ${c.static_rooms || 0}`;
-                document.getElementById('statActiveBookings').textContent = c.active_bookings || 0;
-                document.getElementById('statCompletedBookings').textContent = c.completed_bookings || 0;
-
-                renderAuditLogs(res.recent_audit_logs || []);
-            } catch (err) {
-                showAlert('Failed to load system metrics: ' + err.message);
-            }
-        }
-
-        function renderAuditLogs(logs) {
-            const container = document.getElementById('auditLogTableContainer');
-            if (!logs || logs.length === 0) {
-                container.innerHTML = '<div class="state-box">No audit logs recorded yet.</div>';
-                return;
-            }
-
-            let html = `
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-                    <thead>
-                        <tr style="background: #f8fafc; border-bottom: 2px solid var(--border); text-align: left;">
-                            <th style="padding: 0.75rem 1rem;">Timestamp</th>
-                            <th style="padding: 0.75rem;">Action</th>
-                            <th style="padding: 0.75rem;">Resource</th>
-                            <th style="padding: 0.75rem;">User ID</th>
-                            <th style="padding: 0.75rem 1rem;">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            logs.forEach(l => {
-                const timeStr = l.created_at ? new Date(l.created_at).toLocaleString('en-IN') : '-';
-                let detailsStr = '-';
-                try {
-                    if (l.details) {
-                        const parsed = JSON.parse(l.details);
-                        detailsStr = JSON.stringify(parsed);
-                    }
-                } catch (_) {
-                    detailsStr = l.details;
-                }
-
-                html += `
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 0.6rem 1rem; color: var(--text-muted); font-size: 0.8rem; white-space: nowrap;">${escapeHtml(timeStr)}</td>
-                        <td style="padding: 0.6rem; font-weight: 600;"><code>${escapeHtml(l.action)}</code></td>
-                        <td style="padding: 0.6rem;">${escapeHtml(l.resource_type)} (${escapeHtml((l.resource_id || '').slice(0, 8))}...)</td>
-                        <td style="padding: 0.6rem; color: var(--text-muted); font-size: 0.8rem;">${escapeHtml((l.user_id || 'SYSTEM').slice(0, 10))}</td>
-                        <td style="padding: 0.6rem 1rem; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: 0.75rem;">
-                            ${escapeHtml(detailsStr)}
-                        </td>
-                    </tr>
-                `;
-            });
-
-            html += `</tbody></table>`;
-            container.innerHTML = html;
-        }
-
-        document.getElementById('btnRefreshStats').addEventListener('click', loadStats);
-        document.getElementById('btnRefreshAudit').addEventListener('click', loadStats);
-
-        // Simulation Controls Event Handlers
-        // 1. Reset Demo Data
-        document.getElementById('btnResetDemoData').addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to reset all demo data to the initial Maharashtra benchmark state?')) {
-                return;
-            }
-            try {
-                hideAlert();
-                const res = await apiRequest('/admin/reset-demo-data', { method: 'POST' });
-                showAlert('Demo data restored successfully: ' + res.message, 'success');
-                await loadStats();
-            } catch (err) {
-                showAlert('Failed to reset demo data: ' + err.message);
-            }
-        });
-
-        // 2. Solar Reliability Slider
-        const slider = document.getElementById('solarSlider');
-        const solarLabel = document.getElementById('solarValLabel');
-        const simCap = document.getElementById('simEffectiveCap');
-
-        function updateSliderDisplay() {
-            const val = parseFloat(slider.value);
-            solarLabel.textContent = `${val.toFixed(2)} (${Math.round(val * 100)}%)`;
-            const baseCap = 800.0;
-            simCap.textContent = `${Math.round(baseCap * val)} kg`;
-        }
-        slider.addEventListener('input', updateSliderDisplay);
-
-        document.getElementById('btnUpdateSolar').addEventListener('click', async () => {
-            const vanId = document.getElementById('simVanSelect').value;
-            const factor = parseFloat(slider.value);
-            try {
-                hideAlert();
-                const res = await apiRequest(`/admin/assets/${vanId}/solar-reliability`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ solar_reliability: factor })
+                document.getElementById('auditFilterForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    currentOffset = 0;
+                    loadAuditLogs();
                 });
-                showAlert(
-                    `Updated ${res.asset_name}: solar reliability = ${res.solar_reliability.toFixed(2)}, effective capacity = ${res.effective_capacity_kg} kg`,
-                    'success'
-                );
-                await loadStats();
-            } catch (err) {
-                showAlert('Failed to update solar reliability: ' + err.message);
-            }
-        });
 
-        // 3. Advance Clock
-        document.querySelectorAll('.btnAdvanceHours').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const hours = parseInt(btn.getAttribute('data-hours'), 10);
-                try {
-                    hideAlert();
-                    const res = await apiRequest('/admin/advance-clock', {
-                        method: 'POST',
-                        body: JSON.stringify({ hours })
-                    });
-                    showAlert(`Simulated clock advanced by +${hours} hours. Harvest times shifted back!`, 'success');
-                    await loadStats();
-                } catch (err) {
-                    showAlert('Failed to advance clock: ' + err.message);
-                }
-            });
-        });
+                document.getElementById('btnPrevPage').addEventListener('click', () => {
+                    if (currentOffset >= currentLimit) {
+                        currentOffset -= currentLimit;
+                        loadAuditLogs();
+                    }
+                });
 
-        // 4. Trigger Expiry Check
-        document.getElementById('btnTriggerExpiryCheck').addEventListener('click', async () => {
-            try {
-                hideAlert();
-                const res = await apiRequest('/bookings/check-expirations', { method: 'POST' });
-                showAlert(`Audit check complete: ${res.expired_reservations_processed} overdue reservations expired and released.`, 'success');
-                await loadStats();
+                document.getElementById('btnNextPage').addEventListener('click', () => {
+                    if (currentOffset + currentLimit < totalLogs) {
+                        currentOffset += currentLimit;
+                        loadAuditLogs();
+                    }
+                });
+
+                document.getElementById('advanceClockForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const hours = parseInt(document.getElementById('clockHours').value, 10) || 4;
+                    try {
+                        const res = await apiRequest('/admin/advance-clock', {
+                            method: 'POST',
+                            body: JSON.stringify({ hours })
+                        });
+                        showAlert(`Clock advanced by ${res.hours_advanced} hours. Batch harvest timestamps shifted.`, 'success');
+                    } catch (err) {
+                        showAlert('Failed to advance clock: ' + err.message, 'danger');
+                    }
+                });
+
+                document.getElementById('btnResetDemoData').addEventListener('click', async () => {
+                    const confirmed = confirm('Are you sure you want to reset the demo dataset to the deterministic Maharashtra state? All live mock test records will be restored to defaults.');
+                    if (!confirmed) return;
+
+                    try {
+                        const res = await apiRequest('/admin/reset-demo-data', { method: 'POST' });
+                        showAlert('Demo dataset successfully reset to default state.', 'success');
+                        loadOverview();
+                    } catch (err) {
+                        showAlert('Failed to reset demo dataset: ' + err.message, 'danger');
+                    }
+                });
+
+                loadOverview();
             } catch (err) {
-                showAlert('Expiration check failed: ' + err.message);
+                showAlert('Session error: ' + err.message, 'danger');
             }
-        });
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
     </script>
+    <script src="js/nav.js?v=2.2" defer></script>
 </body>
 </html>

@@ -9,10 +9,11 @@ Provides administrative simulation controls and metrics:
 - System overview metrics and audit trail
 """
 
+import json
 import datetime
 from datetime import timezone, timedelta
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -245,6 +246,88 @@ def get_system_stats(
             "completed_bookings": completed_bookings
         },
         "recent_audit_logs": logs_data,
+        "data_source": "SIMULATED",
+        "data_status": "FRESH"
+    }
+
+
+def sanitize_audit_details(raw_details):
+    if not raw_details:
+        return {}
+    if isinstance(raw_details, str):
+        try:
+            parsed = json.loads(raw_details)
+        except Exception:
+            parsed = {"raw": raw_details}
+    elif isinstance(raw_details, dict):
+        parsed = dict(raw_details)
+    else:
+        parsed = {"value": str(raw_details)}
+
+    sensitive_keys = {"password", "hashed_password", "token", "access_token", "secret", "jwt_secret"}
+    if isinstance(parsed, dict):
+        for k in list(parsed.keys()):
+            if any(s in str(k).lower() for s in sensitive_keys):
+                parsed[k] = "[REDACTED]"
+    return parsed
+
+
+@router.get("/audit-logs")
+def list_audit_logs(
+    action: Optional[str] = None,
+    resource_type: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=200, description="Items per page (1-200)"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    """
+    List system audit logs with optional filtering, pagination, and user emails.
+    ADMIN privileges strictly required. Never returns passwords or secrets.
+    """
+    query = db.query(AuditLog)
+    if action:
+        query = query.filter(AuditLog.action == action)
+    if resource_type:
+        query = query.filter(AuditLog.resource_type == resource_type)
+
+    total = query.count()
+    logs = query.order_by(AuditLog.created_at.desc()).offset(offset).limit(limit).all()
+
+    user_ids = {l.user_id for l in logs if l.user_id}
+    users_map = {}
+    if user_ids:
+        users = db.query(User.id, User.email).filter(User.id.in_(user_ids)).all()
+        users_map = {u.id: u.email for u in users}
+
+    available_actions = [
+        r[0] for r in db.query(AuditLog.action).distinct().order_by(AuditLog.action.asc()).all() if r[0]
+    ]
+    available_resource_types = [
+        r[0] for r in db.query(AuditLog.resource_type).distinct().order_by(AuditLog.resource_type.asc()).all() if r[0]
+    ]
+
+    items = []
+    for l in logs:
+        items.append({
+            "id": l.id,
+            "action": l.action,
+            "resource_type": l.resource_type,
+            "resource_id": l.resource_id,
+            "user_id": l.user_id,
+            "user_email": users_map.get(l.user_id, "System / Automated"),
+            "details": sanitize_audit_details(l.details),
+            "ip_address": l.ip_address,
+            "created_at": l.created_at.isoformat() if l.created_at else None
+        })
+
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "items": items,
+        "available_actions": available_actions,
+        "available_resource_types": available_resource_types,
         "data_source": "SIMULATED",
         "data_status": "FRESH"
     }

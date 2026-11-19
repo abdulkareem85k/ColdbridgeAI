@@ -60,7 +60,7 @@
 
 ---
 
-### Minute 2:00 – 3:00 | Explainable Spoilage Risk Index (SRI) & Honest Prototype Disclosure
+### Minute 2:00 – 2:45 | Explainable Spoilage Risk Index (SRI) & Honest Prototype Disclosure
 - **Screen:** Batch registers instantly; automatically navigates to **My Batches & SRI** (`#tabBatches`).
 - **Visual Cue:** Highlight the **SRI Score Badge: 72/100 (HIGH URGENCY)**.
 - **Presenter Spoken Dialogue:**
@@ -70,7 +70,29 @@
 
 ---
 
-### Minute 3:00 – 4:00 | Cross-Asset Matching & Three-Way Comparison ("Why this Match?")
+### Minute 2:45 – 3:15 | Public Cold Storage Directory (Nashik & Pune)
+- **Action:** Click the **Public Directory** tab (`#tabDirectory`).
+- **Screen:** Opens the **Public Cold Storage Directory – Nashik and Pune**.
+- **Presenter Spoken Dialogue:**
+  > "Before Ramesh books through our automated matching engine, what if he wants to explore existing commercial facilities in his district directly?
+  >
+  > Here is our **Public Cold Storage Directory**.
+  >
+  > *[Exact Judge Statement]*: 'These are real cold storage facilities in Nashik and Pune, taken from public directories. A farmer can contact them directly. The ranking and bids in our prototype are still simulated.'
+  >
+  > Notice the clean separation: this directory is purely informational and read-only. These 10 facilities are public commercial listings—they are NOT ColdBridge partners and never participate in matching, operator bids, or bookings."
+- **Action:**
+  - Click the **Pune** district filter button: show instantaneous filtering to Pune facilities (e.g., *Jai Jinendra Cold Storage*, *Iceage Cold Storage*).
+  - Click **Nashik** filter button: show Nashik facilities.
+  - In the search box, enter `Bhandari` and click **Search**: displays *Bhandari Cold Storage* in Kokangaon, Niphad.
+  - Point out badges: `PUBLIC LISTING` and `NOT A COLDBRIDGE PARTNER`.
+  - Point out contact notice: `⚠️ Unverified – call to confirm`.
+  - Click **Copy Number**: clipboard alert confirms phone copied (`9371751606`).
+  - Point out the **Call** button with a validated `tel:` link.
+
+---
+
+### Minute 3:15 – 4:00 | Cross-Asset Matching & Three-Way Comparison ("Why this Match?")
 - **Action:** Click **Find Cold Chain Match** (`btnFindMatch`).
 - **Screen:** Navigates to **Cooling Matches** (`#tabMatching`). The OpenStreetMap Leaflet map renders the farm location, static cold warehouses, and mobile solar vans with driving routes.
 - **Visual Cue:** Show the three bids generated:
@@ -108,13 +130,15 @@
 
 ## 🕒 PART 2: Phase 2 Surplus Recovery & Buyer Extension (2 Minutes)
 
-### Minute 5:00 – 6:00 | Facility Reception & Operator Quality Sign-Off Gate
+### Minute 5:00 – 6:00 | Facility Reception & Dedicated Operator Panels (Quality Sign-Off Gate)
 - **Action:** Log out of Farmer and log in as **🏭 Static Room Operator** (`static.demo@coldbridge.ai` / `StaticDemo123!`).
-- **Screen:** Redirected to `operator.html`. Click **Surplus & Inventory** tab (`#tabSurplus`).
+- **Screen:** Redirected to dedicated **Storage Operator Panel** (`storage_operator.html`). Click **Inventory & Surplus** tab (`#tabSurplus`).
+  *(Note: Static storage operators see static facilities and drop-off storage batches in `storage_operator.html`; mobile solar van operators manage route pickups and solar capacity in `van_operator.html`).*
 - **Presenter Spoken Dialogue:**
-  > "Now let us examine Phase 2: **Near-Expiry Surplus Recovery**.
+  > "Now let us examine Phase 2: **Near-Expiry Surplus Recovery** and our **Dedicated Operator Architecture**.
+  > ColdBridge AI routes static cold store operators to `storage_operator.html` (green theme) and solar van fleet managers to `van_operator.html` (blue theme).
   > When produce arrives at a cooling facility (`PRODUCE_RECEIVED`), an inventory record is automatically instantiated with shelf-life tracking.
-  > Here in the operator portal, we see a batch of 800 kg hydro-cooled tomatoes nearing the end of its safe storage window. An automated alert was issued to the operator.
+  > Here in the Storage Operator panel, we see a batch of 800 kg hydro-cooled tomatoes nearing the end of its safe storage window. An automated alert was issued to the operator.
   >
   > *[Food Safety Invariant]*: Time alone does NOT prove food safety. Under ColdBridge AI, **an unapproved surplus item can NEVER be published to buyers**. The facility operator must physically inspect the produce."
 - **Action:** In the Surplus Listings table, find the pending tomato listing. Click **Inspect & Sign Off**.

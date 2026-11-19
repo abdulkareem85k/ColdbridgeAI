@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ColdBridge AI – Buyer Marketplace</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2.2">
     <!-- Leaflet.js CSS (OpenStreetMap) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" data-leaflet-css="true" />
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" data-leaflet-css="true" />
     <style>
         .map-toggle-bar {
             display: flex;
@@ -48,6 +48,79 @@
             font-size: 1.25rem;
             font-weight: 800;
             color: var(--primary);
+        }
+        .demo-presets-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius-md, 8px);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.85rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .demo-presets-header {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+        .demo-presets-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main, #1e293b);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .demo-chips-wrap {
+            display: flex;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            align-items: center;
+            overflow-x: auto;
+            max-width: 100%;
+            padding-bottom: 2px;
+        }
+        .demo-chip {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            color: var(--text-main, #1e293b);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.3rem 0.75rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+        }
+        .demo-chip:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+        .demo-chip.active {
+            background: var(--primary, #1b5e20);
+            color: #ffffff;
+            border-color: var(--primary, #1b5e20);
+            box-shadow: 0 1px 3px rgba(27, 94, 32, 0.3);
+        }
+        .demo-preset-explanation {
+            font-size: 0.85rem;
+            color: var(--text-muted, #64748b);
+            margin-top: 0.5rem;
+            padding-top: 0.45rem;
+            border-top: 1px dashed var(--border);
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .demo-preset-explanation::before {
+            content: "ℹ️";
+            font-style: normal;
+            font-size: 0.85rem;
         }
     </style>
 </head>
@@ -96,6 +169,22 @@
                     <h1 class="page-title" style="margin-bottom: 0.25rem;" data-i18n="surplus_market_title">Near-Expiry Surplus Marketplace</h1>
                     <p class="page-subtitle" style="margin-bottom: 0;" data-i18n="surplus_market_subtitle">Procure farm-fresh pre-cooled produce at sliding discounts certified by facility operators.</p>
                 </div>
+            </div>
+
+            <!-- Demo Examples (Shown for logged-in buyer Vikram Mehta) -->
+            <div id="demoPresetsBar" class="demo-presets-card" style="display: none;">
+                <div class="demo-presets-header">
+                    <span class="demo-presets-label">⚡ Demo Examples:</span>
+                    <div class="demo-chips-wrap">
+                        <button type="button" class="demo-chip" data-preset="1" data-crop="" data-min="50" data-max="2000" data-explain="Vikram checks all verified surplus available to him.">Browse All</button>
+                        <button type="button" class="demo-chip" data-preset="2" data-crop="tomato" data-min="50" data-max="2000" data-explain="He needs only tomatoes, so the list and map narrow to tomato stock.">Single Crop</button>
+                        <button type="button" class="demo-chip" data-preset="3" data-crop="" data-min="500" data-max="2000" data-explain="Only facilities with enough stock for a large order appear.">Bulk Buyer</button>
+                        <button type="button" class="demo-chip" data-preset="4" data-crop="" data-min="50" data-max="30" data-explain="Only deeply discounted near-expiry stock is shown.">Tight Budget</button>
+                        <button type="button" class="demo-chip" data-preset="5" data-crop="onion" data-min="200" data-max="40" data-explain="Crop, quantity, and price filters work together.">Combined Needs</button>
+                        <button type="button" class="demo-chip" data-preset="6" data-crop="" data-min="5000" data-max="5" data-explain="No results are shown instead of fake data. Click Reset to restore everything.">No Match</button>
+                    </div>
+                </div>
+                <div id="demoPresetExplanation" class="demo-preset-explanation" style="display: none;"></div>
             </div>
 
             <!-- Filters & Map Toggle Bar -->
@@ -242,7 +331,7 @@
     </div>
 
     <!-- Leaflet.js -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="vendor/leaflet/leaflet.js"></script>
 
     <script type="module">
         import { getMe, logout } from './js/auth.js';
@@ -280,15 +369,27 @@
 
                 currentUser = await getMe();
                 if (!currentUser) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                     return;
                 }
                 if (currentUser.role !== 'BUYER' && currentUser.role !== 'ADMIN') {
                     showAlert('Access restricted to verified buyers. Redirecting...');
-                    setTimeout(() => window.location.href = 'index.html', 1500);
+                    setTimeout(() => window.location.href = 'login.html', 1500);
                     return;
                 }
                 document.getElementById('buyerName').textContent = currentUser.full_name;
+
+                // Show Demo Examples presets bar for Vikram Mehta
+                const isVikram = currentUser && (
+                    (currentUser.full_name && currentUser.full_name.includes('Vikram')) ||
+                    currentUser.email === 'buyer.demo@coldbridge.ai'
+                );
+                const demoBar = document.getElementById('demoPresetsBar');
+                if (demoBar && isVikram) {
+                    demoBar.style.display = 'block';
+                    setupDemoPresets();
+                }
+
                 initMap();
                 await loadMarketplace();
                 await loadOrders();
@@ -636,12 +737,52 @@
             }
         });
 
+        // Demo Presets Handler
+        function setupDemoPresets() {
+            const chips = document.querySelectorAll('.demo-chip');
+            const explainEl = document.getElementById('demoPresetExplanation');
+            const cropInput = document.getElementById('filterCrop');
+            const minQtyInput = document.getElementById('filterMinQty');
+            const maxPriceInput = document.getElementById('filterMaxPrice');
+
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    // Highlight the active chip
+                    chips.forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+
+                    // Auto-fill inputs exactly matching preset
+                    cropInput.value = chip.getAttribute('data-crop');
+                    minQtyInput.value = chip.getAttribute('data-min');
+                    maxPriceInput.value = chip.getAttribute('data-max');
+
+                    // Show explanation line
+                    if (explainEl) {
+                        explainEl.textContent = chip.getAttribute('data-explain');
+                        explainEl.style.display = 'flex';
+                    }
+
+                    // Run the existing filter function
+                    loadMarketplace();
+                });
+            });
+        }
+
         // Filter Handlers
         document.getElementById('btnApplyFilters').addEventListener('click', loadMarketplace);
         document.getElementById('btnResetFilters').addEventListener('click', () => {
             document.getElementById('filterCrop').value = '';
             document.getElementById('filterMinQty').value = '';
             document.getElementById('filterMaxPrice').value = '';
+
+            // Clear active preset chip and explanation line
+            document.querySelectorAll('.demo-chip').forEach(c => c.classList.remove('active'));
+            const explainEl = document.getElementById('demoPresetExplanation');
+            if (explainEl) {
+                explainEl.textContent = '';
+                explainEl.style.display = 'none';
+            }
+
             loadMarketplace();
         });
         document.getElementById('btnRefreshOrders').addEventListener('click', loadOrders);
@@ -650,5 +791,6 @@
         // Run
         init();
     </script>
+    <script src="js/nav.js?v=2.2" defer></script>
 </body>
 </html>

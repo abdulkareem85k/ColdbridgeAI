@@ -119,11 +119,24 @@ def run_cross_asset_matching(
             "geometry": route_info.get("encoded_polyline"),
             "note": accepted_bid.note or "",
             "data_source": accepted_bid.data_source or "SIMULATED",
+            "is_operator_submitted": (accepted_bid.data_source == "LIVE"),
             "is_persisted": True,
             "latitude": asset_lat,
             "longitude": asset_lng,
             "reasons": ["Accepted allocated offer."],
-            "components": {}
+            "components": {},
+            "price_per_kg_per_day": float(asset.price_per_kg_per_day if asset else 0.0),
+            "static_detail": {
+                "address": asset.static_detail.address or "",
+                "supported_crops": asset.static_detail.supported_crops or "",
+                "min_temperature_c": float(asset.static_detail.min_temperature_c or 0.0),
+                "max_temperature_c": float(asset.static_detail.max_temperature_c or 0.0)
+            } if asset and asset.asset_type == "STATIC" and asset.static_detail else None,
+            "mobile_detail": {
+                "vehicle_ref": asset.mobile_detail.vehicle_ref or "",
+                "service_radius_km": float(asset.mobile_detail.service_radius_km or 0.0),
+                "solar_reliability": float(asset.mobile_detail.solar_reliability or 1.0)
+            } if asset and asset.asset_type == "MOBILE" and asset.mobile_detail else None
         }
         pick_dict = {
             "bid_id": accepted_bid.id,
@@ -265,9 +278,22 @@ def run_cross_asset_matching(
             "geometry": route_geometries[asset.id],
             "note": note,
             "data_source": data_source,
+            "is_operator_submitted": (data_source == "LIVE"),
             "is_persisted": is_persisted,
             "latitude": asset.latitude,
-            "longitude": asset.longitude
+            "longitude": asset.longitude,
+            "price_per_kg_per_day": float(asset.price_per_kg_per_day),
+            "static_detail": {
+                "address": asset.static_detail.address or "",
+                "supported_crops": asset.static_detail.supported_crops or "",
+                "min_temperature_c": float(asset.static_detail.min_temperature_c or 0.0),
+                "max_temperature_c": float(asset.static_detail.max_temperature_c or 0.0)
+            } if asset.asset_type == "STATIC" and asset.static_detail else None,
+            "mobile_detail": {
+                "vehicle_ref": asset.mobile_detail.vehicle_ref or "",
+                "service_radius_km": float(asset.mobile_detail.service_radius_km or 0.0),
+                "solar_reliability": float(meta.get("solar_reliability", asset.mobile_detail.solar_reliability or 1.0))
+            } if asset.asset_type == "MOBILE" and asset.mobile_detail else None
         })
 
     # 6. Score and rank eligible offers

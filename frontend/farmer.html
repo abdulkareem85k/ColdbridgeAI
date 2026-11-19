@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ColdBridge AI – Farmer Portal</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2.2">
     <!-- Leaflet.js CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" data-leaflet-css="true" />
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" data-leaflet-css="true" />
 </head>
 <body>
     <header>
@@ -21,6 +21,7 @@
             <a href="#batches" class="nav-link" data-tab="tabBatches" data-i18n="nav_batches">My Batches & SRI</a>
             <a href="#matching" class="nav-link" data-tab="tabMatching" data-i18n="nav_matches">Cooling Matches</a>
             <a href="#bookings" class="nav-link" data-tab="tabBookings" data-i18n="nav_bookings">My Bookings</a>
+            <a href="#directory" class="nav-link" data-tab="tabDirectory" data-i18n="dir_card_title">Public Directory</a>
             
             <!-- Language Switcher (M8-B) -->
             <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
@@ -242,10 +243,17 @@
                 </div>
 
                 <!-- Split layout: Ranked Offers List and Interactive Route Map -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="split-match-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                     <!-- Ranked Offers List -->
                     <div>
-                        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Ranked Provider Offers</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <h3 style="font-size: 1.1rem; margin: 0;">Ranked Provider Offers</h3>
+                            <div style="display: flex; gap: 0.35rem;" id="offersFilterControls">
+                                <button type="button" class="btn btn-sm btn-filter-offer active" data-filter="ALL" style="padding: 0.25rem 0.6rem; font-size: 0.78rem; border-radius: 4px; border: 1px solid var(--border); background: var(--primary); color: #fff; cursor: pointer;">All</button>
+                                <button type="button" class="btn btn-sm btn-filter-offer" data-filter="STATIC" style="padding: 0.25rem 0.6rem; font-size: 0.78rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">🏭 Storage rooms</button>
+                                <button type="button" class="btn btn-sm btn-filter-offer" data-filter="MOBILE" style="padding: 0.25rem 0.6rem; font-size: 0.78rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">🚐 Solar vans</button>
+                            </div>
+                        </div>
                         <div id="rankedOffersList"></div>
                     </div>
 
@@ -286,6 +294,47 @@
                 <div class="state-box">Loading your bookings...</div>
             </div>
         </div>
+
+        <!-- TAB 7: PUBLIC COLD STORAGE DIRECTORY (Part 4) -->
+        <div id="tabDirectory" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.2rem;" data-i18n="dir_card_title">Public Cold Storage Directory – Nashik and Pune</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Verified directory of registered commercial facilities in Maharashtra for direct farmer inquiry.</p>
+                </div>
+            </div>
+
+            <!-- Judge statement - MUST be word for word -->
+            <div class="alert alert-info" style="margin-bottom: 1.5rem; background: #eff6ff; border-left: 4px solid #2563eb; color: #1e3a8a;">
+                📢 <strong>Public Directory Notice:</strong>
+                <p style="margin: 0.5rem 0 0 0; font-size: 0.95rem; font-weight: 500;" data-i18n="dir_judge_statement">These are real cold storage facilities in Nashik and Pune, taken from public directories. A farmer can contact them directly. The ranking and bids in our prototype are still simulated.</p>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="card" style="margin-bottom: 1.5rem; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <!-- District Filters -->
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.25rem;" data-i18n="dir_filter_district">District:</span>
+                        <button type="button" class="btn btn-sm btn-dir-filter active" data-district="" data-i18n="dir_filter_all" style="background: var(--primary); color: white;">All Districts</button>
+                        <button type="button" class="btn btn-sm btn-dir-filter" data-district="Nashik" data-i18n="dir_filter_nashik" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">Nashik</button>
+                        <button type="button" class="btn btn-sm btn-dir-filter" data-district="Pune" data-i18n="dir_filter_pune" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">Pune</button>
+                    </div>
+
+                    <!-- Search Form -->
+                    <form id="dirSearchForm" style="display: flex; gap: 0.5rem; align-items: center; flex: 1; max-width: 480px;">
+                        <input type="text" id="dirSearchInput" placeholder="Search by facility name, area, or address..." data-i18n="dir_search_placeholder" maxlength="100" style="flex: 1; padding: 0.4rem 0.75rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 4px;">
+                        <button type="submit" id="btnDirSearch" class="btn btn-primary btn-sm" data-i18n="dir_btn_search">Search</button>
+                        <button type="button" id="btnDirReset" class="btn btn-secondary btn-sm" style="display: none;">Reset</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Listings Container -->
+            <div id="dirListingsContainer">
+                <div class="state-box" data-i18n="dir_loading">Loading directory listings...</div>
+            </div>
+        </div>
     </div>
 
     <!-- SRI Detail Modal -->
@@ -305,7 +354,7 @@
         import { getMe, logout } from './js/auth.js';
         import { apiRequest } from './js/api.js';
         import { initMap, createMarker, fitToMarkers, drawRoute, mountLocationPicker, escapeHtml } from './js/maps.js';
-        import { initI18n, setLanguage, getLanguage, applyTranslations } from './js/i18n.js';
+        import { initI18n, setLanguage, getLanguage, applyTranslations, t } from './js/i18n.js';
 
         let currentUser = null;
         let networkMap = null;
@@ -333,7 +382,7 @@
             try {
                 currentUser = await getMe();
                 if (!currentUser) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                     return;
                 }
                 document.getElementById('userName').textContent = `${currentUser.full_name} (${currentUser.role})`;
@@ -390,6 +439,8 @@
                     initNetworkMap();
                 } else if (targetTabId === 'tabBookings') {
                     loadBookings();
+                } else if (targetTabId === 'tabDirectory') {
+                    loadDirectoryListings();
                 }
             });
         });
@@ -430,13 +481,26 @@
                 for (const a of assets) {
                     const isVan = a.asset_type === 'MOBILE';
                     const popupHtml = `
-                        <div style="font-size: 0.85rem; line-height: 1.4;">
+                        <div style="font-size: 0.85rem; line-height: 1.4; min-width: 220px;">
                             <strong style="font-size: 0.95rem;">${escapeHtml(a.name)}</strong><br>
-                            <span>${isVan ? '🚐 Mobile Solar Cooling Van' : '🏭 Static Cold Storage Room'}</span><br>
-                            <div style="margin: 0.4rem 0;">
+                            <span style="font-weight: 700; color: ${isVan ? '#0284c7' : '#15803d'};">
+                                ${isVan ? '🚐 Solar Van' : '🏭 Storage Room'}
+                            </span><br>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                ${isVan ? 'This van comes to your farm to pick up.' : 'You deliver your produce to this facility.'}
+                            </div>
+                            <div style="margin: 0.35rem 0; font-size: 0.8rem; border-top: 1px solid #e2e8f0; padding-top: 0.35rem;">
                                 <strong>Capacity:</strong> ${a.available_capacity_kg.toLocaleString()} / ${a.total_capacity_kg.toLocaleString()} kg<br>
                                 <strong>Rate:</strong> ₹${a.price_per_kg_per_day.toFixed(2)} / kg / day<br>
-                                ${isVan && a.mobile_detail ? `<strong>Solar Reliability:</strong> ${(a.mobile_detail.solar_reliability * 100).toFixed(0)}% (Simulated)<br>` : ''}
+                                ${isVan && a.mobile_detail ? `
+                                    <strong>Service Radius:</strong> ${a.mobile_detail.service_radius_km} km<br>
+                                    <strong>Solar Reliability:</strong> ${(a.mobile_detail.solar_reliability * 100).toFixed(0)}% (Simulated)<br>
+                                ` : ''}
+                                ${!isVan && a.static_detail ? `
+                                    <strong>Address:</strong> ${escapeHtml(a.static_detail.address || 'Local Hub')}<br>
+                                    <strong>Temp Range:</strong> ${a.static_detail.min_temperature_c}°C to ${a.static_detail.max_temperature_c}°C<br>
+                                    <strong>Crops:</strong> ${escapeHtml(a.static_detail.supported_crops || 'All')}<br>
+                                ` : ''}
                             </div>
                             <div class="badge-group" style="margin-top: 0.2rem;">
                                 <span class="badge ${a.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">${a.data_source}</span>
@@ -691,7 +755,7 @@
                             <tr style="background: #f1f5f9; text-align: left; border-bottom: 2px solid var(--border);">
                                 <th style="padding: 0.6rem 0.8rem;">Pick Strategy</th>
                                 <th style="padding: 0.6rem 0.8rem;">Selected Facility / Van</th>
-                                <th style="padding: 0.6rem 0.8rem;">Type</th>
+                                <th style="padding: 0.6rem 0.8rem;">Type & Fulfillment</th>
                                 <th style="padding: 0.6rem 0.8rem;">Distance</th>
                                 <th style="padding: 0.6rem 0.8rem;">ETA</th>
                                 <th style="padding: 0.6rem 0.8rem;">Total Price</th>
@@ -702,7 +766,9 @@
                             <tr style="background: #ecfdf5; font-weight: 600; border-bottom: 1px solid var(--border);">
                                 <td style="padding: 0.6rem 0.8rem; color: #15803d;">🏆 ColdBridge Pick</td>
                                 <td style="padding: 0.6rem 0.8rem;">${escapeHtml(cb ? cb.asset_name : 'N/A')}</td>
-                                <td style="padding: 0.6rem 0.8rem;">${cb ? (cb.asset_type === 'MOBILE' ? '🚐 Mobile Van' : '🏭 Static Room') : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem;">
+                                    ${cb ? (cb.asset_type === 'MOBILE' ? '<strong>🚐 Solar Van</strong><br><small style="color: #2563eb;">Farmgate pickup (Simulated solar)</small>' : '<strong>🏭 Storage Room</strong><br><small style="color: #15803d;">Drop-off by farmer</small>') : '-'}
+                                </td>
                                 <td style="padding: 0.6rem 0.8rem;">${cb ? cb.distance_km.toFixed(1) : '-'} km</td>
                                 <td style="padding: 0.6rem 0.8rem;">${cb ? cb.eta_minutes.toFixed(0) : '-'} mins</td>
                                 <td style="padding: 0.6rem 0.8rem;">₹${cb ? cb.price_total.toLocaleString() : '-'}</td>
@@ -711,7 +777,9 @@
                             <tr style="border-bottom: 1px solid var(--border);">
                                 <td style="padding: 0.6rem 0.8rem; color: var(--text-muted);">📍 Nearest Eligible</td>
                                 <td style="padding: 0.6rem 0.8rem;">${escapeHtml(near ? near.asset_name : 'N/A')}</td>
-                                <td style="padding: 0.6rem 0.8rem;">${near ? (near.asset_type === 'MOBILE' ? '🚐 Mobile Van' : '🏭 Static Room') : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem;">
+                                    ${near ? (near.asset_type === 'MOBILE' ? '<strong>🚐 Solar Van</strong><br><small style="color: #2563eb;">Farmgate pickup (Simulated solar)</small>' : '<strong>🏭 Storage Room</strong><br><small style="color: #15803d;">Drop-off by farmer</small>') : '-'}
+                                </td>
                                 <td style="padding: 0.6rem 0.8rem;">${near ? near.distance_km.toFixed(1) : '-'} km</td>
                                 <td style="padding: 0.6rem 0.8rem;">${near ? near.eta_minutes.toFixed(0) : '-'} mins</td>
                                 <td style="padding: 0.6rem 0.8rem;">₹${near ? near.price_total.toLocaleString() : '-'}</td>
@@ -720,7 +788,9 @@
                             <tr>
                                 <td style="padding: 0.6rem 0.8rem; color: var(--text-muted);">💰 Lowest Price Eligible</td>
                                 <td style="padding: 0.6rem 0.8rem;">${escapeHtml(cheap ? cheap.asset_name : 'N/A')}</td>
-                                <td style="padding: 0.6rem 0.8rem;">${cheap ? (cheap.asset_type === 'MOBILE' ? '🚐 Mobile Van' : '🏭 Static Room') : '-'}</td>
+                                <td style="padding: 0.6rem 0.8rem;">
+                                    ${cheap ? (cheap.asset_type === 'MOBILE' ? '<strong>🚐 Solar Van</strong><br><small style="color: #2563eb;">Farmgate pickup (Simulated solar)</small>' : '<strong>🏭 Storage Room</strong><br><small style="color: #15803d;">Drop-off by farmer</small>') : '-'}
+                                </td>
                                 <td style="padding: 0.6rem 0.8rem;">${cheap ? cheap.distance_km.toFixed(1) : '-'} km</td>
                                 <td style="padding: 0.6rem 0.8rem;">${cheap ? cheap.eta_minutes.toFixed(0) : '-'} mins</td>
                                 <td style="padding: 0.6rem 0.8rem;">₹${cheap ? cheap.price_total.toLocaleString() : '-'}</td>
@@ -734,104 +804,179 @@
                 </div>
             `;
 
-            // 2. Render Ranked Offers
-            const offersList = document.getElementById('rankedOffersList');
-            offersList.innerHTML = '';
+            // 2. Render Ranked Offers with Type Filtering
+            let currentOfferFilter = 'ALL';
 
-            data.ranked_offers.forEach((offer, idx) => {
-                const isWinner = offer.is_winner;
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.style.margin = '0 0 1rem 0';
-                card.style.border = isWinner ? '2px solid #15803d' : '1px solid var(--border)';
-                card.style.background = isWinner ? '#f0fdf4' : '#fff';
+            function renderFilteredOffers() {
+                const offersList = document.getElementById('rankedOffersList');
+                offersList.innerHTML = '';
 
-                const comp = offer.components;
-
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <div>
-                            <div style="display: flex; gap: 0.35rem; align-items: center; margin-bottom: 0.25rem;">
-                                <span class="badge ${isWinner ? 'badge-success' : 'badge-secondary'}">
-                                    ${isWinner ? '🏆 #1 BEST MATCH (WINNER)' : `#${offer.rank}`}
-                                </span>
-                                <span class="badge ${offer.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">
-                                    ${offer.data_source === 'LIVE' ? 'LIVE OPERATOR BID' : 'SIMULATED OFFER'}
-                                </span>
-                            </div>
-                            <h4 style="font-size: 1.1rem; margin: 0.2rem 0;">${escapeHtml(offer.asset_name)}</h4>
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">
-                                ${offer.asset_type === 'MOBILE' ? '🚐 Mobile Solar Cooling Van' : '🏭 Static Cold Storage'}
-                            </span>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 1.35rem; font-weight: 800; color: ${isWinner ? '#15803d' : 'var(--text-main)'};">
-                                ₹${offer.price_total.toLocaleString()}
-                            </div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">Total pay-per-use estimate</div>
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; background: #fff; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 0.75rem; font-size: 0.8rem;">
-                        <div>
-                            <span style="color: var(--text-muted); display: block;">Road Distance</span>
-                            <strong>${offer.distance_km.toFixed(1)} km</strong>
-                            <span class="badge badge-secondary" style="font-size: 0.65rem; margin-top: 2px;">${offer.route_source}</span>
-                        </div>
-                        <div>
-                            <span style="color: var(--text-muted); display: block;">Transit Time</span>
-                            <strong>${offer.eta_minutes.toFixed(0)} mins</strong>
-                        </div>
-                        <div>
-                            <span style="color: var(--text-muted); display: block;">Auction Score</span>
-                            <strong style="color: ${isWinner ? '#15803d' : 'inherit'};">${offer.score.toFixed(3)}</strong>
-                        </div>
-                    </div>
-
-                    <!-- Why this match breakdown -->
-                    <details style="margin-bottom: 0.75rem; font-size: 0.85rem;">
-                        <summary style="cursor: pointer; color: var(--primary); font-weight: 600;">
-                            🔍 Why this match? (Score Breakdown & Reasons)
-                        </summary>
-                        <div style="padding: 0.5rem 0; font-size: 0.8rem;">
-                            <ul style="padding-left: 1.2rem; margin-bottom: 0.5rem; line-height: 1.5;">
-                                ${offer.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}
-                            </ul>
-                            <div style="background: #f8fafc; padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-muted);">
-                                <div>Price Norm: ${comp.price_n} | Dist Norm: ${comp.distance_n} | Time Norm: ${comp.time_n}</div>
-                                <div>Reliability Penalty: ${comp.reliability_penalty} | Capacity Penalty: ${comp.capacity_penalty}</div>
-                                <div>Urgency Bonus: <strong>-${comp.urgency_bonus}</strong></div>
-                            </div>
-                        </div>
-                    </details>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
-                        <button type="button" class="btn btn-secondary btn-sm btnPreviewRoute" data-index="${idx}">
-                            📍 View on Map
-                        </button>
-                        <button type="button" class="btn btn-primary btn-sm btnAllocateOffer" data-bid="${offer.bid_id}" data-asset="${offer.asset_id}">
-                            Accept Offer & Reserve Capacity 🔒
-                        </button>
-                    </div>
-                `;
-
-                offersList.appendChild(card);
-            });
-
-            // Attach route preview and allocation handlers
-            document.querySelectorAll('.btnPreviewRoute').forEach(b => {
-                b.addEventListener('click', (e) => {
-                    const idx = parseInt(b.getAttribute('data-index'), 10);
-                    previewRouteOnMap(data.ranked_offers[idx], batch);
+                const filtered = data.ranked_offers.filter(offer => {
+                    if (currentOfferFilter === 'STATIC') return offer.asset_type === 'STATIC';
+                    if (currentOfferFilter === 'MOBILE') return offer.asset_type === 'MOBILE';
+                    return true;
                 });
+
+                if (filtered.length === 0) {
+                    const noOfferMsg = currentOfferFilter === 'MOBILE'
+                        ? 'No solar van available within range'
+                        : 'No storage room available within range';
+                    offersList.innerHTML = `
+                        <div class="state-box" style="padding: 2rem; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius-sm); margin: 0.5rem 0;">
+                            <div style="font-size: 1.75rem; margin-bottom: 0.4rem;">${currentOfferFilter === 'MOBILE' ? '🚐' : '🏭'}</div>
+                            <h4 style="margin: 0 0 0.25rem 0; font-size: 1rem;">${escapeHtml(noOfferMsg)}</h4>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Try selecting "All" to view other available cooling options.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                filtered.forEach((offer) => {
+                    const originalIdx = data.ranked_offers.indexOf(offer);
+                    const isWinner = offer.is_winner;
+                    const isVan = offer.asset_type === 'MOBILE';
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.margin = '0 0 1rem 0';
+                    card.style.border = isWinner ? '2px solid #15803d' : '1px solid var(--border)';
+                    card.style.background = isWinner ? '#f0fdf4' : '#fff';
+
+                    const comp = offer.components;
+
+                    // Distinctive Type Block
+                    const typeBlockHtml = isVan ? `
+                        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; margin: 0.6rem 0; font-size: 0.85rem;">
+                            <div style="font-weight: 700; color: #1e40af; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem;">
+                                <span>🚐 Solar Van</span>
+                                <span style="font-size: 0.75rem; font-weight: normal; color: #2563eb;">– This van comes to your farm to pick up.</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; font-size: 0.8rem; color: var(--text); margin-top: 0.35rem;">
+                                <div><strong>Service Radius:</strong> ${offer.mobile_detail?.service_radius_km || 40} km</div>
+                                <div><strong>Pickup ETA:</strong> ${offer.eta_minutes.toFixed(0)} mins (${offer.distance_km.toFixed(1)} km) ${offer.route_source === 'ESTIMATED' ? '<span class="badge badge-secondary" style="font-size: 0.65rem;">ESTIMATED</span>' : ''}</div>
+                                <div><strong>Solar Reliability:</strong> ${((offer.solar_reliability || 0.9) * 100).toFixed(0)}% <span style="font-size: 0.7rem; color: var(--text-muted);">(Simulated)</span></div>
+                                <div><strong>Effective Capacity:</strong> ${offer.effective_available_kg.toLocaleString()} kg <span style="font-size: 0.7rem; color: var(--text-muted);">(Simulated)</span></div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; margin: 0.6rem 0; font-size: 0.85rem;">
+                            <div style="font-weight: 700; color: #166534; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem;">
+                                <span>🏭 Storage Room</span>
+                                <span style="font-size: 0.75rem; font-weight: normal; color: #15803d;">– You deliver your produce to this facility.</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; font-size: 0.8rem; color: var(--text); margin-top: 0.35rem;">
+                                <div><strong>Address:</strong> ${escapeHtml(offer.static_detail?.address || 'Designated Cold Hub')}</div>
+                                <div><strong>Temp Range:</strong> ${offer.static_detail?.min_temperature_c ?? 2}°C to ${offer.static_detail?.max_temperature_c ?? 12}°C</div>
+                                <div><strong>Supported Crops:</strong> ${escapeHtml(offer.static_detail?.supported_crops || 'All horticulture')}</div>
+                                <div><strong>Rate:</strong> ₹${(offer.price_per_kg_per_day || 1.2).toFixed(2)} / kg / day</div>
+                            </div>
+                        </div>
+                    `;
+
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <div>
+                                <div style="display: flex; gap: 0.35rem; align-items: center; margin-bottom: 0.25rem;">
+                                    <span class="badge ${isWinner ? 'badge-success' : 'badge-secondary'}">
+                                        ${isWinner ? '🏆 #1 BEST MATCH (WINNER)' : '#' + offer.rank}
+                                    </span>
+                                    <span class="badge ${offer.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">
+                                        ${offer.data_source === 'LIVE' ? 'LIVE OPERATOR BID' : 'SIMULATED OFFER'}
+                                    </span>
+                                </div>
+                                <h4 style="font-size: 1.1rem; margin: 0.2rem 0;">${escapeHtml(offer.asset_name)}</h4>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                    ${isVan ? '🚐 Mobile Solar Cooling Van' : '🏭 Static Cold Storage'}
+                                </span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 1.35rem; font-weight: 800; color: ${isWinner ? '#15803d' : 'var(--text-main)'};">
+                                    ₹${offer.price_total.toLocaleString()}
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Total pay-per-use estimate</div>
+                            </div>
+                        </div>
+
+                        ${typeBlockHtml}
+
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; background: #fff; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 0.75rem; font-size: 0.8rem;">
+                            <div>
+                                <span style="color: var(--text-muted); display: block;">Road Distance</span>
+                                <strong>${offer.distance_km.toFixed(1)} km</strong>
+                                <span class="badge badge-secondary" style="font-size: 0.65rem; margin-top: 2px;">${offer.route_source}</span>
+                            </div>
+                            <div>
+                                <span style="color: var(--text-muted); display: block;">Transit Time</span>
+                                <strong>${offer.eta_minutes.toFixed(0)} mins</strong>
+                            </div>
+                            <div>
+                                <span style="color: var(--text-muted); display: block;">Auction Score</span>
+                                <strong style="color: ${isWinner ? '#15803d' : 'inherit'};">${offer.score.toFixed(3)}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Why this match breakdown -->
+                        <details style="margin-bottom: 0.75rem; font-size: 0.85rem;">
+                            <summary style="cursor: pointer; color: var(--primary); font-weight: 600;">
+                                🔍 Why this match? (Score Breakdown & Reasons)
+                            </summary>
+                            <div style="padding: 0.5rem 0; font-size: 0.8rem;">
+                                <ul style="padding-left: 1.2rem; margin-bottom: 0.5rem; line-height: 1.5;">
+                                    ${offer.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}
+                                </ul>
+                                <div style="background: #f8fafc; padding: 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-muted);">
+                                    <div>Price Norm: ${comp.price_n} | Dist Norm: ${comp.distance_n} | Time Norm: ${comp.time_n}</div>
+                                    <div>Reliability Penalty: ${comp.reliability_penalty} | Capacity Penalty: ${comp.capacity_penalty}</div>
+                                    <div>Urgency Bonus: <strong>-${comp.urgency_bonus}</strong></div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary btn-sm btnPreviewRoute" data-index="${originalIdx}">
+                                📍 View on Map
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm btnAllocateOffer" data-bid="${offer.bid_id}" data-asset="${offer.asset_id}">
+                                Accept Offer & Reserve Capacity 🔒
+                            </button>
+                        </div>
+                    `;
+
+                    offersList.appendChild(card);
+                });
+
+                // Attach route preview and allocation handlers
+                offersList.querySelectorAll('.btnPreviewRoute').forEach(b => {
+                    b.addEventListener('click', () => {
+                        const idx = parseInt(b.getAttribute('data-index'), 10);
+                        previewRouteOnMap(data.ranked_offers[idx], batch);
+                    });
+                });
+
+                offersList.querySelectorAll('.btnAllocateOffer').forEach(b => {
+                    b.addEventListener('click', async () => {
+                        const bidId = b.getAttribute('data-bid');
+                        await allocateOffer(activeMatchingRequestId, bidId, days);
+                    });
+                });
+            }
+
+            // Setup Filter Buttons
+            document.querySelectorAll('.btn-filter-offer').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.btn-filter-offer').forEach(b => {
+                        b.classList.remove('active');
+                        b.style.background = 'var(--surface)';
+                        b.style.color = 'var(--text)';
+                    });
+                    btn.classList.add('active');
+                    btn.style.background = 'var(--primary)';
+                    btn.style.color = '#fff';
+                    currentOfferFilter = btn.getAttribute('data-filter');
+                    renderFilteredOffers();
+                };
             });
 
-            document.querySelectorAll('.btnAllocateOffer').forEach(b => {
-                b.addEventListener('click', async () => {
-                    const bidId = b.getAttribute('data-bid');
-                    await allocateOffer(activeMatchingRequestId, bidId, days);
-                });
-            });
+            renderFilteredOffers();
 
             // Initialize route map with winner route
             await initRouteMap();
@@ -870,12 +1015,42 @@
             });
             routeMarkers.push(bMarker);
 
-            // Add asset marker
+            // Add asset marker with rich type clarity popup
+            const isVan = (offer.asset_type === 'MOBILE');
+            const assetPopupHtml = `
+                <div style="font-size: 0.85rem; line-height: 1.4; min-width: 200px;">
+                    <strong style="font-size: 0.95rem;">${escapeHtml(offer.asset_name)}</strong><br>
+                    <span style="font-weight: 700; color: ${isVan ? '#0284c7' : '#15803d'};">
+                        ${isVan ? '🚐 Solar Van' : '🏭 Storage Room'}
+                    </span><br>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+                        ${isVan ? 'This van comes to your farm to pick up.' : 'You deliver your produce to this facility.'}
+                    </div>
+                    <div style="margin: 0.35rem 0; font-size: 0.8rem; border-top: 1px solid #e2e8f0; padding-top: 0.35rem;">
+                        ${isVan ? `
+                            <strong>Service Radius:</strong> ${offer.mobile_detail?.service_radius_km || 40} km<br>
+                            <strong>Pickup ETA:</strong> ${offer.eta_minutes.toFixed(0)} mins (${offer.distance_km.toFixed(1)} km) ${isEst ? '<span class="badge badge-secondary" style="font-size:0.65rem;">ESTIMATED</span>' : ''}<br>
+                            <strong>Solar Reliability:</strong> ${((offer.solar_reliability || 0.9) * 100).toFixed(0)}% (Simulated)<br>
+                            <strong>Effective Capacity:</strong> ${offer.effective_available_kg.toLocaleString()} kg (Simulated)
+                        ` : `
+                            <strong>Address:</strong> ${escapeHtml(offer.static_detail?.address || 'Designated Cold Hub')}<br>
+                            <strong>Temp Range:</strong> ${offer.static_detail?.min_temperature_c ?? 2}°C to ${offer.static_detail?.max_temperature_c ?? 12}°C<br>
+                            <strong>Supported Crops:</strong> ${escapeHtml(offer.static_detail?.supported_crops || 'All horticulture')}<br>
+                            <strong>Daily Rate:</strong> ₹${(offer.price_per_kg_per_day || 1.2).toFixed(2)}/kg/day
+                        `}
+                    </div>
+                    <div style="margin-top: 0.35rem;">
+                        <span class="badge ${offer.data_source === 'LIVE' ? 'badge-source-live' : 'badge-source-simulated'}">${offer.data_source}</span>
+                        <span class="badge badge-secondary">${offer.route_source}</span>
+                    </div>
+                </div>
+            `;
             const aMarker = await createMarker(routeMap, {
                 lat: offer.latitude,
                 lng: offer.longitude,
                 type: offer.asset_type,
-                title: offer.asset_name
+                title: offer.asset_name,
+                popupHtml: assetPopupHtml
             });
             routeMarkers.push(aMarker);
 
@@ -982,6 +1157,31 @@
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">Pay-per-use estimate (${b.days_estimated} days)</div>
                             </div>
                         </div>
+
+                        <!-- Distinctive Type Block (Part 5 E2) -->
+                        ${b.asset_type === 'MOBILE' ? `
+                            <div class="type-block" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; font-size: 0.82rem;">
+                                <div style="font-weight: 700; color: #1e40af; display: flex; align-items: center; gap: 0.35rem;">
+                                    <span>🚐 Solar Van Pickup</span>
+                                    <span style="font-size: 0.75rem; font-weight: normal; color: #2563eb;">– This van comes to your farm to pick up.</span>
+                                </div>
+                                <div style="color: var(--text-muted); font-size: 0.78rem; margin-top: 0.25rem;">
+                                    ${b.mobile_detail?.service_radius_km ? `Service radius: ${b.mobile_detail.service_radius_km} km | ` : ''}
+                                    ${b.mobile_detail?.solar_reliability ? `Solar reliability: ${(b.mobile_detail.solar_reliability * 100).toFixed(0)}% (Simulated)` : 'Simulated mobile solar cooling'}
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="type-block" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; font-size: 0.82rem;">
+                                <div style="font-weight: 700; color: #166534; display: flex; align-items: center; gap: 0.35rem;">
+                                    <span>🏭 Storage Room Drop-Off</span>
+                                    <span style="font-size: 0.75rem; font-weight: normal; color: #15803d;">– You deliver your produce to this facility.</span>
+                                </div>
+                                <div style="color: var(--text-muted); font-size: 0.78rem; margin-top: 0.25rem;">
+                                    Address: ${escapeHtml(b.static_detail?.address || b.asset_name)}
+                                    ${b.static_detail?.min_temperature_c !== undefined ? ` | Storage temp: ${b.static_detail.min_temperature_c}°C to ${b.static_detail.max_temperature_c}°C` : ''}
+                                </div>
+                            </div>
+                        `}
 
                         <!-- Progress Steps -->
                         <div style="display: flex; gap: 0.25rem; margin: 1rem 0; background: #f8fafc; padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border); overflow-x: auto;">
@@ -1187,6 +1387,210 @@
             document.getElementById('latInput').value = '19.9975';
             document.getElementById('lngInput').value = '73.7898';
         });
+
+        // =========================================================================
+        // PUBLIC COLD STORAGE DIRECTORY (Part 4)
+        // =========================================================================
+        let currentDirDistrict = '';
+        let currentDirQuery = '';
+        let isDirLoading = false;
+
+        async function loadDirectoryListings() {
+            const container = document.getElementById('dirListingsContainer');
+            if (!container) return;
+
+            if (isDirLoading) return;
+            isDirLoading = true;
+
+            container.innerHTML = `<div class="state-box" data-i18n="dir_loading">${t('dir_loading') || 'Loading directory listings...'}</div>`;
+
+            let endpoint = '/directory/cold-storages';
+            const params = new URLSearchParams();
+            if (currentDirDistrict) {
+                params.append('district', currentDirDistrict);
+            }
+            if (currentDirQuery) {
+                params.append('q', currentDirQuery);
+            }
+            const queryString = params.toString();
+            if (queryString) {
+                endpoint += `?${queryString}`;
+            }
+
+            try {
+                const data = await apiRequest(endpoint);
+                renderDirectoryListings(data.items || [], data.disclaimer);
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="alert alert-danger" style="margin: 1rem 0;" data-i18n="dir_error">
+                        ${t('dir_error') || 'Unable to load public directory listings. Please try again later.'}
+                    </div>
+                `;
+            } finally {
+                isDirLoading = false;
+            }
+        }
+
+        function renderDirectoryListings(items, disclaimer) {
+            const container = document.getElementById('dirListingsContainer');
+            if (!container) return;
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="state-box" data-i18n="dir_empty">
+                        ${t('dir_empty') || 'No public cold storage facilities found matching your criteria.'}
+                    </div>
+                `;
+                return;
+            }
+
+            const cardsHtml = items.map(it => {
+                const publicBadge = `<span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 600;" data-i18n="dir_badge_public">${t('dir_badge_public') || 'PUBLIC LISTING'}</span>`;
+                const notPartnerBadge = `<span class="badge" style="background: #fed7aa; color: #9a3412; font-weight: 600;" data-i18n="dir_badge_not_partner">${t('dir_badge_not_partner') || 'NOT A COLDBRIDGE PARTNER'}</span>`;
+
+                let verifiedBlock = '';
+                if (!it.contact_verified) {
+                    verifiedBlock = `<span style="font-size: 0.8rem; color: #b45309; font-weight: 500;" data-i18n="dir_unverified_warning">⚠️ ${t('dir_unverified_warning') || 'Unverified – call to confirm'}</span>`;
+                }
+
+                let phoneBlock = '';
+                if (it.phone) {
+                    const rawPhone = escapeHtml(it.phone);
+                    const cleanTel = it.phone.replace(/[^0-9+]/g, '');
+                    const isValidTel = /^\+?[0-9]{7,15}$/.test(cleanTel);
+
+                    phoneBlock = `
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                            <span style="font-weight: 600; font-size: 0.9rem;">📞 ${rawPhone}</span>
+                            ${isValidTel ? `<a href="tel:${cleanTel}" class="btn btn-primary btn-sm" style="text-decoration: none; padding: 0.25rem 0.6rem; font-size: 0.8rem;">📞 ${t('dir_btn_call') || 'Call'}</a>` : ''}
+                            <button type="button" class="btn btn-secondary btn-sm btn-copy-dir-phone" data-phone="${rawPhone}" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">📋 ${t('dir_btn_copy_phone') || 'Copy Number'}</button>
+                        </div>
+                    `;
+                } else {
+                    phoneBlock = `
+                        <div style="margin-top: 0.5rem;">
+                            <span style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;" data-i18n="dir_no_phone">${t('dir_no_phone') || 'No phone listed'}</span>
+                        </div>
+                    `;
+                }
+
+                let mapBtn = '';
+                if (it.latitude !== null && it.longitude !== null && typeof it.latitude === 'number' && typeof it.longitude === 'number') {
+                    mapBtn = `<button type="button" class="btn btn-secondary btn-sm btn-show-dir-map" data-lat="${it.latitude}" data-lng="${it.longitude}" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-left: 0.5rem;">🗺️ ${t('dir_btn_show_map') || 'Show on Map'}</button>`;
+                }
+
+                const sourceNote = it.source_note ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem; border-top: 1px dashed var(--border); padding-top: 0.35rem;">ℹ️ ${escapeHtml(it.source_note)}</div>` : '';
+
+                return `
+                    <div class="card" style="margin-bottom: 1rem; border-left: 4px solid #64748b;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--text);">${escapeHtml(it.name)}</h3>
+                                    ${publicBadge}
+                                    ${notPartnerBadge}
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                                    📍 ${escapeHtml(it.area)}, ${escapeHtml(it.district)}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                ${verifiedBlock}
+                                ${mapBtn}
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text);">
+                            ${escapeHtml(it.address)}
+                        </div>
+
+                        ${phoneBlock}
+                        ${sourceNote}
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = cardsHtml;
+
+            // Attach copy listeners
+            container.querySelectorAll('.btn-copy-dir-phone').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const phone = btn.getAttribute('data-phone');
+                    if (phone) {
+                        try {
+                            await navigator.clipboard.writeText(phone);
+                            showAlert(t('dir_copied_alert') || 'Phone number copied to clipboard!', 'success');
+                        } catch (_) {
+                            window.prompt('Copy phone number:', phone);
+                        }
+                    }
+                });
+            });
+
+            // Attach map listeners if coordinates exist
+            container.querySelectorAll('.btn-show-dir-map').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const lat = parseFloat(btn.getAttribute('data-lat'));
+                    const lng = parseFloat(btn.getAttribute('data-lng'));
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        const mapTabBtn = document.querySelector('a[data-tab="tabCoolingMap"]');
+                        if (mapTabBtn) {
+                            mapTabBtn.click();
+                            setTimeout(() => {
+                                if (networkMap) {
+                                    networkMap.setView([lat, lng], 13);
+                                }
+                            }, 300);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Setup District Filter Buttons
+        document.querySelectorAll('.btn-dir-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-dir-filter').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'var(--surface)';
+                    b.style.color = 'var(--text)';
+                    b.style.border = '1px solid var(--border)';
+                });
+                btn.classList.add('active');
+                btn.style.background = 'var(--primary)';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+
+                currentDirDistrict = btn.getAttribute('data-district') || '';
+                loadDirectoryListings();
+            });
+        });
+
+        // Setup Search Form (only runs on submit or Enter)
+        const dirSearchForm = document.getElementById('dirSearchForm');
+        const dirSearchInput = document.getElementById('dirSearchInput');
+        const btnDirReset = document.getElementById('btnDirReset');
+
+        if (dirSearchForm && dirSearchInput) {
+            dirSearchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                currentDirQuery = dirSearchInput.value.trim();
+                if (btnDirReset) {
+                    btnDirReset.style.display = currentDirQuery ? 'inline-block' : 'none';
+                }
+                loadDirectoryListings();
+            });
+
+            if (btnDirReset) {
+                btnDirReset.addEventListener('click', () => {
+                    dirSearchInput.value = '';
+                    currentDirQuery = '';
+                    btnDirReset.style.display = 'none';
+                    loadDirectoryListings();
+                });
+            }
+        }
     </script>
+    <script src="js/nav.js?v=2.2" defer></script>
 </body>
 </html>

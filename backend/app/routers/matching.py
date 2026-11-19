@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, require_role
 from app.models.user import User
 from app.models.produce import ProduceBatch
 from app.models.matching import MatchingRequest, Bid
@@ -80,6 +80,71 @@ def create_matching_request(
     return matching_req
 
 
+@router.get("/open-requests")
+def list_open_matching_requests(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("STATIC_OPERATOR", "VAN_OPERATOR", "ADMIN"))
+):
+    """
+    List pending matching requests relevant to the calling operator's assets.
+    Enforces privacy by hiding farmer personal contact info and rounding coordinates.
+    """
+    # 1. Fetch pending requests
+    pending_reqs = db.query(MatchingRequest).filter(MatchingRequest.status == "PENDING").order_by(MatchingRequest.created_at.desc()).all()
+
+    # 2. Get calling operator's active assets
+    op_query = db.query(ColdAsset).filter(ColdAsset.is_active == True)
+    if current_user.role == "STATIC_OPERATOR":
+        op_query = op_query.filter(ColdAsset.operator_id == current_user.id, ColdAsset.asset_type == "STATIC")
+    elif current_user.role == "VAN_OPERATOR":
+        op_query = op_query.filter(ColdAsset.operator_id == current_user.id, ColdAsset.asset_type == "MOBILE")
+    op_assets = op_query.all()
+    op_asset_ids = {a.id for a in op_assets}
+
+    results = []
+    for req in pending_reqs:
+        batch = req.batch or db.query(ProduceBatch).filter_by(id=req.batch_id).first()
+        if not batch:
+            continue
+
+        # Check existing bids for this request belonging to this operator
+        existing_bids = (
+            db.query(Bid)
+            .filter(Bid.request_id == req.id, Bid.asset_id.in_(op_asset_ids))
+            .all()
+        ) if op_asset_ids else []
+
+        bid_info = None
+        if existing_bids:
+            # Prefer active non-expired bid
+            eb = next((b for b in existing_bids if not b.is_expired), existing_bids[0])
+            eb_asset = next((a for a in op_assets if a.id == eb.asset_id), None)
+            bid_info = {
+                "id": eb.id,
+                "asset_id": eb.asset_id,
+                "asset_name": eb_asset.name if eb_asset else "Operator Asset",
+                "price_total": eb.price_total,
+                "eta_minutes": eb.eta_minutes,
+                "offered_capacity_kg": eb.offered_capacity_kg,
+                "data_source": eb.data_source,
+                "is_operator_submitted": (eb.data_source == "LIVE")
+            }
+
+        results.append({
+            "id": req.id,
+            "batch_id": req.batch_id,
+            "crop_code": batch.crop_code,
+            "requested_quantity_kg": req.requested_quantity_kg,
+            "approx_latitude": round(batch.latitude, 2) if batch.latitude else None,
+            "approx_longitude": round(batch.longitude, 2) if batch.longitude else None,
+            "status": req.status,
+            "created_at": req.created_at,
+            "existing_bid": bid_info
+        })
+
+    return results
+
+
 @router.post("/requests/{id}/bids", response_model=BidResponse, status_code=status.HTTP_201_CREATED)
 def submit_bid(
     id: str,
@@ -92,6 +157,12 @@ def submit_bid(
     Submits an offer/bid for a matching request.
     Can be submitted by the asset operator or admin.
     """
+    if current_user.role not in ["STATIC_OPERATOR", "VAN_OPERATOR", "ADMIN"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only cooling asset operators and administrators can submit bids."
+        )
+
     matching_req = db.query(MatchingRequest).filter_by(id=id).first()
     if not matching_req:
         raise HTTPException(status_code=404, detail="Matching request not found")
@@ -103,6 +174,19 @@ def submit_bid(
     # Operator ownership check
     if current_user.role != "ADMIN" and asset.operator_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only submit bids for your own cold assets")
+
+    # Asset type check for operator role
+    if current_user.role == "STATIC_OPERATOR" and asset.asset_type != "STATIC":
+        raise HTTPException(status_code=403, detail="Static operators can only bid static storage rooms")
+    if current_user.role == "VAN_OPERATOR" and asset.asset_type != "MOBILE":
+        raise HTTPException(status_code=403, detail="Van operators can only bid mobile solar vans")
+
+    # Capacity check
+    if payload.offered_capacity_kg > asset.available_capacity_kg:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Offered capacity ({payload.offered_capacity_kg} kg) exceeds available asset capacity ({asset.available_capacity_kg} kg)"
+        )
 
     bid = Bid(
         request_id=matching_req.id,

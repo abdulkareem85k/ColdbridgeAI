@@ -34,12 +34,12 @@ export async function logout() {
     } catch (e) {
         console.warn('Logout request warning:', e);
     }
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
 }
 
 export function redirectByRole(user) {
     if (!user) {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return;
     }
     switch (user.role) {
@@ -47,8 +47,11 @@ export function redirectByRole(user) {
             window.location.href = 'farmer.html';
             break;
         case 'STATIC_OPERATOR':
+        case 'STORAGE_OPERATOR':
+            window.location.href = 'storage_operator.html';
+            break;
         case 'VAN_OPERATOR':
-            window.location.href = 'operator.html';
+            window.location.href = 'van_operator.html';
             break;
         case 'BUYER':
             window.location.href = 'buyer.html';

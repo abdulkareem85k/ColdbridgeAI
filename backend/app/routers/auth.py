@@ -15,7 +15,7 @@ from app.schemas.auth import RegisterRequest, LoginRequest, AuthUserResponse, Me
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-VALID_ROLES = {"FARMER", "STATIC_OPERATOR", "VAN_OPERATOR", "BUYER", "ADMIN"}
+VALID_ROLES = {"FARMER", "STATIC_OPERATOR", "VAN_OPERATOR", "BUYER", "ADMIN", "STORAGE_OPERATOR"}
 
 @router.post("/register", response_model=AuthUserResponse, status_code=status.HTTP_201_CREATED)
 def register(
@@ -24,7 +24,11 @@ def register(
     db: Session = Depends(get_db)
 ):
     """Register a new user with a designated role."""
-    if req.role.upper() not in VALID_ROLES:
+    norm_role = req.role.upper()
+    if norm_role == "STORAGE_OPERATOR":
+        norm_role = "STATIC_OPERATOR"
+
+    if norm_role not in VALID_ROLES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid role '{req.role}'. Valid roles: {sorted(list(VALID_ROLES))}"
@@ -40,7 +44,7 @@ def register(
     user = User(
         email=req.email.lower(),
         hashed_password=hash_password(req.password),
-        role=req.role.upper(),
+        role=norm_role,
         full_name=req.full_name,
         phone=req.phone,
         is_active=True

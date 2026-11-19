@@ -82,7 +82,11 @@ class RankedOfferDetail(BaseModel):
     latitude: float
     longitude: float
     data_source: str = "SIMULATED"
+    is_operator_submitted: Optional[bool] = None
     is_persisted: bool = True
+    price_per_kg_per_day: Optional[float] = None
+    static_detail: Optional[Dict[str, Any]] = None
+    mobile_detail: Optional[Dict[str, Any]] = None
 
 
 class BaselinePick(BaseModel):

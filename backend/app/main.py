@@ -1,9 +1,12 @@
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from app.core.config import settings
 from app.routers import (
     health, auth, profiles, produce, assets, maps, sri, matching, bookings, admin,
-    inventory, marketplace, forecast
+    inventory, marketplace, forecast, directory
 )
 
 app = FastAPI(
@@ -31,6 +34,10 @@ for orig in raw_origins:
             if paired not in origins:
                 origins.append(paired)
 
+for p in ["http://127.0.0.1:8000", "http://localhost:8000", "http://127.0.0.1:5500", "http://localhost:5500"]:
+    if p not in origins:
+        origins.append(p)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -54,9 +61,10 @@ app.include_router(admin.router, prefix=API_V1_PREFIX)
 app.include_router(inventory.router, prefix=API_V1_PREFIX)
 app.include_router(marketplace.router, prefix=API_V1_PREFIX)
 app.include_router(forecast.router, prefix=API_V1_PREFIX)
+app.include_router(directory.router, prefix=API_V1_PREFIX)
 
-@app.get("/")
-def root():
+@app.get("/api")
+def api_info():
     return {
         "name": "ColdBridge AI API",
         "version": "1.1.0",
@@ -64,3 +72,20 @@ def root():
         "docs_url": "/docs",
         "health_url": f"{API_V1_PREFIX}/health"
     }
+
+# Serve static frontend files directly so localhost:8000 immediately works for the full UI
+frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"
+if frontend_dir.exists():
+    @app.get("/")
+    def serve_index():
+        index_file = frontend_dir / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        return api_info()
+
+    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+else:
+    @app.get("/")
+    def root():
+        return api_info()
+

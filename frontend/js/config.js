@@ -8,9 +8,19 @@
  * - 100% Free & Open-Source: No Google Cloud keys or proprietary billing accounts needed.
  */
 
+// Determine default API base URL matching the current browser hostname
+function getInitialApiBase() {
+    if (typeof window !== 'undefined' && window.location) {
+        const protocol = window.location.protocol || 'http:';
+        const hostname = window.location.hostname || '127.0.0.1';
+        return `${protocol}//${hostname}:8000/api/v1`;
+    }
+    return "http://127.0.0.1:8000/api/v1";
+}
+
 // Default configuration settings
 const DEFAULT_CONFIG = {
-    API_BASE_URL: "http://127.0.0.1:8000/api/v1",
+    API_BASE_URL: getInitialApiBase(),
     
     // OpenStreetMap & Leaflet Settings
     OSM_TILE_URL: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",

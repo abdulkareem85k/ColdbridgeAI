@@ -101,3 +101,20 @@ This document prepares the team to answer technical, domain, and operational que
 > 2. **Zero Client Storage of Secrets:** Frontend JavaScript has zero calls to `localStorage` or `sessionStorage` for tokens, and never attaches `Authorization: Bearer` headers manually.
 > 3. **CSRF Protection:** Every state-changing API request (`POST`, `PUT`, `PATCH`, `DELETE`) enforces the `X-Requested-With: XMLHttpRequest` header, which modern browsers prevent cross-origin scripts from forging without an explicit CORS preflight check.
 > 4. **Backend Role-Based Access Control (RBAC):** Every endpoint independently validates user identity and resource ownership in Python dependencies. A user cannot access another farmer's batch or another operator's cold room simply by manipulating client-side state."
+
+---
+
+## 8. Real Cold Storage Facilities vs. Simulated Prototype Data
+
+### Q: "Are these real operators?"
+**Answer:**
+> "They are real facilities listed in public directories, shown so a farmer can contact them directly. They are not ColdBridge partners and do not bid in the system. Ranking, bids, vans and solar reliability remain simulated."
+
+### Q: "Why not real bids?"
+**Answer:**
+> "The prototype demonstrates the matching, ranking and bidding workflow with simulated offers. Real participation needs registration, consent and operator-submitted bids."
+
+### Q: "How would a real operator join?"
+**Answer:**
+> "They register as an operator, provide genuine facility details and submit bids through the normal operator screen (see D3)."
+

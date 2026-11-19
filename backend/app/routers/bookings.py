@@ -47,7 +47,18 @@ def enrich_booking(b: Booking) -> dict:
         "updated_at": b.updated_at,
         "asset_name": asset.name if asset else "Unknown Facility",
         "asset_type": asset.asset_type if asset else "STATIC",
-        "can_cancel": can_cancel
+        "can_cancel": can_cancel,
+        "static_detail": {
+            "address": asset.static_detail.address or "",
+            "supported_crops": asset.static_detail.supported_crops or "",
+            "min_temperature_c": float(asset.static_detail.min_temperature_c or 0.0),
+            "max_temperature_c": float(asset.static_detail.max_temperature_c or 0.0)
+        } if asset and asset.asset_type == "STATIC" and asset.static_detail else None,
+        "mobile_detail": {
+            "vehicle_ref": asset.mobile_detail.vehicle_ref or "",
+            "service_radius_km": float(asset.mobile_detail.service_radius_km or 0.0),
+            "solar_reliability": float(asset.mobile_detail.solar_reliability or 1.0)
+        } if asset and asset.asset_type == "MOBILE" and asset.mobile_detail else None
     }
 
 

@@ -34,8 +34,9 @@ def seed_demo_data(db=None):
         should_close = True
 
     try:
-        # Ensure all tables exist
-        Base.metadata.create_all(bind=engine)
+        # Ensure all tables exist on the active database
+        target_bind = db.get_bind() if db else engine
+        Base.metadata.create_all(bind=target_bind)
 
         # Clear existing demo data cleanly in dependency order
         db.query(PurchaseOrder).delete()
@@ -474,6 +475,100 @@ def seed_demo_data(db=None):
             notes="Hydro-cooled farm tomatoes, visually inspected and certified intact."
         )
         db.add(listing_approved)
+
+        # Inventory & Approved Surplus Listing for Onion (Supports Bulk Buyer & Combined Needs Presets)
+        inv_onion = Inventory(
+            id="inv00000-0000-0000-0000-000000000002",
+            batch_id="b0000000-0000-0000-0000-000000000005",
+            booking_id=seed_booking.id,
+            asset_id="a1000000-0000-0000-0000-000000000002", # Godavari Cold Vault
+            farmer_id=farmer2.id,
+            initial_quantity_kg=1200.0,
+            current_quantity_kg=1200.0,
+            storage_location="Chamber B-3",
+            received_at=now - datetime.timedelta(days=15),
+            expiry_risk_date=now + datetime.timedelta(days=3),
+            status="NEAR_EXPIRY",
+            quality_notes="Rabi cured red storage onions, Grade A sorted."
+        )
+        db.add(inv_onion)
+        db.flush()
+
+        onion_list_at = now - datetime.timedelta(hours=14)
+        onion_exp_at = now + datetime.timedelta(hours=34)
+        onion_disc_pct, onion_disc_price = calculate_sliding_discount(
+            base_price_per_kg=35.0,
+            listed_at=onion_list_at,
+            expires_at=onion_exp_at,
+            now=now
+        )
+        listing_onion = BuyerListing(
+            id="lst00000-0000-0000-0000-000000000003",
+            inventory_id=inv_onion.id,
+            asset_id=inv_onion.asset_id,
+            operator_id=static_op.id,
+            crop_code="onion",
+            initial_quantity_kg=800.0,
+            available_quantity_kg=800.0,
+            base_price_per_kg=35.0,
+            current_discount_pct=onion_disc_pct,
+            discounted_price_per_kg=onion_disc_price,
+            status="APPROVED",
+            quality_approved_by=static_op.id,
+            quality_approved_at=onion_list_at,
+            quality_grade="GRADE_A",
+            listed_at=onion_list_at,
+            expires_at=onion_exp_at,
+            notes="Cured Rabi red onions, Grade A certified for commercial processing."
+        )
+        db.add(listing_onion)
+
+        # Inventory & Approved Surplus Listing for Pomegranate (Supports Bulk Buyer Preset)
+        inv_pom = Inventory(
+            id="inv00000-0000-0000-0000-000000000003",
+            batch_id="b0000000-0000-0000-0000-000000000009",
+            booking_id=seed_booking.id,
+            asset_id="a1000000-0000-0000-0000-000000000001", # Nashik Agro Warehouse A
+            farmer_id=farmer4.id,
+            initial_quantity_kg=700.0,
+            current_quantity_kg=700.0,
+            storage_location="Chamber C-1",
+            received_at=now - datetime.timedelta(days=12),
+            expiry_risk_date=now + datetime.timedelta(days=2),
+            status="NEAR_EXPIRY",
+            quality_notes="Bhagwa variety pomegranates, pre-cooled at 6C."
+        )
+        db.add(inv_pom)
+        db.flush()
+
+        pom_list_at = now - datetime.timedelta(hours=10)
+        pom_exp_at = now + datetime.timedelta(hours=38)
+        pom_disc_pct, pom_disc_price = calculate_sliding_discount(
+            base_price_per_kg=80.0,
+            listed_at=pom_list_at,
+            expires_at=pom_exp_at,
+            now=now
+        )
+        listing_pom = BuyerListing(
+            id="lst00000-0000-0000-0000-000000000004",
+            inventory_id=inv_pom.id,
+            asset_id=inv_pom.asset_id,
+            operator_id=static_op.id,
+            crop_code="pomegranate",
+            initial_quantity_kg=600.0,
+            available_quantity_kg=600.0,
+            base_price_per_kg=80.0,
+            current_discount_pct=pom_disc_pct,
+            discounted_price_per_kg=pom_disc_price,
+            status="APPROVED",
+            quality_approved_by=static_op.id,
+            quality_approved_at=pom_list_at,
+            quality_grade="GRADE_A",
+            listed_at=pom_list_at,
+            expires_at=pom_exp_at,
+            notes="Bhagwa export surplus, certified fresh with verified brix sugar levels."
+        )
+        db.add(listing_pom)
 
         # Pending Approval Listing (To demonstrate operator quality check on stage)
         listing_pending = BuyerListing(

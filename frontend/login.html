@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColdBridge AI – Sign In & Registration</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="brand">
+            <span>❄️ ColdBridge AI</span>
+            <span class="brand-badge">MVP Prototype</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="index.html" class="nav-link" style="font-size: 0.85rem; color: var(--text); text-decoration: none; font-weight: 500;">← Back to Home</a>
+            <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
+                <option value="en">🌐 English</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="mr">🚩 मराठी</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container auth-container" style="max-width: 520px; margin-top: 3rem;">
+        <div class="card">
+            <h1 class="page-title" style="font-size: 1.5rem; text-align: center;" data-i18n="auth_welcome">Welcome to ColdBridge AI</h1>
+            <p class="page-subtitle" style="text-align: center; margin-bottom: 1.5rem;" data-i18n="auth_subtitle">
+                Pay-per-use cold chain logistics & smart cross-asset matching
+            </p>
+
+            <div id="alertBox" class="alert" style="display: none;"></div>
+
+            <div class="tab-bar" style="justify-content: center;">
+                <button class="tab-btn active" id="tabLoginBtn" type="button" data-i18n="tab_sign_in">Sign In</button>
+                <button class="tab-btn" id="tabRegisterBtn" type="button" data-i18n="tab_register">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail" data-i18n="label_email">Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="farmer.demo@coldbridge.ai" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword" data-i18n="label_password">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" data-i18n="btn_sign_in">
+                    Sign In
+                </button>
+
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;" data-i18n="demo_logins_title">
+                        Quick Demo Logins (Maharashtra Demo Dataset):
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillFarmer">🧑‍🌾 Farmer</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillStatic">🏭 Static Operator</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillVan">🚐 Van Operator</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnFillBuyer">🛒 Buyer (Phase 2)</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" style="display: none;">
+                <div class="form-group">
+                    <label for="regFullName" data-i18n="label_full_name">Full Name</label>
+                    <input type="text" id="regFullName" required placeholder="e.g. Ramesh Patil">
+                </div>
+                <div class="form-group">
+                    <label for="regEmail" data-i18n="label_email">Email Address</label>
+                    <input type="email" id="regEmail" required placeholder="you@domain.com">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword" data-i18n="label_password">Password (min 8 characters)</label>
+                    <input type="password" id="regPassword" required minlength="8" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label for="regRole" data-i18n="label_role">Role</label>
+                    <select id="regRole" required>
+                        <option value="FARMER">Farmer (Store & transport produce)</option>
+                        <option value="STATIC_OPERATOR">Static Cold Room Operator</option>
+                        <option value="VAN_OPERATOR">Mobile Solar Van Operator</option>
+                        <option value="BUYER">Buyer (Wholesaler / Retailer)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="regPhone" data-i18n="label_phone">Phone Number</label>
+                    <input type="tel" id="regPhone" placeholder="+91-9822011001">
+                </div>
+                <button type="submit" id="regSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" data-i18n="btn_create_account">
+                    Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { login, register, getMe, redirectByRole } from './js/auth.js';
+        import { initI18n, setLanguage, getLanguage } from './js/i18n.js';
+
+        const alertBox = document.getElementById('alertBox');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const tabLoginBtn = document.getElementById('tabLoginBtn');
+        const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+
+        function showAlert(msg, type = 'error') {
+            alertBox.className = `alert alert-${type}`;
+            alertBox.textContent = msg;
+            alertBox.style.display = 'block';
+        }
+
+        function hideAlert() {
+            alertBox.style.display = 'none';
+        }
+
+        // Initialize i18n
+        initI18n();
+        const langSwitcher = document.getElementById('langSwitcher');
+        if (langSwitcher) {
+            langSwitcher.value = getLanguage();
+            langSwitcher.addEventListener('change', (e) => {
+                setLanguage(e.target.value);
+            });
+        }
+
+        // Check if already authenticated on page load
+        (async () => {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const roleParam = (urlParams.get('role') || '').toLowerCase();
+                const user = await getMe();
+                if (user) {
+                    const isSameRole = !roleParam ||
+                        (roleParam === 'farmer' && user.role === 'FARMER') ||
+                        ((roleParam === 'static' || roleParam === 'storage') && (user.role === 'STATIC_OPERATOR' || user.role === 'STORAGE_OPERATOR')) ||
+                        (roleParam === 'van' && user.role === 'VAN_OPERATOR') ||
+                        (roleParam === 'buyer' && user.role === 'BUYER');
+
+                    if (isSameRole) {
+                        redirectByRole(user);
+                        return;
+                    }
+
+                    // Switching roles: clear previous session so the requested demo role fills cleanly
+                    try {
+                        await fetch('/api/v1/auth/logout', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                    } catch (_) {}
+                }
+            } catch (e) {
+                // Not authenticated, stay on login page
+            }
+        })();
+
+        // Tab Switching
+        function showLoginTab() {
+            tabLoginBtn.classList.add('active');
+            tabRegisterBtn.classList.remove('active');
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            hideAlert();
+        }
+
+        function showRegisterTab() {
+            tabRegisterBtn.classList.add('active');
+            tabLoginBtn.classList.remove('active');
+            registerForm.style.display = 'block';
+            loginForm.style.display = 'none';
+            hideAlert();
+        }
+
+        tabLoginBtn.addEventListener('click', () => {
+            showLoginTab();
+            window.location.hash = 'login';
+        });
+
+        tabRegisterBtn.addEventListener('click', () => {
+            showRegisterTab();
+            window.location.hash = 'register';
+        });
+
+        // Demo login autofill functions
+        function fillFarmer() {
+            document.getElementById('loginEmail').value = 'farmer.demo@coldbridge.ai';
+            document.getElementById('loginPassword').value = 'FarmerDemo123!';
+        }
+        function fillStatic() {
+            document.getElementById('loginEmail').value = 'static.demo@coldbridge.ai';
+            document.getElementById('loginPassword').value = 'StaticDemo123!';
+        }
+        function fillVan() {
+            document.getElementById('loginEmail').value = 'van.demo@coldbridge.ai';
+            document.getElementById('loginPassword').value = 'VanDemo123!';
+        }
+        function fillBuyer() {
+            document.getElementById('loginEmail').value = 'buyer.demo@coldbridge.ai';
+            document.getElementById('loginPassword').value = 'BuyerDemo123!';
+        }
+        function fillAdmin() {
+            document.getElementById('loginEmail').value = 'admin.demo@coldbridge.ai';
+            document.getElementById('loginPassword').value = 'AdminDemo123!';
+        }
+
+        document.getElementById('btnFillFarmer').addEventListener('click', fillFarmer);
+        document.getElementById('btnFillStatic').addEventListener('click', fillStatic);
+        document.getElementById('btnFillVan').addEventListener('click', fillVan);
+        document.getElementById('btnFillBuyer').addEventListener('click', fillBuyer);
+
+        // Handle URL hash and parameters on load (e.g. #login, #register, #farmer, #static, etc.)
+        function handleHashRouting() {
+            const hash = (window.location.hash || '').toLowerCase();
+            const urlParams = new URLSearchParams(window.location.search);
+            const roleParam = (urlParams.get('role') || '').toLowerCase();
+
+            if (hash.includes('register')) {
+                showRegisterTab();
+            } else {
+                showLoginTab();
+            }
+
+            if (hash.includes('farmer') || roleParam === 'farmer') {
+                fillFarmer();
+            } else if (hash.includes('static') || roleParam === 'static' || hash.includes('storage') || roleParam === 'storage') {
+                fillStatic();
+            } else if (hash.includes('van') || roleParam === 'van') {
+                fillVan();
+            } else if (hash.includes('buyer') || roleParam === 'buyer') {
+                fillBuyer();
+            } else if (hash.includes('admin') || roleParam === 'admin') {
+                fillAdmin();
+            }
+        }
+
+        window.addEventListener('hashchange', handleHashRouting);
+        handleHashRouting();
+
+        // Login Handler
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+            const btn = document.getElementById('loginSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+
+            try {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const user = await login(email, password);
+                showAlert(`Welcome back, ${user.full_name}! Redirecting...`, 'success');
+                setTimeout(() => redirectByRole(user), 600);
+            } catch (err) {
+                showAlert(err.message || 'Login failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        });
+
+        // Register Handler
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+            const btn = document.getElementById('regSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+
+            try {
+                const payload = {
+                    full_name: document.getElementById('regFullName').value.trim(),
+                    email: document.getElementById('regEmail').value.trim(),
+                    password: document.getElementById('regPassword').value,
+                    role: document.getElementById('regRole').value,
+                    phone: document.getElementById('regPhone').value.trim() || null
+                };
+                await register(payload);
+                showAlert('Account created successfully! Signing you in...', 'success');
+                const user = await login(payload.email, payload.password);
+                setTimeout(() => redirectByRole(user), 600);
+            } catch (err) {
+                showAlert(err.message || 'Registration failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        });
+    </script>
+</body>
+</html>

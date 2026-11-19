@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColdBridge AI – Storage Operator Panel</title>
+    <link rel="stylesheet" href="css/style.css?v=2.2">
+    <!-- Leaflet.js CSS for OpenStreetMap Location Picker -->
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" data-leaflet-css="true" />
+    <style>
+        :root {
+            --primary: #15803d;
+            --primary-hover: #166534;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="storage_operator.html" class="brand">
+            <span>❄️ ColdBridge AI</span>
+            <span class="brand-badge" style="background: #15803d; color: white;">🏭 Storage Operator</span>
+        </a>
+        <nav>
+            <a href="#assets" class="nav-link active" data-tab="tabAssets">My Cold Rooms</a>
+            <a href="#bookings" class="nav-link" data-tab="tabBookings">Incoming Bookings</a>
+            <a href="#surplus" class="nav-link" data-tab="tabSurplus">Inventory & Surplus</a>
+            <a href="#utilization" class="nav-link" data-tab="tabUtilization">Capacity Utilization</a>
+            <a href="#sri-queue" class="nav-link" data-tab="tabSriQueue">SRI Priority Queue</a>
+            <a href="#bids" class="nav-link" data-tab="tabBids">Open Requests & Bids</a>
+            <a href="#add-static" class="nav-link" data-tab="tabAddStatic">Add Cold Room</a>
+            <a href="#directory" class="nav-link" data-tab="tabDirectory">Public Directory</a>
+            <select id="langSwitcher" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;">
+                <option value="en">🌐 English</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="mr">🚩 मराठी</option>
+            </select>
+            <div class="user-pill">
+                <span id="operatorName">Storage Operator</span>
+                <button type="button" id="btnLogout" class="btn btn-secondary btn-sm">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div id="globalAlert" class="alert" style="display: none;"></div>
+
+        <!-- TAB 1: MY COLD ROOMS -->
+        <div id="tabAssets" class="tab-content active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">My Static Cold Rooms</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Manage your registered stationary cold rooms, temperature ranges, and storage capacity.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshAssets">Refresh Rooms</button>
+                </div>
+            </div>
+
+            <div id="assetsGrid" class="grid-cards">
+                <div class="state-box">Loading cold rooms...</div>
+            </div>
+        </div>
+
+        <!-- TAB 2: INCOMING BOOKINGS (DROP-OFF FLOW) -->
+        <div id="tabBookings" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Incoming Facility Bookings</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Track produce delivery and advance facility drop-off status: Reserved → Confirmed → Produce Received → In Storage → Completed.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBookings">Refresh Bookings</button>
+            </div>
+
+            <div class="alert alert-info" style="margin-bottom: 1.25rem;">
+                ℹ️ <strong>Drop-Off Lifecycle:</strong> Farmers transport produce to your facility. Status advances from <strong>CONFIRMED</strong> directly to <strong>PRODUCE_RECEIVED</strong> upon gate arrival.
+            </div>
+
+            <div id="operatorBookingsContainer">
+                <div class="state-box">Loading incoming bookings...</div>
+            </div>
+        </div>
+
+        <!-- TAB 3: INVENTORY & SURPLUS (PHASE 2) -->
+        <div id="tabSurplus" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Facility Inventory & Surplus Produce</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Perform required physical quality inspections and list verified surplus produce on the buyer marketplace.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSurplus">Refresh Inventory</button>
+            </div>
+
+            <div class="notice-banner" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">PROTOTYPE HONESTY</span>
+                    <span class="badge badge-simulated">DATA: SIMULATED</span>
+                    <span class="badge badge-fresh">STATUS: FRESH</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;">
+                    <strong>Mandatory Quality Sign-Off:</strong> Time alone does not prove food safety. Physical operator inspection is strictly mandatory before surplus produce can be published to the buyer marketplace.
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 0.75rem;">📦 Active Cold Room Inventory</h3>
+            <div id="inventoryContainer" style="margin-bottom: 2rem;">
+                <div class="state-box">Loading facility inventory...</div>
+            </div>
+
+            <h3 style="margin-bottom: 0.75rem;">🏷️ Published Surplus Marketplace Listings</h3>
+            <div id="operatorListingsContainer">
+                <div class="state-box">Loading surplus listings...</div>
+            </div>
+        </div>
+
+        <!-- TAB 4: CAPACITY UTILIZATION -->
+        <div id="tabUtilization" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Facility Capacity Utilization</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Aggregate and per-room storage capacity occupancy metrics.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshUtil">Refresh Metrics</button>
+            </div>
+
+            <div class="grid-cards" style="margin-bottom: 1.5rem;">
+                <div class="card" style="margin: 0;">
+                    <div class="card-title">Total Storage Capacity</div>
+                    <div id="statUtilTotal" style="font-size: 2rem; font-weight: 700; color: var(--primary);">0 kg</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Registered cold rooms capacity</div>
+                </div>
+                <div class="card" style="margin: 0;">
+                    <div class="card-title">Currently Occupied</div>
+                    <div id="statUtilBooked" style="font-size: 2rem; font-weight: 700; color: #b45309;">0 kg</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Active reservations & stored produce</div>
+                </div>
+                <div class="card" style="margin: 0;">
+                    <div class="card-title">Occupancy Rate</div>
+                    <div id="statUtilPct" style="font-size: 2rem; font-weight: 700; color: #1e3a8a;">0.0%</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Current facility utilization</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 1rem;">Per-Room Capacity Breakdown</h3>
+                <div id="assetBreakdownContainer">
+                    <div class="state-box">Loading capacity breakdown...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: SRI PRIORITY QUEUE -->
+        <div id="tabSriQueue" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Spoilage Risk Index (SRI) Priority Queue</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Vulnerable harvest batches in your district requiring urgent static cooling intervention.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshSriQueue">Refresh Queue</button>
+            </div>
+
+            <div class="notice-banner" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">PROTOTYPE HONESTY</span>
+                    <span class="badge badge-simulated">DATA: SIMULATED</span>
+                    <span class="badge badge-fresh">STATUS: FRESH</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.4rem;">
+                    The Spoilage Risk Index (SRI) is an explainable heuristic prototype ranking (0–100) based on ambient field temperature and harvest elapsed time. It is not a lab-certified sensor reading.
+                </div>
+            </div>
+
+            <div id="sriQueueContainer">
+                <div class="state-box">Loading priority queue...</div>
+            </div>
+        </div>
+
+        <!-- TAB 6: ADD COLD ROOM -->
+        <div id="tabAddStatic" class="tab-content">
+            <div class="card" style="max-width: 800px; margin: 0 auto;">
+                <h1 class="page-title" style="margin-bottom: 0.5rem;">Register New Static Cold Room</h1>
+                <p class="page-subtitle" style="margin-bottom: 1.5rem;">Add a stationary refrigerated storage chamber to the ColdBridge network.</p>
+
+                <form id="formAddStatic">
+                    <div class="form-group">
+                        <label for="staticName">Facility / Chamber Name *</label>
+                        <input type="text" id="staticName" required placeholder="e.g. Sahyadri Agro Cold Vault A">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="staticCapacity">Total Storage Capacity (kg) *</label>
+                            <input type="number" id="staticCapacity" required min="100" step="50" placeholder="e.g. 5000">
+                        </div>
+                        <div class="form-group">
+                            <label for="staticPrice">Storage Rate (INR ₹ / kg / day) *</label>
+                            <input type="number" id="staticPrice" required min="0.1" step="0.1" placeholder="e.g. 2.0">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="staticMinTemp">Min Operating Temp (°C) *</label>
+                            <input type="number" id="staticMinTemp" required step="0.5" placeholder="e.g. 2.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="staticMaxTemp">Max Operating Temp (°C) *</label>
+                            <input type="number" id="staticMaxTemp" required step="0.5" placeholder="e.g. 10.0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="staticSupportedCrops">Supported Crops (comma-separated)</label>
+                        <input type="text" id="staticSupportedCrops" placeholder="e.g. TOMATO, MANGO, GRAPES, ONION">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Facility Location (OpenStreetMap Picker) *</label>
+                        <div id="staticLocationPickerContainer" style="height: 280px; width: 100%; border-radius: var(--radius); margin-bottom: 0.5rem; border: 1px solid var(--border);"></div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <input type="number" id="staticLat" step="0.0001" required placeholder="Latitude" readonly style="background: #f1f5f9;">
+                            <input type="number" id="staticLng" step="0.0001" required placeholder="Longitude" readonly style="background: #f1f5f9;">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary" id="btnSubmitStatic" style="width: 100%;">
+                            Register Cold Room
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 7: OPEN REQUESTS & BIDS (Part 5 E3) -->
+        <div id="tabBids" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Open Farmgate Requests & Bids</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Review pending harvest requests and submit direct operator offers to store produce in your facilities.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnRefreshBids">Refresh Requests</button>
+            </div>
+
+            <div class="card" style="padding: 0; overflow-x: auto;">
+                <div id="bidsTableContainer">
+                    <div class="state-box">Loading open matching requests...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 8: REGIONAL PUBLIC DIRECTORY (Part 4) -->
+        <div id="tabDirectory" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 class="page-title" style="margin-bottom: 0.25rem;">Regional Public Cold Storage Directory</h1>
+                    <p class="page-subtitle" style="margin-bottom: 0;">Verified commercial directory of real cold storage facilities in Nashik and Pune.</p>
+                </div>
+            </div>
+
+            <!-- Judge statement -->
+            <div class="alert alert-info" style="margin-bottom: 1.5rem; background: #eff6ff; border-left: 4px solid #15803d; color: #14532d;">
+                📢 <strong>Public Directory Notice:</strong>
+                <p style="margin: 0.5rem 0 0 0; font-size: 0.95rem; font-weight: 500;">These are real cold storage facilities in Nashik and Pune, taken from public directories. A farmer can contact them directly. The ranking and bids in our prototype are still simulated.</p>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="card" style="margin-bottom: 1.5rem; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-right: 0.25rem;">District:</span>
+                        <button type="button" class="btn btn-sm btn-op-dir-filter active" data-district="" style="background: #15803d; color: white;">All Districts</button>
+                        <button type="button" class="btn btn-sm btn-op-dir-filter" data-district="Nashik" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">Nashik</button>
+                        <button type="button" class="btn btn-sm btn-op-dir-filter" data-district="Pune" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">Pune</button>
+                    </div>
+
+                    <form id="opDirSearchForm" style="display: flex; gap: 0.5rem; align-items: center; flex: 1; max-width: 480px;">
+                        <input type="text" id="opDirSearchInput" placeholder="Search by facility name, area, or address..." maxlength="100" style="flex: 1; padding: 0.4rem 0.75rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 4px;">
+                        <button type="submit" id="btnOpDirSearch" class="btn btn-primary btn-sm">Search</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="opDirListingsContainer">
+                <div class="state-box">Loading public directory listings...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operator Bid Submission Modal (Part 5 E3) -->
+    <div id="bidModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 520px; width: 90%; margin: auto;">
+            <div class="card-title">
+                <span>Submit Operator Offer to Store</span>
+                <button type="button" id="btnCloseBidModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form id="bidSubmissionForm" style="margin-top: 1rem;">
+                <input type="hidden" id="bidRequestId">
+                <div class="form-group">
+                    <label>Harvest Request Info</label>
+                    <input type="text" id="bidRequestSummary" disabled style="background: #f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label for="bidAssetSelect">Select Cold Room *</label>
+                    <select id="bidAssetSelect" required></select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="bidOfferedKg">Offered Capacity (kg) *</label>
+                        <input type="number" id="bidOfferedKg" step="10" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bidPriceTotal">Total Offer Price (INR ₹) *</label>
+                        <input type="number" id="bidPriceTotal" step="10" min="10" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="bidEtaMinutes">Estimated ETA (Minutes)</label>
+                        <input type="number" id="bidEtaMinutes" step="5" min="0" value="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bidValidityHours">Bid Validity (Hours)</label>
+                        <select id="bidValidityHours">
+                            <option value="2" selected>2 Hours</option>
+                            <option value="4">4 Hours</option>
+                            <option value="12">12 Hours</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="bidNote">Operator Note to Farmer</label>
+                    <input type="text" id="bidNote" placeholder="e.g., Pre-cooled chamber available immediately.">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
+                    <button type="button" id="btnCancelBid" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnConfirmBid">Submit Offer to Store 📤</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Surplus Listing Creation Modal -->
+    <div id="surplusModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 520px; width: 90%; margin: auto;">
+            <div class="card-title">
+                <span>List Near-Expiry Surplus Produce</span>
+            </div>
+            <form id="surplusListingForm" style="margin-top: 1rem;">
+                <input type="hidden" id="surplusInventoryId">
+                <div class="form-group">
+                    <label>Produce Batch & Crop</label>
+                    <input type="text" id="surplusBatchSummary" disabled style="background: #f1f5f9;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="surplusQuantity">Quantity to List (kg) *</label>
+                        <input type="number" id="surplusQuantity" step="10" min="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="surplusBasePrice">Base Price (INR ₹ / kg) *</label>
+                        <input type="number" id="surplusBasePrice" step="0.5" min="1" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="surplusExpiryHours">Listing Window (Hours)</label>
+                        <select id="surplusExpiryHours">
+                            <option value="24">24 Hours (Fast Clearance)</option>
+                            <option value="48" selected>48 Hours (Standard)</option>
+                            <option value="72">72 Hours</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="surplusQualityGrade">Inspected Quality Grade</label>
+                        <select id="surplusQualityGrade">
+                            <option value="GRADE_A">Grade A (Firm, Unblemished)</option>
+                            <option value="GRADE_B">Grade B (Ripe, Intact)</option>
+                            <option value="GRADE_C">Grade C (Processing Grade)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="surplusNotes">Inspection / Condition Notes</label>
+                    <textarea id="surplusNotes" rows="2" placeholder="e.g. Hydro-cooled tomatoes, 80% color, no fungal lesions"></textarea>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; background: #f8fafc; padding: 0.5rem; border-radius: var(--radius); border: 1px solid var(--border);">
+                    <input type="checkbox" id="surplusApproveImmediately" checked>
+                    <label for="surplusApproveImmediately" style="margin: 0; font-size: 0.85rem; cursor: pointer;">
+                        <strong>Operator Sign-Off:</strong> I have physically inspected this produce and certify its quality for immediate marketplace release.
+                    </label>
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" id="btnCancelSurplusModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitSurplus">Publish Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quality Approval Modal -->
+    <div id="qualityApprovalModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 480px; width: 90%; margin: auto;">
+            <div class="card-title">
+                <span>Produce Quality Inspection Sign-Off</span>
+            </div>
+            <form id="qualityApprovalForm" style="margin-top: 1rem;">
+                <input type="hidden" id="approvalListingId">
+                <p id="approvalListingSummary" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"></p>
+                <div class="form-group">
+                    <label for="approvalGrade">Certified Quality Grade *</label>
+                    <select id="approvalGrade" required>
+                        <option value="GRADE_A">Grade A (Premium Fresh, Firm, Zero Mould)</option>
+                        <option value="GRADE_B">Grade B (Fully Ripe, Suitable for Immediate Consumption)</option>
+                        <option value="GRADE_C">Grade C (Processing / Pulping Grade)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="approvalNotes">Visual & Physical Inspection Notes *</label>
+                    <textarea id="approvalNotes" rows="3" required placeholder="e.g. Firmness tested with penetrometer; skin intact; cold storage at 4C maintained."></textarea>
+                </div>
+                <div class="notice-banner" style="margin-bottom: 1rem; font-size: 0.8rem; background: #fffbeb; border-color: #fde68a; color: #92400e;">
+                    ℹ️ Time alone does NOT prove food safety. By signing off, you confirm that physical inspection was performed and produce is fit for human consumption.
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" id="btnCancelApprovalModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnConfirmApproval">Approve & Release to Buyers</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Capacity Adjustment Modal -->
+    <div id="capacityModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 480px; width: 90%; margin: auto;">
+            <div class="card-title">
+                <span>Update Cold Room Capacity & Availability</span>
+            </div>
+            <form id="capacityUpdateForm" style="margin-top: 1rem;">
+                <input type="hidden" id="modalAssetId">
+                <input type="hidden" id="modalAssetTotal">
+                <div class="form-group">
+                    <label>Facility Name</label>
+                    <input type="text" id="modalAssetName" disabled style="background: #f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label for="modalNewAvailCap">Available Capacity (kg) *</label>
+                    <input type="number" id="modalNewAvailCap" step="10" min="0" required>
+                    <span class="form-help" id="modalCapHelp">Must not exceed total capacity</span>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="modalIsActive">
+                    <label for="modalIsActive" style="margin: 0; cursor: pointer;">Cold Room is Active for Matching</label>
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;">
+                    <button type="button" class="btn btn-secondary" id="btnCancelModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leaflet.js JS for OpenStreetMap Picker -->
+    <script src="vendor/leaflet/leaflet.js" data-leaflet-js="true"></script>
+
+    <script type="module">
+        import { initOperatorSession, setupLangSwitcher, setupTabs, escapeHtml, formatDate, getStatusBadge } from './js/operator_common.js';
+        import { apiRequest } from './js/api.js';
+        import { logout } from './js/auth.js';
+        import { mountLocationPicker } from './js/maps.js';
+
+        let currentUser = null;
+        let cachedAssets = [];
+
+        const globalAlert = document.getElementById('globalAlert');
+        function showAlert(msg, type = 'error') {
+            globalAlert.className = `alert alert-${type}`;
+            globalAlert.textContent = msg;
+            globalAlert.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function hideAlert() {
+            globalAlert.style.display = 'none';
+        }
+
+        // Initialize Session Guard and Setup
+        (async () => {
+            currentUser = await initOperatorSession('STATIC_OPERATOR');
+            if (!currentUser) return;
+
+            document.getElementById('operatorName').textContent = `${currentUser.full_name} (Storage Operator)`;
+            setupLangSwitcher('langSwitcher');
+            setupTabs('nav .nav-link', '.tab-content', 'tabAssets');
+
+            // Mount OpenStreetMap Location Picker for Static Cold Room
+            await mountLocationPicker('staticLocationPickerContainer', {
+                initialLat: 20.0050,
+                initialLng: 73.7950,
+                onChange: ({ lat, lng }) => {
+                    document.getElementById('staticLat').value = lat.toFixed(4);
+                    document.getElementById('staticLng').value = lng.toFixed(4);
+                }
+            });
+
+            // Initial Data Loads
+            await loadMyColdRooms();
+            await loadBookings();
+            await loadInventoryAndSurplus();
+            await loadUtilization();
+            await loadSriQueue();
+            await loadOpenRequestsAndBids();
+            await loadOpDirectoryListings();
+        })();
+
+        document.getElementById('btnLogout').addEventListener('click', logout);
+        document.getElementById('btnRefreshBids').addEventListener('click', loadOpenRequestsAndBids);
+
+        // Load Static Cold Rooms
+        async function loadMyColdRooms() {
+            const grid = document.getElementById('assetsGrid');
+            grid.innerHTML = '<div class="state-box">Loading cold rooms...</div>';
+
+            try {
+                const res = await apiRequest('/assets?limit=50&asset_type=STATIC');
+                cachedAssets = res.items || [];
+
+                if (cachedAssets.length === 0) {
+                    grid.innerHTML = `
+                        <div class="state-box" style="grid-column: 1 / -1;">
+                            <h3>No cold rooms registered yet</h3>
+                            <p>Register your first static cold room chamber using the <strong>Add Cold Room</strong> tab.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = cachedAssets.map(a => {
+                    const pct = a.total_capacity_kg > 0
+                        ? Math.round(((a.total_capacity_kg - a.available_capacity_kg) / a.total_capacity_kg) * 100)
+                        : 0;
+
+                    return `
+                        <div class="card" style="margin: 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <div>
+                                    <span style="font-size: 1.25rem;">🏭</span>
+                                    <strong style="font-size: 1.1rem; margin-left: 0.25rem;">${escapeHtml(a.name)}</strong>
+                                </div>
+                                <span class="badge ${a.is_active ? 'badge-fresh' : 'badge-danger'}">
+                                    ${a.is_active ? 'ACTIVE' : 'INACTIVE'}
+                                </span>
+                            </div>
+
+                            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                                📍 ${a.latitude.toFixed(4)}, ${a.longitude.toFixed(4)}
+                            </div>
+
+                            <div style="margin-bottom: 0.75rem;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.25rem;">
+                                    <span>Occupancy:</span>
+                                    <strong>${pct}% (${(a.total_capacity_kg - a.available_capacity_kg).toLocaleString()} / ${a.total_capacity_kg.toLocaleString()} kg)</strong>
+                                </div>
+                                <div style="height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                                    <div style="width: ${pct}%; height: 100%; background: ${pct > 85 ? '#ef4444' : 'var(--primary)'};"></div>
+                                </div>
+                            </div>
+
+                            <div style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 1rem; border-top: 1px solid var(--border); padding-top: 0.5rem;">
+                                <div><strong>Available:</strong> ${a.available_capacity_kg.toLocaleString()} kg</div>
+                                <div><strong>Rate:</strong> ₹${a.price_per_kg_per_day.toFixed(2)} / kg / day</div>
+                                <div><strong>Temp Range:</strong> ${a.static_detail?.min_temperature_c ?? 2}°C to ${a.static_detail?.max_temperature_c ?? 10}°C</div>
+                                <div><strong>Supported:</strong> ${escapeHtml(a.static_detail?.supported_crops || 'All Crops')}</div>
+                            </div>
+
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" class="btn btn-secondary btn-sm btn-update-cap" data-id="${a.id}" style="width: 100%;">
+                                    Update Capacity
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.querySelectorAll('.btn-update-cap').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        const asset = cachedAssets.find(x => x.id === id);
+                        if (asset) openCapacityModal(asset);
+                    });
+                });
+
+            } catch (err) {
+                grid.innerHTML = `<div class="state-box" style="grid-column: 1 / -1; color: var(--danger);">Failed to load cold rooms: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        document.getElementById('btnRefreshAssets').addEventListener('click', loadMyColdRooms);
+
+        // Capacity Modal Logic
+        function openCapacityModal(asset) {
+            document.getElementById('modalAssetId').value = asset.id;
+            document.getElementById('modalAssetName').value = asset.name;
+            document.getElementById('modalAssetTotal').value = asset.total_capacity_kg;
+            document.getElementById('modalNewAvailCap').value = asset.available_capacity_kg;
+            document.getElementById('modalNewAvailCap').max = asset.total_capacity_kg;
+            document.getElementById('modalIsActive').checked = asset.is_active;
+            document.getElementById('modalCapHelp').textContent = `Must be between 0 and ${asset.total_capacity_kg.toLocaleString()} kg`;
+            document.getElementById('capacityModal').style.display = 'flex';
+        }
+
+        document.getElementById('btnCancelModal').addEventListener('click', () => {
+            document.getElementById('capacityModal').style.display = 'none';
+        });
+
+        document.getElementById('capacityUpdateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const assetId = document.getElementById('modalAssetId').value;
+            const newAvail = parseFloat(document.getElementById('modalNewAvailCap').value);
+            const total = parseFloat(document.getElementById('modalAssetTotal').value);
+            const isActive = document.getElementById('modalIsActive').checked;
+
+            if (newAvail < 0 || newAvail > total) {
+                showAlert(`Available capacity must be between 0 and ${total} kg`, 'error');
+                return;
+            }
+
+            try {
+                await apiRequest(`/assets/${assetId}/availability`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        available_capacity_kg: newAvail,
+                        is_active: isActive
+                    })
+                });
+
+                document.getElementById('capacityModal').style.display = 'none';
+                showAlert('Cold room capacity updated successfully!', 'success');
+                await loadMyColdRooms();
+                await loadUtilization();
+            } catch (err) {
+                showAlert('Failed to update capacity: ' + err.message, 'error');
+            }
+        });
+
+        // Load Bookings (Drop-Off Flow)
+        async function loadBookings() {
+            const container = document.getElementById('operatorBookingsContainer');
+            container.innerHTML = '<div class="state-box">Loading incoming bookings...</div>';
+
+            try {
+                const bookings = await apiRequest('/bookings/my-bookings');
+                // Filter to static assets
+                const staticBookings = (bookings || []).filter(b => b.asset && b.asset.asset_type === 'STATIC');
+
+                if (staticBookings.length === 0) {
+                    container.innerHTML = '<div class="state-box">No facility bookings found for your static chambers.</div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        ${staticBookings.map(b => {
+                            const canProgress = !['COMPLETED', 'CANCELLED', 'EXPIRED', 'FAILED'].includes(b.status);
+                            let nextStatuses = [];
+                            if (b.status === 'RESERVED') nextStatuses = ['CONFIRMED', 'CANCELLED'];
+                            else if (b.status === 'CONFIRMED') nextStatuses = ['PRODUCE_RECEIVED', 'CANCELLED'];
+                            else if (b.status === 'PRODUCE_RECEIVED') nextStatuses = ['IN_STORAGE'];
+                            else if (b.status === 'IN_STORAGE') nextStatuses = ['COMPLETED'];
+
+                            return `
+                                <div class="card" style="margin: 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                        <div>
+                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                <strong style="font-size: 1.05rem;">Booking #${b.id.substring(0, 8)}</strong>
+                                                ${getStatusBadge(b.status)}
+                                            </div>
+                                            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                                Facility: <strong>${escapeHtml(b.asset?.name || 'Cold Vault')}</strong> | Created: ${formatDate(b.created_at)}
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary);">₹${(b.price_total || 0).toLocaleString()}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">${b.days_estimated} days storage</div>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; font-size: 0.85rem; background: #f8fafc; padding: 0.75rem; border-radius: var(--radius); margin-bottom: 1rem;">
+                                        <div>📦 <strong>Quantity:</strong> ${b.quantity_kg} kg</div>
+                                        <div>🏷️ <strong>Rate:</strong> ₹${b.rate_per_kg_per_day} / kg / day</div>
+                                        <div>⏳ <strong>Estimated Duration:</strong> ${b.days_estimated} days</div>
+                                        <div>🏭 <strong>Chamber:</strong> ${escapeHtml(b.asset?.name || 'Main Room')}</div>
+                                    </div>
+
+                                    ${canProgress && nextStatuses.length > 0 ? `
+                                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                                            <span style="font-size: 0.85rem; color: var(--text-muted);">Advance Drop-off:</span>
+                                            ${nextStatuses.map(ns => `
+                                                <button type="button" class="btn ${ns === 'CANCELLED' ? 'btn-danger' : 'btn-primary'} btn-sm btn-advance-status" data-id="${b.id}" data-status="${ns}">
+                                                    ${ns === 'PRODUCE_RECEIVED' ? 'Mark Produce Received' : ns === 'IN_STORAGE' ? 'Store in Chamber' : ns === 'COMPLETED' ? 'Mark Completed' : ns}
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+
+                document.querySelectorAll('.btn-advance-status').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const id = btn.getAttribute('data-id');
+                        const status = btn.getAttribute('data-status');
+                        await advanceBookingStatus(id, status);
+                    });
+                });
+
+            } catch (err) {
+                container.innerHTML = `<div class="state-box" style="color: var(--danger);">Failed to load bookings: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        async function advanceBookingStatus(bookingId, newStatus) {
+            hideAlert();
+            try {
+                await apiRequest(`/bookings/${bookingId}/status`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ status: newStatus })
+                });
+                showAlert(`Booking status updated to ${newStatus}!`, 'success');
+                await loadBookings();
+                await loadMyColdRooms();
+                await loadInventoryAndSurplus();
+                await loadUtilization();
+            } catch (err) {
+                showAlert('Failed to update status: ' + err.message, 'error');
+            }
+        }
+
+        document.getElementById('btnRefreshBookings').addEventListener('click', loadBookings);
+
+        // Load Capacity Utilization
+        async function loadUtilization() {
+            try {
+                const res = await apiRequest('/assets/my-assets/utilization');
+                const ov = res.overall || {};
+                document.getElementById('statUtilTotal').textContent = `${(ov.total_capacity_kg || 0).toLocaleString()} kg`;
+                document.getElementById('statUtilBooked').textContent = `${(ov.booked_capacity_kg || 0).toLocaleString()} kg`;
+                document.getElementById('statUtilPct').textContent = `${(ov.utilization_pct || 0).toFixed(1)}%`;
+
+                const breakdown = document.getElementById('assetBreakdownContainer');
+                const perAsset = (res.per_asset || []).filter(a => a.asset_type === 'STATIC');
+
+                if (perAsset.length === 0) {
+                    breakdown.innerHTML = '<p style="color: var(--text-muted);">No active cold rooms registered.</p>';
+                    return;
+                }
+
+                breakdown.innerHTML = `
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                                    <th style="padding: 0.5rem;">Cold Room</th>
+                                    <th style="padding: 0.5rem;">Total (kg)</th>
+                                    <th style="padding: 0.5rem;">Available (kg)</th>
+                                    <th style="padding: 0.5rem;">Booked (kg)</th>
+                                    <th style="padding: 0.5rem;">Occupancy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${perAsset.map(a => `
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 0.5rem;"><strong>${escapeHtml(a.asset_name)}</strong></td>
+                                        <td style="padding: 0.5rem;">${a.total_capacity_kg.toLocaleString()}</td>
+                                        <td style="padding: 0.5rem;">${a.available_capacity_kg.toLocaleString()}</td>
+                                        <td style="padding: 0.5rem;">${a.booked_capacity_kg.toLocaleString()}</td>
+                                        <td style="padding: 0.5rem;">
+                                            <span style="font-weight: 700; color: ${a.utilization_pct > 80 ? '#b45309' : 'var(--primary)'};">
+                                                ${a.utilization_pct.toFixed(1)}%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Utilization error:', err);
+            }
+        }
+
+        document.getElementById('btnRefreshUtil').addEventListener('click', loadUtilization);
+
+        // Load SRI Priority Queue
+        async function loadSriQueue() {
+            const container = document.getElementById('sriQueueContainer');
+            try {
+                const queue = await apiRequest('/sri/priority-queue?limit=50');
+                if (!queue || queue.length === 0) {
+                    container.innerHTML = '<div class="state-box">No harvest batches currently requiring urgent cooling in your region.</div>';
+                    return;
+                }
+
+                container.innerHTML = queue.map(item => `
+                    <div class="card" style="margin-bottom: 1rem; border-left: 4px solid ${item.score > 70 ? '#ef4444' : item.score > 40 ? '#f59e0b' : '#10b981'};">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <span class="badge" style="background:#e0e7ff; color:#3730a3; font-weight:700;">Rank #${item.priority_rank}</span>
+                                <strong style="font-size: 1.1rem; margin-left: 0.25rem;">${escapeHtml(item.crop_code)}</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">(${item.quantity_kg} kg)</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 1.25rem; font-weight: 800; color: ${item.score > 70 ? '#ef4444' : item.score > 40 ? '#f59e0b' : '#10b981'};">
+                                    SRI ${item.score.toFixed(1)} / 100
+                                </div>
+                                <span class="badge ${item.risk_category === 'HIGH' ? 'badge-danger' : item.risk_category === 'MEDIUM' ? 'badge-warning' : 'badge-fresh'}">
+                                    ${item.risk_category} RISK
+                                </span>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+                            📍 Farm Coordinates: ${item.latitude.toFixed(2)}, ${item.longitude.toFixed(2)} | Ambient Field Temp: ${item.ambient_temp_c}°C
+                        </div>
+                        <div style="margin-top: 0.5rem; font-size: 0.85rem; background: #f8fafc; padding: 0.5rem; border-radius: var(--radius);">
+                            💡 <strong>Recommended Action:</strong> ${escapeHtml(item.recommended_action)}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                container.innerHTML = `<div class="state-box" style="color: var(--danger);">Failed to load SRI queue: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        document.getElementById('btnRefreshSriQueue').addEventListener('click', loadSriQueue);
+
+        // Load Inventory and Surplus Listings
+        async function loadInventoryAndSurplus() {
+            const invContainer = document.getElementById('inventoryContainer');
+            const listContainer = document.getElementById('operatorListingsContainer');
+
+            try {
+                const [invItems, listings] = await Promise.all([
+                    apiRequest('/inventory'),
+                    apiRequest('/marketplace/operator-listings')
+                ]);
+
+                if (!invItems || invItems.length === 0) {
+                    invContainer.innerHTML = '<div class="state-box">No stored produce currently in facility inventory.</div>';
+                } else {
+                    invContainer.innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            ${invItems.map(inv => `
+                                <div class="card" style="margin: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                    <div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <strong>${escapeHtml(inv.crop_code || 'PRODUCE')}</strong>
+                                            <span class="badge badge-fresh">${inv.status}</span>
+                                        </div>
+                                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                            Chamber: <strong>${escapeHtml(inv.asset_name || 'Static Vault')}</strong> | Stored: ${inv.current_quantity_kg} kg | Received: ${formatDate(inv.received_at)}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-primary btn-sm btn-create-surplus"
+                                            data-id="${inv.id}"
+                                            data-crop="${escapeHtml(inv.crop_code)}"
+                                            data-qty="${inv.current_quantity_kg}">
+                                            List as Surplus
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+
+                    document.querySelectorAll('.btn-create-surplus').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-id');
+                            const crop = btn.getAttribute('data-crop');
+                            const qty = btn.getAttribute('data-qty');
+                            document.getElementById('surplusInventoryId').value = id;
+                            document.getElementById('surplusBatchSummary').value = `${crop} (${qty} kg available)`;
+                            document.getElementById('surplusQuantity').value = qty;
+                            document.getElementById('surplusQuantity').max = qty;
+                            document.getElementById('surplusModal').style.display = 'flex';
+                        });
+                    });
+                }
+
+                if (!listings || listings.length === 0) {
+                    listContainer.innerHTML = '<div class="state-box">No surplus listings created yet.</div>';
+                } else {
+                    listContainer.innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            ${listings.map(l => `
+                                <div class="card" style="margin: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                    <div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <strong>${escapeHtml(l.crop_code)}</strong>
+                                            <span class="badge ${l.status === 'APPROVED' ? 'badge-fresh' : 'badge-warning'}">
+                                                ${l.status}
+                                            </span>
+                                            ${l.quality_grade ? `<span class="badge" style="background:#f1f5f9; color:#475569;">${l.quality_grade}</span>` : ''}
+                                        </div>
+                                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                            Available: <strong>${l.available_quantity_kg} kg</strong> | Current Price: <strong>₹${l.discounted_price_per_kg || l.base_price_per_kg}/kg</strong> (Base ₹${l.base_price_per_kg})
+                                        </div>
+                                    </div>
+                                    <div>
+                                        ${l.status === 'PENDING_APPROVAL' ? `
+                                            <button type="button" class="btn btn-primary btn-sm btn-approve-quality"
+                                                data-id="${l.id}"
+                                                data-crop="${escapeHtml(l.crop_code)}"
+                                                data-qty="${l.available_quantity_kg}">
+                                                Sign Off Quality Inspection
+                                            </button>
+                                        ` : `
+                                            <span style="font-size: 0.85rem; color: #15803d; font-weight: 600;">✓ Certified & Live</span>
+                                        `}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+
+                    document.querySelectorAll('.btn-approve-quality').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-id');
+                            const crop = btn.getAttribute('data-crop');
+                            const qty = btn.getAttribute('data-qty');
+                            document.getElementById('approvalListingId').value = id;
+                            document.getElementById('approvalListingSummary').textContent = `Inspecting ${crop} (${qty} kg) for buyer marketplace publication.`;
+                            document.getElementById('qualityApprovalModal').style.display = 'flex';
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error('Surplus error:', err);
+            }
+        }
+
+        document.getElementById('btnRefreshSurplus').addEventListener('click', loadInventoryAndSurplus);
+
+        // Surplus Modal Actions
+        document.getElementById('btnCancelSurplusModal').addEventListener('click', () => {
+            document.getElementById('surplusModal').style.display = 'none';
+        });
+
+        document.getElementById('surplusListingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const payload = {
+                inventory_id: document.getElementById('surplusInventoryId').value,
+                initial_quantity_kg: parseFloat(document.getElementById('surplusQuantity').value),
+                base_price_per_kg: parseFloat(document.getElementById('surplusBasePrice').value),
+                expiry_hours: parseInt(document.getElementById('surplusExpiryHours').value, 10),
+                quality_grade: document.getElementById('surplusQualityGrade').value,
+                notes: document.getElementById('surplusNotes').value.trim(),
+                approve_immediately: document.getElementById('surplusApproveImmediately').checked
+            };
+
+            try {
+                await apiRequest('/marketplace/listings', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                document.getElementById('surplusModal').style.display = 'none';
+                showAlert('Surplus listing created successfully!', 'success');
+                await loadInventoryAndSurplus();
+            } catch (err) {
+                showAlert('Failed to create surplus listing: ' + err.message, 'error');
+            }
+        });
+
+        // Quality Approval Modal Actions
+        document.getElementById('btnCancelApprovalModal').addEventListener('click', () => {
+            document.getElementById('qualityApprovalModal').style.display = 'none';
+        });
+
+        document.getElementById('qualityApprovalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const listingId = document.getElementById('approvalListingId').value;
+            const payload = {
+                quality_grade: document.getElementById('approvalGrade').value,
+                notes: document.getElementById('approvalNotes').value.trim()
+            };
+
+            try {
+                await apiRequest(`/marketplace/listings/${listingId}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                document.getElementById('qualityApprovalModal').style.display = 'none';
+                showAlert('Quality inspection certified! Listing published to wholesale buyers.', 'success');
+                await loadInventoryAndSurplus();
+            } catch (err) {
+                showAlert('Failed to certify quality: ' + err.message, 'error');
+            }
+        });
+
+        // Add Cold Room Form Handler
+        document.getElementById('formAddStatic').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const payload = {
+                name: document.getElementById('staticName').value.trim(),
+                asset_type: 'STATIC',
+                total_capacity_kg: parseFloat(document.getElementById('staticCapacity').value),
+                price_per_kg_per_day: parseFloat(document.getElementById('staticPrice').value),
+                latitude: parseFloat(document.getElementById('staticLat').value),
+                longitude: parseFloat(document.getElementById('staticLng').value),
+                static_detail: {
+                    supported_crops: document.getElementById('staticSupportedCrops').value.trim() || 'ALL',
+                    min_temperature_c: parseFloat(document.getElementById('staticMinTemp').value),
+                    max_temperature_c: parseFloat(document.getElementById('staticMaxTemp').value)
+                }
+            };
+
+            try {
+                await apiRequest('/assets', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                showAlert(`Cold room "${payload.name}" registered successfully!`, 'success');
+                document.getElementById('formAddStatic').reset();
+                await loadMyColdRooms();
+                await loadUtilization();
+            } catch (err) {
+                showAlert('Failed to register cold room: ' + err.message, 'error');
+            }
+        });
+
+        // Load Open Requests & Bids (Part 5 E3)
+        let cachedOpenRequests = [];
+        async function loadOpenRequestsAndBids() {
+            const container = document.getElementById('bidsTableContainer');
+            container.innerHTML = '<div class="state-box">Loading open matching requests...</div>';
+
+            try {
+                const requests = await apiRequest('/matching/open-requests');
+                cachedOpenRequests = requests || [];
+
+                if (cachedOpenRequests.length === 0) {
+                    container.innerHTML = `
+                        <div class="state-box">
+                            <div class="state-icon">📋</div>
+                            <h3>No Open Harvest Requests</h3>
+                            <p>There are currently no pending matching requests eligible for static storage.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid var(--border);">
+                                <th style="padding: 0.6rem 0.8rem;">Request ID</th>
+                                <th style="padding: 0.6rem 0.8rem;">Crop</th>
+                                <th style="padding: 0.6rem 0.8rem;">Quantity</th>
+                                <th style="padding: 0.6rem 0.8rem;">Approx Farm Location</th>
+                                <th style="padding: 0.6rem 0.8rem;">My Existing Offer</th>
+                                <th style="padding: 0.6rem 0.8rem; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${cachedOpenRequests.map(req => {
+                                const eb = req.existing_bid;
+                                let bidBadge = '<span class="badge badge-secondary">NO BID SUBMITTED</span>';
+                                if (eb) {
+                                    if (eb.is_operator_submitted) {
+                                        bidBadge = `<span class="badge badge-source-live">OPERATOR-SUBMITTED (₹${eb.price_total.toLocaleString()})</span>`;
+                                    } else {
+                                        bidBadge = `<span class="badge badge-source-simulated">ENGINE SIMULATED (₹${eb.price_total.toLocaleString()})</span>`;
+                                    }
+                                }
+
+                                return `
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 0.6rem 0.8rem; font-family: monospace;">#${req.id.slice(0, 8)}</td>
+                                        <td style="padding: 0.6rem 0.8rem;"><strong>${escapeHtml(req.crop_code.toUpperCase())}</strong></td>
+                                        <td style="padding: 0.6rem 0.8rem;">${req.requested_quantity_kg.toLocaleString()} kg</td>
+                                        <td style="padding: 0.6rem 0.8rem; font-size: 0.85rem; color: var(--text-muted);">
+                                            ${req.approx_latitude && req.approx_longitude ? `Lat ${req.approx_latitude}, Lng ${req.approx_longitude}` : 'Maharashtra Region'}
+                                        </td>
+                                        <td style="padding: 0.6rem 0.8rem;">${bidBadge}</td>
+                                        <td style="padding: 0.6rem 0.8rem; text-align: right;">
+                                            <button type="button" class="btn btn-primary btn-sm btnOpenBidModal" data-id="${req.id}" data-crop="${escapeHtml(req.crop_code)}" data-kg="${req.requested_quantity_kg}">
+                                                ${eb && eb.is_operator_submitted ? 'Update Offer to Store' : 'Submit Offer to Store 📤'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                // Attach modal open triggers
+                container.querySelectorAll('.btnOpenBidModal').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const reqId = btn.getAttribute('data-id');
+                        const crop = btn.getAttribute('data-crop');
+                        const kg = parseFloat(btn.getAttribute('data-kg'));
+                        openBidModal(reqId, crop, kg);
+                    });
+                });
+            } catch (err) {
+                container.innerHTML = `<div class="alert alert-error">Failed to load open requests: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        function openBidModal(reqId, crop, kg) {
+            document.getElementById('bidRequestId').value = reqId;
+            document.getElementById('bidRequestSummary').value = `Request #${reqId.slice(0,8)} | Crop: ${crop.toUpperCase()} | Requested: ${kg} kg`;
+            document.getElementById('bidOfferedKg').value = kg;
+            document.getElementById('bidPriceTotal').value = Math.round(kg * 1.5 * 3);
+            document.getElementById('bidEtaMinutes').value = 30;
+
+            const select = document.getElementById('bidAssetSelect');
+            select.innerHTML = '';
+            const activeStaticAssets = cachedAssets.filter(a => a.is_active && a.asset_type === 'STATIC');
+            if (activeStaticAssets.length === 0) {
+                alert('You must have at least one active static cold room to submit storage offers.');
+                return;
+            }
+            activeStaticAssets.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = `${a.name} (Avail: ${a.available_capacity_kg.toLocaleString()} kg, Rate: ₹${a.price_per_kg_per_day}/kg/day)`;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('bidModal').style.display = 'flex';
+        }
+
+        document.getElementById('btnCloseBidModal').onclick = () => { document.getElementById('bidModal').style.display = 'none'; };
+        document.getElementById('btnCancelBid').onclick = () => { document.getElementById('bidModal').style.display = 'none'; };
+
+        document.getElementById('bidSubmissionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const reqId = document.getElementById('bidRequestId').value;
+            const assetId = document.getElementById('bidAssetSelect').value;
+            const offeredKg = parseFloat(document.getElementById('bidOfferedKg').value);
+            const priceTotal = parseFloat(document.getElementById('bidPriceTotal').value);
+            const etaMinutes = parseFloat(document.getElementById('bidEtaMinutes').value);
+            const validityHours = parseInt(document.getElementById('bidValidityHours').value, 10);
+            const note = document.getElementById('bidNote').value;
+
+            // Client-side validation
+            const selectedAsset = cachedAssets.find(a => a.id === assetId);
+            if (selectedAsset && offeredKg > selectedAsset.available_capacity_kg) {
+                alert(`Offered capacity (${offeredKg} kg) exceeds available cold room capacity (${selectedAsset.available_capacity_kg} kg).`);
+                return;
+            }
+
+            const validUntil = new Date(Date.now() + validityHours * 3600 * 1000).toISOString();
+
+            try {
+                hideAlert();
+                await apiRequest(`/matching/requests/${reqId}/bids`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        asset_id: assetId,
+                        offered_capacity_kg: offeredKg,
+                        price_total: priceTotal,
+                        eta_minutes: etaMinutes,
+                        valid_until: validUntil,
+                        note: note || undefined
+                    })
+                });
+
+                document.getElementById('bidModal').style.display = 'none';
+                showAlert(`Successfully submitted offer to store for request #${reqId.slice(0, 8)}! (Source: LIVE OPERATOR BID)`, 'success');
+                await loadOpenRequestsAndBids();
+            } catch (err) {
+                alert('Bid submission error: ' + err.message);
+            }
+        });
+
+        // =========================================================================
+        // REGIONAL PUBLIC DIRECTORY (Part 4)
+        // =========================================================================
+        let currentOpDirDistrict = '';
+        let currentOpDirQuery = '';
+        let isOpDirLoading = false;
+
+        async function loadOpDirectoryListings() {
+            const container = document.getElementById('opDirListingsContainer');
+            if (!container) return;
+
+            if (isOpDirLoading) return;
+            isOpDirLoading = true;
+
+            container.innerHTML = `<div class="state-box">Loading regional cold storage listings...</div>`;
+
+            let endpoint = '/directory/cold-storages';
+            const params = new URLSearchParams();
+            if (currentOpDirDistrict) {
+                params.append('district', currentOpDirDistrict);
+            }
+            if (currentOpDirQuery) {
+                params.append('q', currentOpDirQuery);
+            }
+            const qs = params.toString();
+            if (qs) {
+                endpoint += `?${qs}`;
+            }
+
+            try {
+                const data = await apiRequest(endpoint);
+                renderOpDirectoryListings(data.items || [], data.disclaimer);
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="alert alert-error" style="margin: 1rem 0;">
+                        Unable to load public directory listings: ${escapeHtml(err.message)}
+                    </div>
+                `;
+            } finally {
+                isOpDirLoading = false;
+            }
+        }
+
+        function renderOpDirectoryListings(items, disclaimer) {
+            const container = document.getElementById('opDirListingsContainer');
+            if (!container) return;
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="state-box">
+                        No public cold storage facilities found matching your criteria.
+                    </div>
+                `;
+                return;
+            }
+
+            const cardsHtml = items.map(it => {
+                const publicBadge = `<span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 600;">PUBLIC LISTING</span>`;
+                const notPartnerBadge = `<span class="badge" style="background: #fed7aa; color: #9a3412; font-weight: 600;">NOT A COLDBRIDGE PARTNER</span>`;
+
+                let verifiedBlock = '';
+                if (!it.contact_verified) {
+                    verifiedBlock = `<span style="font-size: 0.8rem; color: #b45309; font-weight: 500;">⚠️ Unverified – call to confirm</span>`;
+                }
+
+                let phoneBlock = '';
+                if (it.phone) {
+                    const rawPhone = escapeHtml(it.phone);
+                    const cleanTel = it.phone.replace(/[^0-9+]/g, '');
+                    const isValidTel = /^\+?[0-9]{7,15}$/.test(cleanTel);
+
+                    phoneBlock = `
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                            <span style="font-weight: 600; font-size: 0.9rem;">📞 ${rawPhone}</span>
+                            ${isValidTel ? `<a href="tel:${cleanTel}" class="btn btn-primary btn-sm" style="text-decoration: none; padding: 0.25rem 0.6rem; font-size: 0.8rem;">📞 Call</a>` : ''}
+                            <button type="button" class="btn btn-secondary btn-sm btn-copy-op-phone" data-phone="${rawPhone}" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">📋 Copy Number</button>
+                        </div>
+                    `;
+                } else {
+                    phoneBlock = `
+                        <div style="margin-top: 0.5rem;">
+                            <span style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">No phone listed</span>
+                        </div>
+                    `;
+                }
+
+                const sourceNote = it.source_note ? `<div style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem; border-top: 1px dashed var(--border); padding-top: 0.35rem;">ℹ️ ${escapeHtml(it.source_note)}</div>` : '';
+
+                return `
+                    <div class="card" style="margin-bottom: 1rem; border-left: 4px solid #15803d;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--text);">${escapeHtml(it.name)}</h3>
+                                    ${publicBadge}
+                                    ${notPartnerBadge}
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                                    📍 ${escapeHtml(it.area)}, ${escapeHtml(it.district)}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                ${verifiedBlock}
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text);">
+                            ${escapeHtml(it.address)}
+                        </div>
+
+                        ${phoneBlock}
+                        ${sourceNote}
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = cardsHtml;
+
+            // Attach copy listeners
+            container.querySelectorAll('.btn-copy-op-phone').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const phone = btn.getAttribute('data-phone');
+                    if (phone) {
+                        try {
+                            await navigator.clipboard.writeText(phone);
+                            showAlert('Phone number copied to clipboard!', 'success');
+                        } catch (_) {
+                            window.prompt('Copy phone number:', phone);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Setup District Filter Buttons
+        document.querySelectorAll('.btn-op-dir-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-op-dir-filter').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = 'var(--surface)';
+                    b.style.color = 'var(--text)';
+                    b.style.border = '1px solid var(--border)';
+                });
+                btn.classList.add('active');
+                btn.style.background = '#15803d';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+
+                currentOpDirDistrict = btn.getAttribute('data-district') || '';
+                loadOpDirectoryListings();
+            });
+        });
+
+        // Setup Search Form
+        const opDirSearchForm = document.getElementById('opDirSearchForm');
+        if (opDirSearchForm) {
+            opDirSearchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                currentOpDirQuery = (document.getElementById('opDirSearchInput').value || '').trim();
+                loadOpDirectoryListings();
+            });
+        }
+    </script>
+    <script src="js/nav.js?v=2.2" defer></script>
+</body>
+</html>

@@ -9,6 +9,7 @@ from app.models.audit import AuditLog
 from app.models.inventory import Inventory, Alert
 from app.models.marketplace import BuyerListing, PurchaseOrder
 from app.models.forecast import DemandForecast
+from app.models.directory import PublicColdStorageListing
 
 __all__ = [
     "Base",
@@ -32,5 +33,6 @@ __all__ = [
     "Alert",
     "BuyerListing",
     "PurchaseOrder",
-    "DemandForecast"
+    "DemandForecast",
+    "PublicColdStorageListing"
 ]
